@@ -1,0 +1,43 @@
+@App_HostAddress = http://localhost:5112
+
+# Get all todos
+GET {{App_HostAddress}}/todos/
+Accept: application/json
+
+###
+
+# Get todo by ID
+GET {{App_HostAddress}}/todos/1
+Accept: application/json
+
+###
+
+# Create a new todo
+POST {{App_HostAddress}}/todos/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Learn EF Core",
+  "dueBy": "2025-06-20",
+  "isComplete": false
+}
+
+###
+
+# Update a todo
+PUT {{App_HostAddress}}/todos/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Walk the dog twice a day",
+  "dueBy": "2025-06-13",
+  "isComplete": true
+}
+
+###
+
+# Delete a todo
+DELETE {{App_HostAddress}}/todos/5
+Accept: application/json

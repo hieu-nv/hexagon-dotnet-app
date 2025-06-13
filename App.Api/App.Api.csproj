@@ -4,5 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>App.Api</RootNamespace>
+    <AssemblyName>App.Api</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../App.Data/App.Data.csproj" />
+  </ItemGroup>
 </Project>
