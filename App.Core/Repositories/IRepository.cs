@@ -21,11 +21,11 @@ public interface IRepository<T, TKey>
     Task<T?> FindByIdAsync(TKey id);
 
     /// <summary>
-    /// Adds a new entity
+    /// Creates a new entity
     /// </summary>
-    /// <param name="entity">The entity to add</param>
-    /// <returns>The added entity</returns>
-    Task<T> AddAsync(T entity);
+    /// <param name="entity">The entity to create</param>
+    /// <returns>The created entity</returns>
+    Task<T> CreateAsync(T entity);
 
     /// <summary>
     /// Updates an existing entity

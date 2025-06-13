@@ -40,7 +40,7 @@ todosApi.MapPost(
     "/",
     async (TodoEntity todo, [FromServices] ITodoRepository repository) =>
     {
-        var result = await repository.AddAsync(todo);
+        var result = await repository.CreateAsync(todo);
         return Results.Created($"/todos/{result.Id}", result);
     }
 );
