@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
-using App.Data.Models;
+using App.Core.Entities;
+using App.Core.Repositories;
+using App.Data.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +23,9 @@ public static class Data
                     ?? "Data Source=app.db"
             )
         );
+
+        builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.TypeInfoResolverChain.Insert(
@@ -48,6 +53,6 @@ public static class Data
     }
 }
 
-[JsonSerializable(typeof(Todo[]))]
-[JsonSerializable(typeof(Todo))]
+[JsonSerializable(typeof(TodoEntity[]))]
+[JsonSerializable(typeof(TodoEntity))]
 internal partial class DataJsonSerializerContext : JsonSerializerContext { }

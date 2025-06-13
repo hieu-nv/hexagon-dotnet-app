@@ -20,7 +20,7 @@ Accept: application/json
 {
   "title": "Learn EF Core",
   "dueBy": "2025-06-20",
-  "isComplete": false
+  "isCompleted": false
 }
 
 ###
@@ -33,7 +33,7 @@ Accept: application/json
 {
   "title": "Walk the dog twice a day",
   "dueBy": "2025-06-13",
-  "isComplete": true
+  "isCompleted": true
 }
 
 ###

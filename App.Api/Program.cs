@@ -1,6 +1,7 @@
+using App.Core.Entities;
+using App.Core.Repositories;
 using App.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -10,13 +11,37 @@ var app = builder.Build();
 app.UseData();
 
 var todosApi = app.MapGroup("/todos");
-todosApi.MapGet("/", async ([FromServices] AppDbContext db) => await db.Todos.ToListAsync());
+todosApi.MapGet(
+    "/",
+    async ([FromServices] ITodoRepository repository) => await repository.FindAllAsync()
+);
+
 todosApi.MapGet(
     "/{id}",
-    async (int id, [FromServices] AppDbContext db) =>
+    async (int id, [FromServices] ITodoRepository repository) =>
     {
-        var todo = await db.Todos.FindAsync(id);
-        return todo != null ? Results.Ok(todo) : Results.NotFound();
+        var todoEntity = await repository.FindByIdAsync(id);
+        return todoEntity != null ? Results.Ok(todoEntity) : Results.NotFound();
+    }
+);
+
+// Example using the specialized repository
+todosApi.MapGet(
+    "/completed",
+    async ([FromServices] ITodoRepository repository) => await repository.FindCompletedTodosAsync()
+);
+
+todosApi.MapGet(
+    "/incomplete",
+    async ([FromServices] ITodoRepository repository) => await repository.FindIncompleteTodosAsync()
+);
+
+todosApi.MapPost(
+    "/",
+    async (TodoEntity todo, [FromServices] ITodoRepository repository) =>
+    {
+        var result = await repository.AddAsync(todo);
+        return Results.Created($"/todos/{result.Id}", result);
     }
 );
 
