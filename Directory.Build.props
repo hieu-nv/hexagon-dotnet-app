@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Enable .NET analyzers by default -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>All</AnalysisMode>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- Enable nullable reference types -->
+    <Nullable>enable</Nullable>
+    <!-- Generate documentation files -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Disable specific warnings -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- CS1591: Missing XML comment for publicly visible type or member -->
+    <!-- Custom ruleset -->
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)custom.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <!-- Include StyleCop.json file -->
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+</Project>

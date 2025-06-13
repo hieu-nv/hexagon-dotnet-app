@@ -11,10 +11,7 @@ var app = builder.Build();
 app.UseData();
 
 var todosApi = app.MapGroup("/todos");
-todosApi.MapGet(
-    "/",
-    async ([FromServices] ITodoRepository repository) => await repository.FindAllAsync()
-);
+todosApi.MapGet("/", async ([FromServices] ITodoRepository repository) => await repository.FindAllAsync());
 
 todosApi.MapGet(
     "/{id}",

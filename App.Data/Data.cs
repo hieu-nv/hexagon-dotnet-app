@@ -18,20 +18,14 @@ public static class Data
     public static WebApplicationBuilder UseData(this WebApplicationBuilder builder)
     {
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(
-                builder.Configuration.GetConnectionString("DefaultConnection")
-                    ?? "Data Source=app.db"
-            )
+            options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db")
         );
 
         builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
-            options.SerializerOptions.TypeInfoResolverChain.Insert(
-                0,
-                DataJsonSerializerContext.Default
-            );
+            options.SerializerOptions.TypeInfoResolverChain.Insert(0, DataJsonSerializerContext.Default);
         });
 
         return builder;
