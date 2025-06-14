@@ -1,3 +1,4 @@
+using App.Api.Endpoints;
 using App.Core.Entities;
 using App.Core.Repositories;
 using App.Data;
@@ -27,45 +28,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at the root
+        c.RoutePrefix = string.Empty;
     });
 }
 
-var todosApi = app.MapGroup("/todos");
-todosApi.MapGet(
-    "/",
-    async ([FromServices] ITodoRepository repository) => await repository.FindAllAsync().ConfigureAwait(false)
-);
-
-todosApi.MapGet(
-    "/{id:int}",
-    async (int id, [FromServices] ITodoRepository repository) =>
-    {
-        var todoEntity = await repository.FindByIdAsync(id).ConfigureAwait(false);
-        return todoEntity != null ? Results.Ok(todoEntity) : Results.NotFound();
-    }
-);
-
-// Example using the specialized repository
-todosApi.MapGet(
-    "/completed",
-    async ([FromServices] ITodoRepository repository) =>
-        await repository.FindCompletedTodosAsync().ConfigureAwait(false)
-);
-
-todosApi.MapGet(
-    "/incomplete",
-    async ([FromServices] ITodoRepository repository) =>
-        await repository.FindIncompleteTodosAsync().ConfigureAwait(false)
-);
-
-todosApi.MapPost(
-    "/",
-    async (TodoEntity todo, [FromServices] ITodoRepository repository) =>
-    {
-        var result = await repository.CreateAsync(todo).ConfigureAwait(false);
-        return Results.Created($"/todos/{result.Id}", result);
-    }
-);
+app.MapTodoEndpoints();
 
 app.Run();
