@@ -32,7 +32,7 @@ The application follows a hexagonal architecture pattern:
 ### Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/hexagon-dotnet-app.git
 cd hexagon-dotnet-app
 ```
 
@@ -42,14 +42,14 @@ cd hexagon-dotnet-app
 dotnet run --project App.Api
 ```
 
-The API will be available at `https://localhost:5001` or `http://localhost:5000`.
+The API will be available at `http://localhost:5112`.
 
 ### Swagger Documentation
 
 When running in development mode, Swagger UI is available at the root URL:
 
 ```
-http://localhost:5000
+http://localhost:5112
 ```
 
 ## API Endpoints
