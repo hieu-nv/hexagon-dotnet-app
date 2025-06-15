@@ -1,9 +1,11 @@
 using App.Api.Endpoints;
+using App.Core;
 using App.Data;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.UseCore();
 builder.UseData();
 
 if (builder.Environment.IsDevelopment())
