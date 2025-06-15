@@ -10,9 +10,19 @@ This application demonstrates the implementation of a Todo list API using a hexa
 
 The application follows a hexagonal architecture pattern:
 
-- **App.Core**: Contains the domain model, entities, and repository interfaces (ports)
+- **App.Core**: Contains the domain model, entities, repository interfaces (ports), and services
+  - Organized with domain-focused directories (e.g., Todo/)
+  - Includes the AppCore class for core service registration
+
 - **App.Data**: Implements the data access layer and repository implementations (adapters)
+  - Includes AppDbContext for Entity Framework Core data access
+  - Implements the repository pattern with generic and specific repositories
+  - AppData class provides extension methods for data layer configuration
+
 - **App.Api**: Exposes the HTTP API endpoints using minimal API syntax
+  - Uses extension methods for clean endpoint registration
+  - Organized by domain rather than technical concerns
+  - Leverages dependency injection for clean service resolution
 
 ## Features
 
@@ -56,10 +66,10 @@ http://localhost:5112
 
 | Method | URL                    | Description                           |
 |--------|------------------------|---------------------------------------|
-| GET    | /todos                 | Get all todo items                    |
-| GET    | /todos/{id}            | Get a specific todo item by ID        |
-| GET    | /todos/completed       | Get all completed todo items          |
-| GET    | /todos/incomplete      | Get all incomplete todo items         |
+| GET    | /todos                 | Find all todo items                   |
+| GET    | /todos/{id}            | Find a specific todo item by ID       |
+| GET    | /todos/completed       | Find all completed todo items         |
+| GET    | /todos/incomplete      | Find all incomplete todo items        |
 
 ## Code Formatting
 
@@ -74,26 +84,28 @@ csharpier format .
 ```
 App.sln
 ├── App.Api/
-│   ├── Endpoints/
+│   ├── Todo/
 │   │   └── TodoEndpoints.cs
-│   ├── Controllers/
 │   ├── Program.cs
 │   └── App.Api.csproj
 ├── App.Core/
+│   ├── AppCore.cs
 │   ├── Entities/
 │   │   ├── Entity.cs
 │   │   ├── IEntity.cs
 │   │   └── TodoEntity.cs
 │   ├── Repositories/
-│   │   ├── IRepository.cs
-│   │   └── ITodoRepository.cs
+│   │   └── IRepository.cs
+│   ├── Todo/
+│   │   ├── ITodoRepository.cs
+│   │   └── TodoService.cs
 │   └── App.Core.csproj
 └── App.Data/
-    ├── Data.cs
-    ├── Data/
-    │   └── AppDbContext.cs
+    ├── AppData.cs
+    ├── AppDbContext.cs
     ├── Repositories/
-    │   ├── Repository.cs
+    │   └── Repository.cs
+    ├── Todo/
     │   └── TodoRepository.cs
     └── App.Data.csproj
 ```
