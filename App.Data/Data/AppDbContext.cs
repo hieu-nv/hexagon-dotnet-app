@@ -6,15 +6,19 @@ namespace App.Data;
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options) { }
+        : base(options ?? throw new ArgumentNullException(nameof(options)))
+    {
+        // FIX: SA1500
+    }
 
     public DbSet<TodoEntity> Todos { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
+
         base.OnModelCreating(modelBuilder);
 
-        // Add sample todos
         modelBuilder
             .Entity<TodoEntity>()
             .HasData(

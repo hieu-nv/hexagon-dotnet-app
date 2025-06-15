@@ -1,0 +1,16 @@
+{
+  "newlineAtEndOfFile": true,
+  "usingDirectives": {
+    "placement": "outsideNamespace",
+    "blankLinesBetweenGroups": true,
+    "systemFirst": true
+  },
+  "constructorInitializer": {
+    "newLineBeforeBrace": false
+  },
+  "indentation": {
+    "size": 4
+  },
+  "braceStyle": "collapse",
+  "trailingCommas": "all"
+}

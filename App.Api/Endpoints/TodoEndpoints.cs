@@ -23,18 +23,25 @@ internal static class TodoEndpoints
         return Results.Ok(await repository.FindAllAsync().ConfigureAwait(false));
     }
 
-    public static async Task<IResult> FindByIdAsync([FromServices] ITodoRepository repository, int id)
+    public static async Task<IResult> FindByIdAsync(
+        [FromServices] ITodoRepository repository,
+        int id
+    )
     {
         var todoEntity = await repository.FindByIdAsync(id).ConfigureAwait(false);
         return todoEntity != null ? Results.Ok(todoEntity) : Results.NotFound();
     }
 
-    public static async Task<IResult> FindCompletedTodosAsync([FromServices] ITodoRepository repository)
+    public static async Task<IResult> FindCompletedTodosAsync(
+        [FromServices] ITodoRepository repository
+    )
     {
         return Results.Ok(await repository.FindCompletedTodosAsync().ConfigureAwait(false));
     }
 
-    public static async Task<IResult> FindIncompleteTodosAsync([FromServices] ITodoRepository repository)
+    public static async Task<IResult> FindIncompleteTodosAsync(
+        [FromServices] ITodoRepository repository
+    )
     {
         return Results.Ok(await repository.FindIncompleteTodosAsync().ConfigureAwait(false));
     }

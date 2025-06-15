@@ -13,11 +13,5 @@
     <!-- Disable specific warnings -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <!-- CS1591: Missing XML comment for publicly visible type or member -->
-    <!-- Custom ruleset -->
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)custom.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <!-- Include StyleCop.json file -->
-  <ItemGroup>
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
 </Project>
