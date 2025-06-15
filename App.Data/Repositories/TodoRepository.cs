@@ -14,11 +14,11 @@ public class TodoRepository : Repository<TodoEntity, int>, ITodoRepository
 
     public async Task<IEnumerable<TodoEntity>> FindCompletedTodosAsync()
     {
-        return await _dbContext.Todos.Where(t => t.IsCompleted).ToListAsync();
+        return await DbContext.Todos.Where(t => t.IsCompleted).ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<TodoEntity>> FindIncompleteTodosAsync()
     {
-        return await _dbContext.Todos.Where(t => !t.IsCompleted).ToListAsync();
+        return await DbContext.Todos.Where(t => !t.IsCompleted).ToListAsync().ConfigureAwait(false);
     }
 }

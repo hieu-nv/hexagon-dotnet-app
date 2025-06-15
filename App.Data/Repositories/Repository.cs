@@ -8,49 +8,44 @@ namespace App.Data.Repositories;
 /// Base implementation of the repository pattern for Entity Framework Core.
 /// </summary>
 /// <typeparam name="T">The entity type that inherits from Entity.</typeparam>
-/// <typeparam name="TKey">The type of the entity's key.</typeparam>
-public class Repository<T, TKey> : IRepository<T, TKey>
-    where T : Entity<TKey>
+/// <typeparam name="K">The type of the entity's key.</typeparam>
+public class Repository<T, K>(AppDbContext dbContext) : IRepository<T, K>
+    where T : Entity<K>
 {
-    protected readonly AppDbContext _dbContext;
-
-    public Repository(AppDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
+    protected AppDbContext DbContext { get; private set; } = dbContext;
 
     public async Task<T> CreateAsync(T entity)
     {
-        _dbContext.Set<T>().Add(entity);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<T>().Add(entity);
+        await DbContext.SaveChangesAsync().ConfigureAwait(false);
         return entity;
     }
 
     public virtual async Task<T> UpdateAsync(T entity)
     {
-        _dbContext.Entry(entity).State = EntityState.Modified;
-        await _dbContext.SaveChangesAsync();
+        DbContext.Entry(entity).State = EntityState.Modified;
+        await DbContext.SaveChangesAsync().ConfigureAwait(false);
         return entity;
     }
 
-    public virtual async Task<bool> DeleteAsync(TKey id)
+    public virtual async Task<bool> DeleteAsync(K id)
     {
-        var entity = await FindByIdAsync(id);
+        var entity = await FindByIdAsync(id).ConfigureAwait(false);
         if (entity == null)
             return false;
 
-        _dbContext.Set<T>().Remove(entity);
-        await _dbContext.SaveChangesAsync();
+        DbContext.Set<T>().Remove(entity);
+        await DbContext.SaveChangesAsync().ConfigureAwait(false);
         return true;
     }
 
     public async Task<IEnumerable<T>> FindAllAsync()
     {
-        return await _dbContext.Set<T>().ToListAsync();
+        return await DbContext.Set<T>().ToListAsync().ConfigureAwait(false);
     }
 
-    public async Task<T?> FindByIdAsync(TKey id)
+    public async Task<T?> FindByIdAsync(K id)
     {
-        return await _dbContext.Set<T>().FindAsync(id);
+        return await DbContext.Set<T>().FindAsync(id).ConfigureAwait(false);
     }
 }

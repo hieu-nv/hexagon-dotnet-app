@@ -384,3 +384,16 @@ csharp_new_line_before_catch = false
 csharp_new_line_before_finally = false
 csharp_indent_braces = false
 
+# Naming conventions
+dotnet_naming_rule.generic_type_parameter_rule.severity = none
+dotnet_naming_rule.generic_type_parameter_rule.symbols = generic_type_parameter
+dotnet_naming_rule.generic_type_parameter_rule.style = generic_type_parameter_style
+
+dotnet_naming_symbols.generic_type_parameter.applicable_kinds = type_parameter
+dotnet_naming_style.generic_type_parameter_style.required_prefix = T
+
+# CA1715: Identifiers should have correct prefix
+dotnet_diagnostic.CA1715.severity = none
+
+# CA1715: Identifiers should have correct prefix
+dotnet_diagnostic.CA1715.severity = none

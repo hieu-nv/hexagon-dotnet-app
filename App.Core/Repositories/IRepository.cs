@@ -4,8 +4,8 @@ namespace App.Core.Repositories;
 /// Generic repository interface for CRUD operations
 /// </summary>
 /// <typeparam name="T">Entity type that inherits from BaseEntity</typeparam>
-/// <typeparam name="TKey">The type of the entity's key</typeparam>
-public interface IRepository<T, TKey>
+/// <typeparam name="K">The type of the entity's key</typeparam>
+public interface IRepository<T, K>
 {
     /// <summary>
     /// Finds all entities
@@ -18,7 +18,7 @@ public interface IRepository<T, TKey>
     /// </summary>
     /// <param name="id">The ID of the entity to retrieve</param>
     /// <returns>The entity if found, otherwise null</returns>
-    Task<T?> FindByIdAsync(TKey id);
+    Task<T?> FindByIdAsync(K id);
 
     /// <summary>
     /// Creates a new entity
@@ -39,5 +39,5 @@ public interface IRepository<T, TKey>
     /// </summary>
     /// <param name="id">The ID of the entity to delete</param>
     /// <returns>True if the entity was deleted, otherwise false</returns>
-    Task<bool> DeleteAsync(TKey id);
+    Task<bool> DeleteAsync(K id);
 }

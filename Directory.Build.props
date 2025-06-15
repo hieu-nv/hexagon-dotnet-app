@@ -11,7 +11,8 @@
     <!-- Generate documentation files -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Disable specific warnings -->
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;IDE1006</NoWarn>
     <!-- CS1591: Missing XML comment for publicly visible type or member -->
+    <!-- IDE1006: Naming rule violation -->
   </PropertyGroup>
 </Project>
