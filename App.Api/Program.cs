@@ -1,8 +1,5 @@
 using App.Api.Endpoints;
-using App.Core.Entities;
-using App.Core.Repositories;
 using App.Data;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +15,8 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
+builder.UseTodo();
+
 var app = builder.Build();
 app.UseData();
 
@@ -32,6 +31,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapTodoEndpoints();
+app.UseTodo();
 
 app.Run();

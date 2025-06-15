@@ -1,48 +1,59 @@
 using App.Core.Repositories;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Builder;
 
 namespace App.Api.Endpoints;
 
-internal static class TodoEndpoints
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Class is instantiated by the DI container."
+)]
+sealed class TodoEndpoints(ITodoRepository todoRepository)
 {
-    public static void MapTodoEndpoints(this IEndpointRouteBuilder endpoints)
+    private readonly ITodoRepository _todoRepository = todoRepository;
+
+    public async Task<IResult> GetAllTodos()
     {
-        var todosApi = endpoints.MapGroup("/todos");
-
-        todosApi.MapGet("/", FindAllAsync);
-
-        todosApi.MapGet("/{id:int}", FindByIdAsync);
-
-        todosApi.MapGet("/completed", FindCompletedTodosAsync);
-
-        todosApi.MapGet("/incomplete", FindIncompleteTodosAsync);
+        var todos = await _todoRepository.FindAllAsync().ConfigureAwait(false);
+        return Results.Ok(todos);
     }
 
-    public static async Task<IResult> FindAllAsync([FromServices] ITodoRepository repository)
+    public async Task<IResult> GetTodoById(int id)
     {
-        return Results.Ok(await repository.FindAllAsync().ConfigureAwait(false));
+        var todo = await _todoRepository.FindByIdAsync(id).ConfigureAwait(false);
+        return todo is not null ? Results.Ok(todo) : Results.NotFound();
     }
 
-    public static async Task<IResult> FindByIdAsync(
-        [FromServices] ITodoRepository repository,
-        int id
-    )
+    public async Task<IResult> GetCompletedTodos()
     {
-        var todoEntity = await repository.FindByIdAsync(id).ConfigureAwait(false);
-        return todoEntity != null ? Results.Ok(todoEntity) : Results.NotFound();
+        var todos = await _todoRepository.FindCompletedTodosAsync().ConfigureAwait(false);
+        return Results.Ok(todos);
     }
 
-    public static async Task<IResult> FindCompletedTodosAsync(
-        [FromServices] ITodoRepository repository
-    )
+    public async Task<IResult> GetIncompleteTodos()
     {
-        return Results.Ok(await repository.FindCompletedTodosAsync().ConfigureAwait(false));
+        var todos = await _todoRepository.FindIncompleteTodosAsync().ConfigureAwait(false);
+        return Results.Ok(todos);
+    }
+}
+
+internal static class TodoEndpointsExtensions
+{
+    public static WebApplicationBuilder UseTodo(this WebApplicationBuilder app)
+    {
+        app.Services.AddScoped<TodoEndpoints>();
+        return app;
     }
 
-    public static async Task<IResult> FindIncompleteTodosAsync(
-        [FromServices] ITodoRepository repository
-    )
+    public static IEndpointRouteBuilder UseTodo(this IEndpointRouteBuilder endpointRouteBuilder)
     {
-        return Results.Ok(await repository.FindIncompleteTodosAsync().ConfigureAwait(false));
+        var group = endpointRouteBuilder.MapGroup("/todos");
+
+        group.MapGet("/", (TodoEndpoints handler) => handler.GetAllTodos());
+        group.MapGet("/{id:int}", (TodoEndpoints handler, int id) => handler.GetTodoById(id));
+        group.MapGet("/completed", (TodoEndpoints handler) => handler.GetCompletedTodos());
+        group.MapGet("/incomplete", (TodoEndpoints handler) => handler.GetIncompleteTodos());
+
+        return endpointRouteBuilder;
     }
 }

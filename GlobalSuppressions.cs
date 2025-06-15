@@ -6,4 +6,8 @@
 using System.Diagnostics.CodeAnalysis;
 
 // Generic type parameter naming rule
-[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "We use single-letter names for generic type parameters")]
+[assembly: SuppressMessage(
+    "Style",
+    "IDE1006:Naming Styles",
+    Justification = "We use single-letter names for generic type parameters"
+)]
