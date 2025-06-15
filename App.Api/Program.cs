@@ -5,8 +5,8 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.UseCore();
-builder.UseData();
+builder.UseAppCore();
+builder.UseAppData();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -20,7 +20,7 @@ if (builder.Environment.IsDevelopment())
 builder.UseTodo();
 
 var app = builder.Build();
-app.UseData();
+app.UseAppData();
 
 if (app.Environment.IsDevelopment())
 {

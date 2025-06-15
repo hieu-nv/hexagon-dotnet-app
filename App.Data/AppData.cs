@@ -9,13 +9,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Data;
 
-public static class Data
+public static class AppData
 {
     /// <summary>
     /// Configures the application to use the data layer with SQLite.
     /// </summary>
     /// <param name="builder">The web application builder.</param>
-    public static WebApplicationBuilder UseData(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder UseAppData(this WebApplicationBuilder builder)
     {
         builder?.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(
@@ -30,7 +30,7 @@ public static class Data
         {
             options.SerializerOptions.TypeInfoResolverChain.Insert(
                 0,
-                DataJsonSerializerContext.Default
+                AppDataJsonSerializerContext.Default
             );
         });
 
@@ -42,7 +42,7 @@ public static class Data
     /// </summary>
     /// <param name="app">The web application.</param>
     /// <returns>The web application.</returns>
-    public static WebApplication UseData(this WebApplication app)
+    public static WebApplication UseAppData(this WebApplication app)
     {
         using (var scope = app?.Services.CreateScope())
         {
@@ -55,4 +55,4 @@ public static class Data
 
 [JsonSerializable(typeof(TodoEntity[]))]
 [JsonSerializable(typeof(TodoEntity))]
-internal sealed partial class DataJsonSerializerContext : JsonSerializerContext { }
+internal sealed partial class AppDataJsonSerializerContext : JsonSerializerContext { }
