@@ -3,16 +3,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.Data;
 
-public class AppDbContext : DbContext
+/// <summary>
+/// Database context for the application, managing the TodoEntity.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="AppDbContext"/> class with the specified options.
+/// </remarks>
+/// <param name="options"></param>
+/// <exception cref="ArgumentNullException"></exception>
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : DbContext(options ?? throw new ArgumentNullException(nameof(options)))
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options ?? throw new ArgumentNullException(nameof(options)))
-    {
-        // FIX: SA1500
-    }
-
+    /// <summary>
+    /// Represents the collection of to-do items in the database.
+    /// </summary>
     public DbSet<TodoEntity> Todos { get; set; } = null!;
 
+    /// <summary>
+    /// Configures the model for the application database context.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder used to configure the model.</param>
+    /// <exception cref="ArgumentNullException">Thrown when the modelBuilder is null.</exception>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

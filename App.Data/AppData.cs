@@ -9,6 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Data;
 
+/// <summary>
+/// Provides methods to configure the application data layer, including database context and repositories.
+/// </summary>
 public static class AppData
 {
     /// <summary>
@@ -53,6 +56,10 @@ public static class AppData
     }
 }
 
+/// <summary>
+/// Provides a JSON serializer context for the application data layer.
+/// This context is used for serializing and deserializing entities.
+/// </summary>
 [JsonSerializable(typeof(TodoEntity[]))]
 [JsonSerializable(typeof(TodoEntity))]
 internal sealed partial class AppDataJsonSerializerContext : JsonSerializerContext { }
