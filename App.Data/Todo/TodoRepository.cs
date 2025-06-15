@@ -1,17 +1,17 @@
 using App.Core.Entities;
-using App.Core.Repositories;
+using App.Core.Todo;
+using App.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace App.Data.Repositories;
+namespace App.Data.Todo;
 
 /// <summary>
 /// Repository for TodoEntity with custom methods specific to todos.
 /// </summary>
-public class TodoRepository : Repository<TodoEntity, int>, ITodoRepository
+public class TodoRepository(AppDbContext dbContext)
+    : Repository<TodoEntity, int>(dbContext),
+        ITodoRepository
 {
-    public TodoRepository(AppDbContext dbContext)
-        : base(dbContext) { }
-
     public async Task<IEnumerable<TodoEntity>> FindCompletedTodosAsync()
     {
         return await DbContext.Todos.Where(t => t.IsCompleted).ToListAsync().ConfigureAwait(false);

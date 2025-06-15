@@ -1,8 +1,6 @@
-using App.Core.Repositories;
-using App.Core.Services.Todo;
-using Microsoft.AspNetCore.Builder;
+using App.Core.Todo;
 
-namespace App.Api.Endpoints;
+namespace App.Api.Todo;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Performance",

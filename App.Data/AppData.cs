@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using App.Core.Entities;
-using App.Core.Repositories;
-using App.Data.Repositories;
+using App.Core.Todo;
+using App.Data.Todo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

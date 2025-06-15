@@ -1,5 +1,4 @@
-using System;
-using App.Core.Services.Todo;
+using App.Core.Todo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

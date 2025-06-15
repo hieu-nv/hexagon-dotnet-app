@@ -1,6 +1,7 @@
 using App.Core.Entities;
+using App.Core.Repositories;
 
-namespace App.Core.Repositories;
+namespace App.Core.Todo;
 
 /// <summary>
 /// Repository interface for managing to-do items.

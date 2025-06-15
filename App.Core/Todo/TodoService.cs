@@ -1,8 +1,6 @@
-using System;
 using App.Core.Entities;
-using App.Core.Repositories;
 
-namespace App.Core.Services.Todo;
+namespace App.Core.Todo;
 
 public class TodoService(ITodoRepository todoRepository)
 {
