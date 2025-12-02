@@ -10,9 +10,45 @@
     <Nullable>enable</Nullable>
     <!-- Generate documentation files -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Code Analysis Configuration -->
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <!-- Disable specific warnings -->
     <NoWarn>$(NoWarn);CS1591;IDE1006</NoWarn>
     <!-- CS1591: Missing XML comment for publicly visible type or member -->
     <!-- IDE1006: Naming rule violation -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Microsoft .NET Analyzers -->
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.100">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- SonarAnalyzer for .NET -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.5.0.116594">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+
+    <!-- Additional Security and Performance Analyzers -->
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.11.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+
+    <!-- Microsoft Visual Studio Threading Analyzers -->
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+
+    <!-- Security Code Scan -->
+    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

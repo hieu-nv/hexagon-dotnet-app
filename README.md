@@ -11,10 +11,12 @@ This application demonstrates the implementation of a Todo list API using a hexa
 The application follows a hexagonal architecture pattern:
 
 - **App.Core**: Contains the domain model, entities, repository interfaces (ports), and services
+
   - Organized with domain-focused directories (e.g., Todo/)
   - Includes the AppCore class for core service registration
 
 - **App.Data**: Implements the data access layer and repository implementations (adapters)
+
   - Includes AppDbContext for Entity Framework Core data access
   - Implements the repository pattern with generic and specific repositories
   - AppData class provides extension methods for data layer configuration
@@ -31,6 +33,34 @@ The application follows a hexagonal architecture pattern:
 - Clean separation of concerns using hexagonal architecture
 - SQLite database for data persistence
 - Swagger UI for API documentation and testing
+- Comprehensive code analysis with Roslyn and SonarAnalyzer
+- Automated security scanning and quality gates
+- GitHub Actions CI/CD pipeline
+
+## Code Quality & Analysis
+
+This project is configured with comprehensive static code analysis tools:
+
+- **Microsoft .NET Analyzers**: Core .NET code quality and security rules
+- **SonarAnalyzer for C#**: Industry-standard code quality analysis
+- **Security Code Scan**: Security vulnerability detection
+- **AsyncUsage Analyzers**: Async/await best practices
+- **Custom Rulesets**: Tailored rule configuration for the project
+
+For detailed information about the analyzer configuration, see [ANALYZER_SETUP.md](ANALYZER_SETUP.md).
+
+### Running Code Analysis
+
+```bash
+# Build with analyzer warnings
+dotnet build src/App.sln --verbosity normal
+
+# Run tests with coverage
+dotnet test src/App.sln --collect:"XPlat Code Coverage"
+
+# Format code
+csharpier format .
+```
 
 ## Prerequisites
 
@@ -64,12 +94,12 @@ http://localhost:5112
 
 ## API Endpoints
 
-| Method | URL                    | Description                           |
-|--------|------------------------|---------------------------------------|
-| GET    | /todos                 | Find all todo items                   |
-| GET    | /todos/{id}            | Find a specific todo item by ID       |
-| GET    | /todos/completed       | Find all completed todo items         |
-| GET    | /todos/incomplete      | Find all incomplete todo items        |
+| Method | URL               | Description                     |
+| ------ | ----------------- | ------------------------------- |
+| GET    | /todos            | Find all todo items             |
+| GET    | /todos/{id}       | Find a specific todo item by ID |
+| GET    | /todos/completed  | Find all completed todo items   |
+| GET    | /todos/incomplete | Find all incomplete todo items  |
 
 ## Code Formatting
 

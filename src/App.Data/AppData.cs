@@ -1,13 +1,13 @@
 using System.Text.Json.Serialization;
 using App.Core.Entities;
 using App.Core.Todo;
+using App.Data;
 using App.Data.Todo;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.Data;
+namespace Microsoft.AspNetCore.Builder;
 
 /// <summary>
 /// Provides methods to configure the application data layer, including database context and repositories.

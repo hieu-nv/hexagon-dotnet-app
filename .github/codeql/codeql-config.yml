@@ -1,0 +1,34 @@
+name: "CodeQL Config for Hexagon .NET App"
+
+disable-default-queries: false
+
+queries:
+  - name: security-and-quality
+    uses: security-and-quality
+
+  - name: security-extended
+    uses: security-extended
+
+paths:
+  - src/
+
+paths-ignore:
+  - src/**/bin/**
+  - src/**/obj/**
+  - test/**/bin/**
+  - test/**/obj/**
+  - "**/*.Generated.cs"
+  - "**/Program.cs"
+
+query-filters:
+  - exclude:
+      id: cs/web/xss
+      reason: "XSS protection handled by ASP.NET Core framework"
+
+  - exclude:
+      id: cs/sql-injection
+      reason: "Using EF Core with parameterized queries"
+
+packs:
+  - codeql/csharp-queries
+  - codeql/csharp-security-queries

@@ -1,8 +1,7 @@
 using App.Core.Todo;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.Core;
+namespace Microsoft.AspNetCore.Builder;
 
 /// <summary>
 /// Provides methods to configure the application core, including services for managing to-do items.

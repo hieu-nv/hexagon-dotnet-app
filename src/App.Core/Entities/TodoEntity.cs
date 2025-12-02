@@ -25,5 +25,5 @@ public class TodoEntity : Entity<int>
     /// Gets or sets a value indicating whether the to-do item is completed.
     /// </summary>
     [Column("IS_COMPLETED")]
-    public bool IsCompleted { get; set; } = false;
+    public bool IsCompleted { get; set; }
 }
