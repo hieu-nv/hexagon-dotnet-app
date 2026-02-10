@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using App.Core.Entities;
 
 namespace App.Core.Todo;
@@ -26,6 +27,7 @@ public class TodoService(ITodoRepository todoRepository)
     /// </summary>
     public async Task<TodoEntity?> FindByIdAsync(int id)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(id, 1);
         return await _todoRepository.FindByIdAsync(id).ConfigureAwait(false);
     }
 
@@ -43,5 +45,55 @@ public class TodoService(ITodoRepository todoRepository)
     public async Task<IEnumerable<TodoEntity>> FindIncompleteAsync()
     {
         return await _todoRepository.FindIncompleteTodosAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Creates a new to-do item.
+    /// </summary>
+    public async Task<TodoEntity> CreateAsync(TodoEntity entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        if (string.IsNullOrWhiteSpace(entity.Title))
+        {
+            throw new ValidationException("Title is required");
+        }
+
+        return await _todoRepository.CreateAsync(entity).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Updates an existing to-do item.
+    /// </summary>
+    public async Task<TodoEntity?> UpdateAsync(int id, TodoEntity entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        ArgumentOutOfRangeException.ThrowIfLessThan(id, 1);
+
+        if (string.IsNullOrWhiteSpace(entity.Title))
+        {
+            throw new ValidationException("Title is required");
+        }
+
+        var existing = await _todoRepository.FindByIdAsync(id).ConfigureAwait(false);
+        if (existing == null)
+        {
+            return null;
+        }
+
+        existing.Title = entity.Title;
+        existing.DueBy = entity.DueBy;
+        existing.IsCompleted = entity.IsCompleted;
+
+        return await _todoRepository.UpdateAsync(existing).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Deletes a to-do item by its ID.
+    /// </summary>
+    public async Task<bool> DeleteAsync(int id)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(id, 1);
+        return await _todoRepository.DeleteAsync(id).ConfigureAwait(false);
     }
 }

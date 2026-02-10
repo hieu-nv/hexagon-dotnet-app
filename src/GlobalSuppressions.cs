@@ -68,10 +68,3 @@ using System.Diagnostics.CodeAnalysis;
     "CA1034:Nested types should not be visible",
     Justification = "Nested DTOs are appropriate for API endpoint organization"
 )]
-
-// Security suppressions (with careful justification)
-[assembly: SuppressMessage(
-    "Security",
-    "CA2100:Review SQL queries for security vulnerabilities",
-    Justification = "EF Core parameterization handles SQL injection protection"
-)]

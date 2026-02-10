@@ -20,6 +20,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<TodoEntity> Todos { get; set; } = null!;
 
     /// <summary>
+    /// Saves all changes made in this context to the database.
+    /// Automatically updates the UpdatedAt timestamp for modified entities.
+    /// </summary>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker
+            .Entries<Entity<int>>()
+            .Where(e => e.State == EntityState.Modified);
+
+        foreach (var entry in entries)
+        {
+            entry.Entity.UpdatedAt = DateTime.UtcNow;
+        }
+
+        return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Configures the model for the application database context.
     /// </summary>
     /// <param name="modelBuilder">The model builder used to configure the model.</param>
@@ -43,14 +61,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 {
                     Id = 2,
                     Title = "Do the dishes",
-                    DueBy = DateOnly.FromDateTime(DateTime.Now),
+                    DueBy = new DateOnly(2026, 2, 15),
                     IsCompleted = false,
                 },
                 new TodoEntity
                 {
                     Id = 3,
                     Title = "Do the laundry",
-                    DueBy = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+                    DueBy = new DateOnly(2026, 2, 16),
                     IsCompleted = false,
                 },
                 new TodoEntity
@@ -63,7 +81,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 {
                     Id = 5,
                     Title = "Clean the car",
-                    DueBy = DateOnly.FromDateTime(DateTime.Now.AddDays(2)),
+                    DueBy = new DateOnly(2026, 2, 17),
                     IsCompleted = false,
                 }
             );

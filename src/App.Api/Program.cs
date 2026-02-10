@@ -8,6 +8,8 @@ builder.UseTodo();
 WebApplication app = builder.Build();
 app.UseAppData();
 
+app.MapHealthChecks("/health");
+
 if (app.Environment.IsDevelopment())
 {
     _ = app.UseDeveloperExceptionPage();

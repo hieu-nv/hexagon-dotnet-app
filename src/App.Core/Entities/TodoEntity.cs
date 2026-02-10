@@ -12,8 +12,13 @@ public class TodoEntity : Entity<int>
     /// Gets or sets the title of the to-do item.
     /// </summary>
     [Required]
+    [StringLength(
+        200,
+        MinimumLength = 1,
+        ErrorMessage = "Title must be between 1 and 200 characters"
+    )]
     [Column("TITLE")]
-    public string? Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the due date for the to-do item.

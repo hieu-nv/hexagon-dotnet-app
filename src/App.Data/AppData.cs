@@ -29,6 +29,8 @@ public static class AppData
 
         builder?.Services.AddScoped<ITodoRepository, TodoRepository>();
 
+        builder?.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+
         builder?.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.TypeInfoResolverChain.Insert(
