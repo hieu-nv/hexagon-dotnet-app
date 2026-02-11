@@ -41,3 +41,23 @@ Accept: application/json
 # Delete a todo
 DELETE {{App_HostAddress}}/todos/5
 Accept: application/json
+
+###
+
+### Pokemon Gateway Endpoints ###
+
+# Get Pokemon list (default: 20 items)
+GET {{App_HostAddress}}/api/v1/pokemon
+Accept: application/json
+
+###
+
+# Get Pokemon list with pagination
+GET {{App_HostAddress}}/api/v1/pokemon?limit=10&offset=0
+Accept: application/json
+
+###
+
+# Get specific Pokemon by ID
+GET {{App_HostAddress}}/api/v1/pokemon/25
+Accept: application/json
