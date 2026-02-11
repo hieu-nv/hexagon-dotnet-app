@@ -2,3 +2,4 @@ bin/
 obj/
 TestResults/
 app.db*
+commit-message.txt

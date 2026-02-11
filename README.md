@@ -6,17 +6,23 @@ A modern ASP.NET Core application using minimal APIs to manage Todo items with a
 
 This application demonstrates the implementation of a Todo list API using a hexagonal (ports and adapters) architecture in ASP.NET Core. It provides a structured approach to building maintainable and testable applications by separating business logic from external concerns.
 
+**Key Technologies:**
+
+- ASP.NET Core 10 with Minimal APIs
+- Entity Framework Core with SQLite
+- Dependency Injection
+- Health Checks
+- OpenAPI/Swagger Documentation
+
 ## Architecture
 
 The application follows a hexagonal architecture pattern:
 
 - **App.Core**: Contains the domain model, entities, repository interfaces (ports), and services
-
   - Organized with domain-focused directories (e.g., Todo/)
   - Includes the AppCore class for core service registration
 
 - **App.Data**: Implements the data access layer and repository implementations (adapters)
-
   - Includes AppDbContext for Entity Framework Core data access
   - Implements the repository pattern with generic and specific repositories
   - AppData class provides extension methods for data layer configuration
@@ -28,14 +34,17 @@ The application follows a hexagonal architecture pattern:
 
 ## Features
 
-- CRUD operations for Todo items
-- Filtering todos by completion status
-- Clean separation of concerns using hexagonal architecture
-- SQLite database for data persistence
-- Swagger UI for API documentation and testing
-- Comprehensive code analysis with Roslyn and SonarAnalyzer
-- Automated security scanning and quality gates
-- GitHub Actions CI/CD pipeline
+- **Full CRUD operations** for Todo items (Create, Read, Update, Delete)
+- **Filtering** todos by completion status (completed/incomplete)
+- **Validation** with data annotations and business rule enforcement
+- **Clean separation of concerns** using hexagonal architecture
+- **SQLite database** for data persistence with Entity Framework Core
+- **Health checks** endpoint for monitoring
+- **Swagger UI** for API documentation and testing
+- **Comprehensive code analysis** with Roslyn and SonarAnalyzer
+- **Automated security scanning** and quality gates
+- **GitHub Actions CI/CD** pipeline
+- **Automatic timestamp tracking** (CreatedAt, UpdatedAt)
 
 ## Code Quality & Analysis
 
@@ -64,7 +73,7 @@ csharpier format .
 
 ## Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) (or .NET 9 SDK)
 - Any code editor (preferably Visual Studio or Visual Studio Code)
 
 ## Getting Started
@@ -79,10 +88,22 @@ cd hexagon-dotnet-app
 ### Run the Application
 
 ```bash
-dotnet run --project App.Api
+dotnet run --project src/App.Api
 ```
 
 The API will be available at `http://localhost:5112`.
+
+### Build the Solution
+
+```bash
+dotnet build src/App.sln
+```
+
+### Run Tests
+
+```bash
+dotnet test src/App.sln
+```
 
 ### Swagger Documentation
 
@@ -94,12 +115,23 @@ http://localhost:5112
 
 ## API Endpoints
 
-| Method | URL               | Description                     |
-| ------ | ----------------- | ------------------------------- |
-| GET    | /todos            | Find all todo items             |
-| GET    | /todos/{id}       | Find a specific todo item by ID |
-| GET    | /todos/completed  | Find all completed todo items   |
-| GET    | /todos/incomplete | Find all incomplete todo items  |
+All endpoints are prefixed with `/api/v1/todos`:
+
+| Method | URL                      | Description                     |
+| ------ | ------------------------ | ------------------------------- |
+| GET    | /api/v1/todos            | Find all todo items             |
+| GET    | /api/v1/todos/{id}       | Find a specific todo item by ID |
+| GET    | /api/v1/todos/completed  | Find all completed todo items   |
+| GET    | /api/v1/todos/incomplete | Find all incomplete todo items  |
+| POST   | /api/v1/todos            | Create a new todo item          |
+| PUT    | /api/v1/todos/{id}       | Update an existing todo item    |
+| DELETE | /api/v1/todos/{id}       | Delete a todo item              |
+
+**Additional Endpoints:**
+
+| Method | URL     | Description  |
+| ------ | ------- | ------------ |
+| GET    | /health | Health check |
 
 ## Code Formatting
 
@@ -112,32 +144,42 @@ csharpier format .
 ## Project Structure
 
 ```
-App.sln
-├── App.Api/
-│   ├── Todo/
-│   │   └── TodoEndpoints.cs
-│   ├── Program.cs
-│   └── App.Api.csproj
-├── App.Core/
-│   ├── AppCore.cs
-│   ├── Entities/
-│   │   ├── Entity.cs
-│   │   ├── IEntity.cs
-│   │   └── TodoEntity.cs
-│   ├── Repositories/
-│   │   └── IRepository.cs
-│   ├── Todo/
-│   │   ├── ITodoRepository.cs
-│   │   └── TodoService.cs
-│   └── App.Core.csproj
-└── App.Data/
-    ├── AppData.cs
-    ├── AppDbContext.cs
-    ├── Repositories/
-    │   └── Repository.cs
-    ├── Todo/
-    │   └── TodoRepository.cs
-    └── App.Data.csproj
+/
+├── src/
+│   ├── App.sln
+│   ├── Directory.Build.props
+│   ├── GlobalSuppressions.cs
+│   ├── App.Api/                      # HTTP Adapters (Minimal APIs)
+│   │   ├── Todo/
+│   │   │   ├── TodoEndpoints.cs       # Endpoint handlers
+│   │   │   └── TodoEndpointsExtensions.cs  # DI and route registration
+│   │   ├── Program.cs                 # Application entry point
+│   │   ├── appsettings.json
+│   │   ├── appsettings.Development.json
+│   │   └── App.Api.csproj
+│   ├── App.Core/                     # Domain Logic & Ports
+│   │   ├── AppCore.cs                 # Core DI registration
+│   │   ├── Entities/
+│   │   │   ├── Entity.cs              # Base entity with Id, timestamps
+│   │   │   ├── IEntity.cs
+│   │   │   └── TodoEntity.cs          # Todo domain model
+│   │   ├── Repositories/
+│   │   │   └── IRepository.cs         # Generic repository interface
+│   │   ├── Todo/
+│   │   │   ├── ITodoRepository.cs     # Todo repository port
+│   │   │   └── TodoService.cs         # Todo business logic
+│   │   └── App.Core.csproj
+│   └── App.Data/                     # Infrastructure Adapters
+│       ├── AppData.cs                 # Data layer DI registration
+│       ├── AppDbContext.cs            # EF Core DbContext
+│       ├── Todo/
+│       │   └── TodoRepository.cs      # Todo repository implementation
+│       └── App.Data.csproj
+└── test/
+    └── App.Core.Tests/               # Unit Tests
+        ├── Todo/
+        │   └── TodoServiceTests.cs
+        └── App.Core.Tests.csproj
 ```
 
 ## License
