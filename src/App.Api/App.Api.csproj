@@ -8,6 +8,9 @@
     <AssemblyName>App.Api</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="App.Api.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../App.Data/App.Data.csproj" />
   </ItemGroup>
 </Project>
