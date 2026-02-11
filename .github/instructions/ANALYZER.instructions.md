@@ -125,13 +125,13 @@ The project is configured with multiple layers of static code analysis to ensure
 1. **Build with Analysis**:
 
    ```bash
-   dotnet build src/App.sln --verbosity normal
+   dotnet build src/App.slnx --verbosity normal
    ```
 
 2. **Run Tests with Coverage**:
 
    ```bash
-   dotnet test src/App.sln --collect:"XPlat Code Coverage"
+   dotnet test src/App.slnx --collect:"XPlat Code Coverage"
    ```
 
 3. **Format Code**:

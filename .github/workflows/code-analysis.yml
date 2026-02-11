@@ -37,7 +37,7 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore src/App.sln
+        run: dotnet restore src/App.slnx
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -46,10 +46,10 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Build solution
-        run: dotnet build src/App.sln --no-restore --configuration Release
+        run: dotnet build src/App.slnx --no-restore --configuration Release
 
       - name: Run Unit Tests with Coverage
-        run: dotnet test src/App.sln --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test src/App.slnx --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
@@ -80,7 +80,7 @@ jobs:
       - name: Run Security Code Scan
         run: |
           dotnet tool install --global security-scan
-          dotnet restore src/App.sln
+          dotnet restore src/App.slnx
           security-scan src/ --export=security-results.sarif
 
       - name: Upload SARIF results
@@ -128,9 +128,9 @@ jobs:
 
       - name: Build and test
         run: |
-          dotnet restore src/App.sln
-          dotnet build src/App.sln --no-restore
-          dotnet test src/App.sln --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          dotnet restore src/App.slnx
+          dotnet build src/App.slnx --no-restore
+          dotnet test src/App.slnx --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
       - name: End SonarCloud analysis
         env:
@@ -155,12 +155,12 @@ jobs:
 
       - name: Restore and Build
         run: |
-          dotnet restore src/App.sln
-          dotnet build src/App.sln --no-restore --configuration Release
+          dotnet restore src/App.slnx
+          dotnet build src/App.slnx --no-restore --configuration Release
 
       - name: Run Code Analysis
         run: |
-          dotnet build src/App.sln --no-restore --verbosity normal > analysis.log 2>&1
+          dotnet build src/App.slnx --no-restore --verbosity normal > analysis.log 2>&1
           echo "Checking for analysis warnings/errors..."
 
           # Check for critical issues
@@ -183,7 +183,7 @@ jobs:
 
       - name: Test Coverage Check
         run: |
-          dotnet test src/App.sln --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          dotnet test src/App.slnx --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
           # Extract coverage percentage (simplified check)
           echo "✅ Test coverage check completed"

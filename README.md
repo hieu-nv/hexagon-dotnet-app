@@ -62,10 +62,10 @@ For detailed information about the analyzer configuration, see [ANALYZER_SETUP.m
 
 ```bash
 # Build with analyzer warnings
-dotnet build src/App.sln --verbosity normal
+dotnet build src/App.slnx --verbosity normal
 
 # Run tests with coverage
-dotnet test src/App.sln --collect:"XPlat Code Coverage"
+dotnet test src/App.slnx --collect:"XPlat Code Coverage"
 
 # Format code
 csharpier format .
@@ -96,13 +96,13 @@ The API will be available at `http://localhost:5112`.
 ### Build the Solution
 
 ```bash
-dotnet build src/App.sln
+dotnet build src/App.slnx
 ```
 
 ### Run Tests
 
 ```bash
-dotnet test src/App.sln
+dotnet test src/App.slnx
 ```
 
 ### Swagger Documentation
@@ -146,7 +146,7 @@ csharpier format .
 ```
 /
 ├── src/
-│   ├── App.sln
+│   ├── App.slnx
 │   ├── Directory.Build.props
 │   ├── GlobalSuppressions.cs
 │   ├── App.Api/                      # HTTP Adapters (Minimal APIs)

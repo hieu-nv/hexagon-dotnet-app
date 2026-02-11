@@ -1,20 +1,22 @@
 using System.ComponentModel.DataAnnotations;
 using App.Core.Entities;
 using App.Core.Todo;
-using NSubstitute;
+using Moq;
 using Xunit;
 
 namespace App.Core.Tests.Todo;
 
 public class TodoServiceTests
 {
+    private readonly Mock<ITodoRepository> _todoRepositoryMock;
     private readonly ITodoRepository _todoRepository;
     private readonly TodoService _todoService;
 
     public TodoServiceTests()
     {
         // Arrange - Setup mock repository
-        _todoRepository = Substitute.For<ITodoRepository>();
+        _todoRepositoryMock = new Mock<ITodoRepository>();
+        _todoRepository = _todoRepositoryMock.Object;
         _todoService = new TodoService(_todoRepository);
     }
 
@@ -38,14 +40,14 @@ public class TodoServiceTests
             },
         };
 
-        _todoRepository.FindAllAsync().Returns(expectedTodos);
+        _todoRepositoryMock.Setup(x => x.FindAllAsync()).ReturnsAsync(expectedTodos);
 
         // Act
         var result = await _todoService.FindAllAsync();
 
         // Assert
         Assert.Equal(expectedTodos, result);
-        await _todoRepository.Received(1).FindAllAsync();
+        _todoRepositoryMock.Verify(x => x.FindAllAsync(), Times.Once);
     }
 
     [Fact]
@@ -60,14 +62,14 @@ public class TodoServiceTests
             IsCompleted = false,
         };
 
-        _todoRepository.FindByIdAsync(todoId).Returns(expectedTodo);
+        _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(expectedTodo);
 
         // Act
         var result = await _todoService.FindByIdAsync(todoId);
 
         // Assert
         Assert.Equal(expectedTodo, result);
-        await _todoRepository.Received(1).FindByIdAsync(todoId);
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
     }
 
     [Fact]
@@ -75,14 +77,14 @@ public class TodoServiceTests
     {
         // Arrange
         var todoId = 999;
-        _todoRepository.FindByIdAsync(todoId).Returns((TodoEntity?)null);
+        _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync((TodoEntity?)null);
 
         // Act
         var result = await _todoService.FindByIdAsync(todoId);
 
         // Assert
         Assert.Null(result);
-        await _todoRepository.Received(1).FindByIdAsync(todoId);
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
     }
 
     [Fact]
@@ -105,7 +107,7 @@ public class TodoServiceTests
             },
         };
 
-        _todoRepository.FindCompletedTodosAsync().Returns(completedTodos);
+        _todoRepositoryMock.Setup(x => x.FindCompletedTodosAsync()).ReturnsAsync(completedTodos);
 
         // Act
         var result = await _todoService.FindCompletedAsync();
@@ -113,7 +115,7 @@ public class TodoServiceTests
         // Assert
         Assert.Equal(completedTodos, result);
         Assert.All(result, todo => Assert.True(todo.IsCompleted));
-        await _todoRepository.Received(1).FindCompletedTodosAsync();
+        _todoRepositoryMock.Verify(x => x.FindCompletedTodosAsync(), Times.Once);
     }
 
     [Fact]
@@ -136,7 +138,7 @@ public class TodoServiceTests
             },
         };
 
-        _todoRepository.FindIncompleteTodosAsync().Returns(incompleteTodos);
+        _todoRepositoryMock.Setup(x => x.FindIncompleteTodosAsync()).ReturnsAsync(incompleteTodos);
 
         // Act
         var result = await _todoService.FindIncompleteAsync();
@@ -144,7 +146,7 @@ public class TodoServiceTests
         // Assert
         Assert.Equal(incompleteTodos, result);
         Assert.All(result, todo => Assert.False(todo.IsCompleted));
-        await _todoRepository.Received(1).FindIncompleteTodosAsync();
+        _todoRepositoryMock.Verify(x => x.FindIncompleteTodosAsync(), Times.Once);
     }
 
     [Fact]
@@ -160,7 +162,9 @@ public class TodoServiceTests
             IsCompleted = false,
         };
 
-        _todoRepository.CreateAsync(Arg.Any<TodoEntity>()).Returns(createdTodo);
+        _todoRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<TodoEntity>()))
+            .ReturnsAsync(createdTodo);
 
         // Act
         var result = await _todoService.CreateAsync(newTodo);
@@ -169,7 +173,7 @@ public class TodoServiceTests
         Assert.NotNull(result);
         Assert.Equal(createdTodo.Id, result.Id);
         Assert.Equal(createdTodo.Title, result.Title);
-        await _todoRepository.Received(1).CreateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Once);
     }
 
     [Fact]
@@ -182,7 +186,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _todoService.CreateAsync(nullEntity!)
         );
-        await _todoRepository.DidNotReceive().CreateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
@@ -193,7 +197,7 @@ public class TodoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _todoService.CreateAsync(invalidTodo));
-        await _todoRepository.DidNotReceive().CreateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
@@ -204,7 +208,7 @@ public class TodoServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() => _todoService.CreateAsync(invalidTodo));
-        await _todoRepository.DidNotReceive().CreateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
@@ -226,10 +230,10 @@ public class TodoServiceTests
             IsCompleted = true,
         };
 
-        _todoRepository.FindByIdAsync(todoId).Returns(existingTodo);
-        _todoRepository
-            .UpdateAsync(Arg.Any<TodoEntity>())
-            .Returns(callInfo => callInfo.Arg<TodoEntity>());
+        _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(existingTodo);
+        _todoRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TodoEntity>()))
+            .ReturnsAsync((TodoEntity entity) => entity);
 
         // Act
         var result = await _todoService.UpdateAsync(todoId, updatedData);
@@ -240,8 +244,8 @@ public class TodoServiceTests
         Assert.Equal("Updated Title", result.Title);
         Assert.Equal(new DateOnly(2026, 3, 15), result.DueBy);
         Assert.True(result.IsCompleted);
-        await _todoRepository.Received(1).FindByIdAsync(todoId);
-        await _todoRepository.Received(1).UpdateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
+        _todoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TodoEntity>()), Times.Once);
     }
 
     [Fact]
@@ -251,15 +255,15 @@ public class TodoServiceTests
         var todoId = 999;
         var updatedData = new TodoEntity { Title = "Updated Title", IsCompleted = true };
 
-        _todoRepository.FindByIdAsync(todoId).Returns((TodoEntity?)null);
+        _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync((TodoEntity?)null);
 
         // Act
         var result = await _todoService.UpdateAsync(todoId, updatedData);
 
         // Assert
         Assert.Null(result);
-        await _todoRepository.Received(1).FindByIdAsync(todoId);
-        await _todoRepository.DidNotReceive().UpdateAsync(Arg.Any<TodoEntity>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
+        _todoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
@@ -273,7 +277,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.UpdateAsync(invalidId, updatedData)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -287,7 +291,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.UpdateAsync(invalidId, updatedData)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -301,7 +305,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _todoService.UpdateAsync(todoId, nullEntity!)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -315,7 +319,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ValidationException>(() =>
             _todoService.UpdateAsync(todoId, invalidData)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -323,14 +327,14 @@ public class TodoServiceTests
     {
         // Arrange
         var todoId = 1;
-        _todoRepository.DeleteAsync(todoId).Returns(true);
+        _todoRepositoryMock.Setup(x => x.DeleteAsync(todoId)).ReturnsAsync(true);
 
         // Act
         var result = await _todoService.DeleteAsync(todoId);
 
         // Assert
         Assert.True(result);
-        await _todoRepository.Received(1).DeleteAsync(todoId);
+        _todoRepositoryMock.Verify(x => x.DeleteAsync(todoId), Times.Once);
     }
 
     [Fact]
@@ -338,14 +342,14 @@ public class TodoServiceTests
     {
         // Arrange
         var todoId = 999;
-        _todoRepository.DeleteAsync(todoId).Returns(false);
+        _todoRepositoryMock.Setup(x => x.DeleteAsync(todoId)).ReturnsAsync(false);
 
         // Act
         var result = await _todoService.DeleteAsync(todoId);
 
         // Assert
         Assert.False(result);
-        await _todoRepository.Received(1).DeleteAsync(todoId);
+        _todoRepositoryMock.Verify(x => x.DeleteAsync(todoId), Times.Once);
     }
 
     [Fact]
@@ -358,7 +362,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.DeleteAsync(invalidId)
         );
-        await _todoRepository.DidNotReceive().DeleteAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -371,7 +375,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.DeleteAsync(invalidId)
         );
-        await _todoRepository.DidNotReceive().DeleteAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -384,7 +388,7 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.FindByIdAsync(invalidId)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -397,6 +401,6 @@ public class TodoServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _todoService.FindByIdAsync(invalidId)
         );
-        await _todoRepository.DidNotReceive().FindByIdAsync(Arg.Any<int>());
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
     }
 }

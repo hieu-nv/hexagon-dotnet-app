@@ -8,8 +8,7 @@
       "name": "C#: App.Api",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/App.Api/App.Api.csproj",
-      "launchConfigurationId": "TargetFramework=;http"
+      "projectPath": "${workspaceFolder}/src/App.Api/App.Api.csproj"
     }
   ]
 }

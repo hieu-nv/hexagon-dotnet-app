@@ -89,7 +89,7 @@ csharpier format .                             # Format all files
 
 ## Testing Conventions
 
-- Uses **xUnit** with **NSubstitute** for mocking
+- Uses **xUnit** with **Moq** for mocking
 - Test project: `test/App.Core.Tests/`
 - Repository interfaces mocked, services tested directly
 - Test naming: `MethodName_Condition_ExpectedResult`
