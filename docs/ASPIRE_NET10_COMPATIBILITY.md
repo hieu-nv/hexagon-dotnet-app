@@ -27,9 +27,13 @@ There **was** a compatibility issue between .NET 10 and .NET Aspire 9.0:
 
 **Resolution**: Upgraded to **Aspire 13.1.1** which uses the new SDK pattern (`Aspire.AppHost.Sdk/13.1.1`) and fully supports .NET 10 without workload dependency.
 
-## What Works ✅
+---
 
-All Aspire **observability and resilience features** work when running the API directly:
+## Historical Information (All sections below are obsolete)
+
+### What Worked (Aspire 9.0 Era) ✅
+
+All Aspire **observability and resilience features** worked when running the API directly:
 
 ```bash
 dotnet run --project src/App.Api
@@ -42,23 +46,23 @@ You get:
 - ✅ **HTTP Resilience** - Automatic retries, timeouts, circuit breakers
 - ✅ **Service Discovery** - Ready for multi-service scenarios
 
-## What Doesn't Work ❌
+### What Didn't Work (Aspire 9.0 Era) ❌
 
-The **AppHost orchestrator** (dashboard and DCP) doesn't work:
+The **AppHost orchestrator** (dashboard and DCP) didn't work:
 
 ```bash
-dotnet run --project src/App.AppHost  # ❌ Fails with DCP error
+dotnet run --project src/App.AppHost  # ❌ Failed with DCP error
 ```
 
-This is because:
+This was because:
 
-1. The workload is deprecated in .NET 10
-2. Aspire 9.0 packages don't include DCP for .NET 10
-3. Aspire 10+ (future release) will support .NET 10 without workload
+1. The workload was deprecated in .NET 10
+2. Aspire 9.0 packages didn't include DCP for .NET 10
+3. Aspire 13+ wasn't yet released
 
-## Solutions
+### Solutions That Were Available (Now Obsolete)
 
-### Option 1: Run API Directly (Recommended for Now)
+### Former Option 1: Run API Directly
 
 ```bash
 dotnet run --project src/App.Api
@@ -77,25 +81,22 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4317
 dotnet run --project src/App.Api
 ```
 
-### Option 2: Downgrade to .NET 9 (Full Aspire Support)
+### Former Option 2: Downgrade to .NET 9
 
-If you need the Aspire Dashboard:
+If you needed the Aspire Dashboard with Aspire 9.0, the workaround was:
 
 1. Install .NET 9 SDK
 2. Change `<TargetFramework>net10.0</TargetFramework>` to `net9.0` in all .csproj files
 3. Install workload: `dotnet workload install aspire`
 4. Run: `dotnet run --project src/App.AppHost`
 
-### Option 3: Wait for Aspire 10+
+### Former Option 3: Wait for Aspire 13+
 
-.NET Aspire 10 will support .NET 10 without requiring the workload. Monitor:
+This option materialized when Aspire 13.1.1 was released with .NET 10 support.
 
-- https://github.com/dotnet/aspire
-- https://www.nuget.org/packages/Aspire.Hosting
+### Telemetry Alternatives (Historical)
 
-## Telemetry Without Dashboard
-
-Even without the dashboard, telemetry is collected. You can:
+Even without the Aspire dashboard, telemetry was collected. Alternative options were:
 
 1. **Export to Jaeger**:
 
@@ -124,9 +125,9 @@ Even without the dashboard, telemetry is collected. You can:
    dotnet run --project src/App.Api
    ```
 
-## Testing the Setup
+### Testing ServiceDefaults (Historical Example)
 
-Verify ServiceDefaults is working:
+This example showed how to verify ServiceDefaults was working without the dashboard:
 
 ```bash
 # Start the API
@@ -143,7 +144,7 @@ curl http://localhost:5112/api/v1/pokemon?limit=5
 # Check logs for OpenTelemetry activity IDs
 ```
 
-You should see correlation IDs in logs like:
+You would see correlation IDs in logs like:
 
 ```
 info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
@@ -151,6 +152,10 @@ info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
       ActivityId: 00-a1b2c3d4e5f6...
 ```
 
-## Summary
+## Historical Summary
 
-For .NET 10, use App.Api directly with ServiceDefaults. You get all benefits except the visual dashboard. The AppHost orchestrator will work once Aspire 10+ is released or if you downgrade to .NET 9.
+**The Problem (Aspire 9.0 + .NET 10)**: The Aspire workload was deprecated in .NET 10, but Aspire 9.0 required it for the orchestration runtime (DCP and Dashboard).
+
+**The Solution**: Aspire 13.1.1 introduced a new SDK pattern (`Aspire.AppHost.Sdk/13.1.1`) that works with .NET 10 without requiring any workload installation.
+
+**Current Status**: Everything works perfectly. See [ASPIRE_INTEGRATION.md](ASPIRE_INTEGRATION.md) for current setup.

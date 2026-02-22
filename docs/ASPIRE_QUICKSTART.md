@@ -75,7 +75,7 @@ Once the AppHost is running, navigate to: `http://localhost:17123`
 
 When running the API directly, Swagger is available at: `http://localhost:5112`
 
-Note: When running via Aspire, check the dashboard for the assigned API port.
+Note: When running via Aspire, the API is still available at the same port (`http://localhost:5112`).
 
 ### Via Aspire Dashboard
 
@@ -229,4 +229,4 @@ If telemetry isn't showing in the dashboard:
 - Deploy to Azure Container Apps using `azd`
 - Set up CI/CD pipelines
 
-For more details, see [docs/ASPIRE_INTEGRATION.md](../docs/ASPIRE_INTEGRATION.md)
+For more details, see [ASPIRE_INTEGRATION.md](ASPIRE_INTEGRATION.md)
