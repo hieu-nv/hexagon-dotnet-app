@@ -1,5 +1,8 @@
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Add Aspire service defaults (OpenTelemetry, service discovery, resilience)
+builder.AddServiceDefaults();
+
 builder.UseAppCore();
 builder.UseAppData();
 builder.UseAppGateway();
@@ -10,7 +13,8 @@ builder.UsePokemon();
 WebApplication app = builder.Build();
 app.UseAppData();
 
-app.MapHealthChecks("/health");
+// Map Aspire default endpoints (/health, /alive)
+app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

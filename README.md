@@ -13,15 +13,29 @@ It provides a structured approach to building maintainable and testable applicat
 
 **Key Technologies:**
 
+- .NET Aspire 13.1.1 (Orchestration and Observability)
 - ASP.NET Core 10 with Minimal APIs
 - Entity Framework Core with SQLite
+- OpenTelemetry (Tracing, Metrics, Logging)
+- Service Discovery and Resilience
 - Dependency Injection
 - Health Checks
 - OpenAPI/Swagger Documentation
 
 ## Architecture
 
-The application follows a hexagonal architecture pattern:
+The application follows a hexagonal architecture pattern enhanced with .NET Aspire:
+
+- **App.AppHost**: .NET Aspire orchestration and service discovery
+  - Manages application lifecycle and service dependencies
+  - Provides the Aspire dashboard for observability
+  - Configures distributed application resources
+
+- **App.ServiceDefaults**: Shared observability and resilience configuration
+  - OpenTelemetry integration (tracing, metrics, logging)
+  - Service discovery and HTTP resilience patterns
+  - Health check configuration
+  - Reusable across all services in the distributed application
 
 - **App.Core**: Contains the domain model, entities, repository interfaces (ports), and services
   - Organized with domain-focused directories (e.g., Todo/, Pokemon/)
@@ -43,6 +57,7 @@ The application follows a hexagonal architecture pattern:
   - Uses extension methods for clean endpoint registration
   - Organized by domain rather than technical concerns
   - Leverages dependency injection for clean service resolution
+  - Integrated with Aspire ServiceDefaults for observability
 
 ## Features
 
@@ -98,8 +113,10 @@ csharpier format .
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) (or .NET 9 SDK)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - Any code editor (preferably Visual Studio or Visual Studio Code)
+
+> **Note**: This application uses Aspire 13.1.1 which works directly with .NET 10 using the new SDK pattern (no workload installation required).
 
 ## Getting Started
 
@@ -110,7 +127,31 @@ git clone https://github.com/yourusername/hexagon-dotnet-app.git
 cd hexagon-dotnet-app
 ```
 
-### Run the Application
+### Run the Application with .NET Aspire (Recommended)
+
+.NET Aspire provides orchestration, service discovery, and an observability dashboard:
+
+```bash
+dotnet run --project src/App.AppHost
+```
+
+This will start:
+
+- **Aspire Dashboard**: `http://localhost:17123` (view logs, traces, metrics)
+- **API Service**: `http://localhost:5112`
+
+> **Note**: The dashboard runs on HTTP (not HTTPS) in development to avoid SSL certificate errors. This is configured via `ASPIRE_ALLOW_UNSECURED_TRANSPORT=true` in launch settings.
+
+The dashboard provides:
+
+- Real-time application logs
+- Distributed tracing visualization
+- Metrics and performance data
+- Resource management
+
+### Run the API Directly (Without Aspire)
+
+You can also run the API service independently:
 
 ```bash
 dotnet run --project src/App.Api
@@ -166,9 +207,10 @@ All Pokemon endpoints are prefixed with `/api/v1/pokemon`:
 
 ### Additional Endpoints
 
-| Method | URL     | Description  |
-| ------ | ------- | ------------ |
-| GET    | /health | Health check |
+| Method | URL     | Description                     |
+| ------ | ------- | ------------------------------- |
+| GET    | /health | Health check (readiness)        |
+| GET    | /alive  | Liveness check (Aspire default) |
 
 ## Code Formatting
 
@@ -188,6 +230,13 @@ csharpier format .
 │   ├── App.slnx
 │   ├── Directory.Build.props
 │   ├── GlobalSuppressions.cs
+│   ├── App.AppHost/                  # .NET Aspire Orchestration
+│   │   ├── Program.cs                 # Aspire app configuration
+│   │   ├── appsettings.json
+│   │   └── App.AppHost.csproj
+│   ├── App.ServiceDefaults/          # Shared Observability Configuration
+│   │   ├── Extensions.cs              # OpenTelemetry & health checks
+│   │   └── App.ServiceDefaults.csproj
 │   ├── App.Api/                      # HTTP Adapters (Primary - Minimal APIs)
 │   │   ├── Pokemon/
 │   │   │   ├── PokemonEndpoints.cs    # Pokemon endpoint handlers

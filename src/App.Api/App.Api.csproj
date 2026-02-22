@@ -13,5 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="../App.Data/App.Data.csproj" />
     <ProjectReference Include="../App.Gateway/App.Gateway.csproj" />
+    <ProjectReference Include="../App.ServiceDefaults/App.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

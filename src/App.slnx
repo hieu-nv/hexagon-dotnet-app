@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="App.AppHost\App.AppHost.csproj" Type="Classic C#" />
     <Project Path="App.Api\App.Api.csproj" Type="Classic C#" />
     <Project Path="App.Data\App.Data.csproj" Type="Classic C#" />
     <Project Path="App.Core\App.Core.csproj" Type="Classic C#" />
     <Project Path="App.Gateway\App.Gateway.csproj" Type="Classic C#" />
+    <Project Path="App.ServiceDefaults\App.ServiceDefaults.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="..\test\App.Api.Tests\App.Api.Tests.csproj" Type="Classic C#" />
