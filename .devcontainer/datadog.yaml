@@ -1,0 +1,132 @@
+## This file is managed by the dev container configuration
+## For Datadog Agent configuration reference, see:
+## https://github.com/DataDog/datadog-agent/blob/main/pkg/config/config_template.yaml
+
+##################################
+## Basic Configuration
+##################################
+
+# Datadog API key (set via environment variable)
+api_key: ${DD_API_KEY}
+
+# Datadog site (US5 region)
+site: us5.datadoghq.com
+
+# Hostname for this agent
+hostname: hexagon-dotnet-devcontainer
+
+# Log level
+log_level: info
+
+# DogStatsD configuration - bind to all interfaces
+dogstatsd_bind_host: 0.0.0.0
+dogstatsd_port: 8125
+dogstatsd_non_local_traffic: true
+
+##################################
+## DogStatsD Configuration
+##################################
+
+dogstatsd_config:
+  # Bind to all interfaces to accept external connections
+  bind_host: 0.0.0.0
+  port: 8125
+  # Enable non-local traffic
+  non_local_traffic: true
+
+##################################
+## APM Configuration
+##################################
+
+apm_config:
+  enabled: true
+  # APM endpoints
+  apm_non_local_traffic: false
+  # Enable trace stats computation
+  analyzed_spans:
+    enabled: true
+
+##################################
+## Process Monitoring
+##################################
+
+process_config:
+  process_collection:
+    enabled: true
+  container_collection:
+    enabled: true
+
+##################################
+## Logs Configuration
+##################################
+
+logs_enabled: true
+logs_config:
+  container_collect_all: false
+  auto_multi_line_detection: true
+
+##################################
+## Metrics & Checks
+##################################
+
+# Enable inventories for installed packages tracking
+inventories_enabled: true
+
+# Enable histogram percentiles
+histogram_percentiles:
+  - 0.95
+  - 0.99
+
+##################################
+## Performance & Resources
+##################################
+
+# Forwarder configuration
+forwarder_timeout: 20
+forwarder_retry_queue_payloads_max_size: 15728640
+
+# Check runners
+check_runners: 4
+
+##################################
+## Disabled Features
+## (Require elevated Linux capabilities unavailable in dev containers)
+##################################
+
+# Runtime security requires CAP_SYS_ADMIN, CAP_SYS_RESOURCE, CAP_SYS_PTRACE
+runtime_security_config:
+  enabled: false
+
+# Compliance monitoring requires elevated privileges
+compliance_config:
+  enabled: false
+
+# Network performance monitoring requires CAP_NET_ADMIN, CAP_NET_RAW, CAP_BPF
+network_config:
+  enabled: false
+
+# System probe requires kernel access
+system_probe_config:
+  enabled: false
+
+##################################
+## Integrations
+##################################
+
+# Autodiscovery
+listeners:
+  - name: docker
+  - name: kubelet
+
+config_providers:
+  - name: docker
+    polling: true
+
+##################################
+## Telemetry
+##################################
+
+# Enable internal telemetry
+telemetry:
+  enabled: true
+  checks: ["*"]
