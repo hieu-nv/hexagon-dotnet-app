@@ -8,7 +8,17 @@
       "launchUrl": "",
       "applicationUrl": "http://localhost:5112",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DD_AGENT_HOST": "localhost",
+        "DD_TRACE_AGENT_PORT": "8126",
+        "DD_DOGSTATSD_PORT": "8125",
+        "DD_ENV": "development",
+        "DD_SERVICE": "hexagon-dotnet-app",
+        "DD_VERSION": "1.0.0",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+        "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+        "OTEL_SERVICE_NAME": "hexagon-dotnet-app",
+        "OTEL_RESOURCE_ATTRIBUTES": "deployment.environment=development,service.version=1.0.0"
       }
     }
   }
