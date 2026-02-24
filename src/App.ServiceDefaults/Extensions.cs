@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
@@ -53,6 +54,14 @@ public static class AspireServiceDefaultsExtensions
 
         builder
             .Services.AddOpenTelemetry()
+            .ConfigureResource(resource =>
+            {
+                resource.AddService(
+                    serviceName: builder.Configuration["OTEL_SERVICE_NAME"] ?? "hexagon-dotnet-app",
+                    serviceVersion: builder.Configuration["DD_VERSION"] ?? "1.0.0",
+                    serviceInstanceId: Environment.MachineName
+                );
+            })
             .WithMetrics(metrics =>
             {
                 metrics

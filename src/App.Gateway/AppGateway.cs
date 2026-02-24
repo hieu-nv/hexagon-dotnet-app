@@ -20,12 +20,21 @@ public static class AppGateway
         ArgumentNullException.ThrowIfNull(builder);
 
         // Register HTTP client for PokeAPI
-        builder.Services.AddHttpClient<IPokeClient, PokeClient>(client =>
-        {
-            client.BaseAddress = new Uri("https://pokeapi.co/api/v2/");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
+        builder
+            .Services.AddHttpClient<IPokeClient, PokeClient>(client =>
+            {
+                client.BaseAddress = new Uri("https://pokeapi.co/api/v2/");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                // Don't retry on 404 - these are expected for invalid Pokemon IDs
+                options.Retry.ShouldHandle = args =>
+                    ValueTask.FromResult(
+                        args.Outcome.Result?.StatusCode != System.Net.HttpStatusCode.NotFound
+                    );
+            });
 
         // Register gateway implementations
         builder.Services.AddScoped<IPokemonGateway, PokemonGateway>();

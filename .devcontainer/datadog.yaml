@@ -19,20 +19,8 @@ hostname: hexagon-dotnet-devcontainer
 log_level: info
 
 # DogStatsD configuration - bind to all interfaces
-dogstatsd_bind_host: 0.0.0.0
-dogstatsd_port: 8125
 dogstatsd_non_local_traffic: true
-
-##################################
-## DogStatsD Configuration
-##################################
-
-dogstatsd_config:
-  # Bind to all interfaces to accept external connections
-  bind_host: 0.0.0.0
-  port: 8125
-  # Enable non-local traffic
-  non_local_traffic: true
+dogstatsd_port: 8125
 
 ##################################
 ## APM Configuration
@@ -45,6 +33,18 @@ apm_config:
   # Enable trace stats computation
   analyzed_spans:
     enabled: true
+
+##################################
+## OTLP Configuration (OpenTelemetry)
+##################################
+
+otlp_config:
+  receiver:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
 
 ##################################
 ## Process Monitoring

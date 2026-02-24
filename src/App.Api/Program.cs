@@ -20,21 +20,28 @@ Log.Logger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         shared: true,
-        flushToDiskInterval: TimeSpan.FromSeconds(1))
+        flushToDiskInterval: TimeSpan.FromSeconds(1)
+    )
     .WriteTo.DatadogLogs(
-        apiKey: "7330e4f63b184ae564bfcb8abe595196",
+        apiKey: builder.Configuration["DD_API_KEY"]
+            ?? throw new InvalidOperationException(
+                "DD_API_KEY environment variable is required for Datadog logging"
+            ),
         source: "csharp",
         service: "hexagon-dotnet-app",
         host: Environment.MachineName,
         tags: new[] { $"env:{builder.Environment.EnvironmentName}", "version:1.0.0" },
         configuration: new DatadogConfiguration
         {
-            Url = "https://http-intake.logs.us5.datadoghq.com"
+            Url = "https://http-intake.logs.us5.datadoghq.com",
         }
     )
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
+// Filter out verbose HTTP resilience logs (404s are expected for invalid Pokemon IDs)
+builder.Logging.AddFilter("Microsoft.Extensions.Http.Resilience", LogLevel.Warning);
 
 // Add Aspire service defaults (OpenTelemetry, service discovery, resilience)
 builder.AddServiceDefaults();

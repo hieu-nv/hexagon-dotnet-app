@@ -3,7 +3,7 @@
 {
   "name": "C# (.NET)",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "cfc928efaf49",
+  "image": "localhost/datadog/agent",
   // "build": {
   //   // Path is relative to the devcontainer.json file.
   //   "dockerfile": "Dockerfile"
@@ -23,21 +23,25 @@
   // Datadog Agent Configuration
   // For Podman: host.containers.internal is available by default
   // For Docker: use --add-host=host.docker.internal:host-gateway
-  // "runArgs": ["--add-host=host.docker.internal:host-gateway"],
-  // "containerEnv": {
-  //   "DD_API_KEY": "${localEnv:DD_API_KEY}",
-  //   "DD_SITE": "${localEnv:DD_SITE:datadoghq.com}",
-  //   "DD_ENV": "development",
-  //   "DD_SERVICE": "hexagon-dotnet-app",
-  //   "DD_VERSION": "1.0.0",
-  //   "DD_AGENT_HOST": "host.containers.internal",
-  //   "DD_TRACE_AGENT_PORT": "8126",
-  //   "DD_DOGSTATSD_PORT": "8125"
-  // },
+  "containerEnv": {
+    "DD_API_KEY": "7330e4f63b184ae564bfcb8abe595196",
+    "DD_SITE": "us5.datadoghq.com",
+    "DD_ENV": "development",
+    "DD_SERVICE": "hexagon-dotnet-app",
+    "DD_VERSION": "1.0.0",
+    "DD_AGENT_HOST": "localhost",
+    "DD_TRACE_AGENT_PORT": "8126",
+    "DD_DOGSTATSD_PORT": "8125",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.us5.datadoghq.com:443",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_HEADERS": "dd-api-key=7330e4f63b184ae564bfcb8abe595196",
+    "OTEL_SERVICE_NAME": "hexagon-dotnet-app",
+    "OTEL_RESOURCE_ATTRIBUTES": "deployment.environment=development,service.version=1.0.0"
+  },
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [5112, 8125, 8126],
+  "forwardPorts": [5112, 4317, 4318, 8125, 8126],
   "portsAttributes": {
     // "5001": {
     //   "protocol": "https",
@@ -45,6 +49,14 @@
     // },
     "5112": {
       "label": "API (HTTP)"
+    },
+    "4317": {
+      "label": "Datadog OTLP gRPC",
+      "onAutoForward": "silent"
+    },
+    "4318": {
+      "label": "Datadog OTLP HTTP",
+      "onAutoForward": "silent"
     },
     "8125": {
       "label": "Datadog StatsD",
