@@ -59,9 +59,9 @@ ${CONTAINER_RUNTIME} run -d \
     -p 8126:8126 \
     -p 4317:4317 \
     -p 4318:4318 \
-    -v "${SCRIPT_DIR}/../.devcontainer/datadog.yaml:/etc/datadog-agent/datadog.yaml:ro" \
     -v /var/run/docker.sock:/var/run/docker.sock:ro \
-    -v "${SCRIPT_DIR}/../.devcontainer/conf.d:/etc/datadog-agent/conf.d:ro" \
+    -v "${SCRIPT_DIR}/datadog-agent/datadog.yaml:/etc/datadog-agent/datadog.yaml:ro" \
+    -v "${SCRIPT_DIR}/datadog-agent/conf.d:/etc/datadog-agent/conf.d:ro" \
     -v "${SCRIPT_DIR}/../src/App.Api/logs:/app/logs:ro" \
     gcr.io/datadoghq/agent:latest
 
