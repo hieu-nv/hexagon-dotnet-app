@@ -1,0 +1,14 @@
+logs:
+  - type: file
+    path: /app/logs/app*.log
+    service: hexagon-dotnet-app
+    source: csharp
+    sourcecategory: app
+    tags:
+      - env:development
+      - version:1.0.0
+    # Parse JSON logs
+    log_processing_rules:
+      - type: multi_line
+        name: new_log_start_with_timestamp
+        pattern: ^\{"Timestamp"

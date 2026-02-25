@@ -5,5 +5,5 @@ app.db*
 commit-message.txt
 .dd/
 .devcontainer/Dockerfile
-run-datadog-agent.sh
 logs/
+.env

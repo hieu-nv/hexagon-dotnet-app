@@ -81,18 +81,29 @@ The application follows a hexagonal architecture pattern enhanced with .NET Aspi
 - **Paginated list endpoint** with limit and offset parameters
 - **Individual Pokemon lookup** by ID
 
-### Datadog Observability & Logging
+### Datadog Observability & APM
 
+- **Full-stack observability** with OpenTelemetry integration
+- **Distributed tracing** for request flows across services
+- **Application Performance Monitoring (APM)** with automatic instrumentation:
+  - HTTP request/response tracing with enriched metadata
+  - Database query tracing (Entity Framework Core + SQL Client)
+  - External API call tracing (PokeAPI integration)
+  - Exception tracking and error rates
+- **Metrics collection**:
+  - ASP.NET Core request metrics
+  - HTTP client metrics
+  - .NET Runtime metrics (GC, memory, threads)
+  - Process-level metrics (CPU, memory usage)
 - **Structured logging** with Serilog across all endpoints
 - **Direct log forwarding** to Datadog cloud intake API
-- **Datadog APM agent** integration for traces and metrics
 - **Real-time log viewing** in Datadog dashboard with rich context
 - **Log enrichment** with service name, environment, and custom properties
-- **StatsD metrics** forwarding (port 8125)
-- **APM traces** collection (port 8126)
-- **JSON log files** for local debugging and agent tailing
+- **Local OTLP agent support** for development and testing
 
-For detailed logging setup and configuration, see [DATADOG_LOGGING.md](docs/DATADOG_LOGGING.md).
+**Quick Start APM**: See [DATADOG_APM_QUICKSTART.md](docs/DATADOG_APM_QUICKSTART.md)  
+**Detailed APM Setup**: See [LOCAL_DATADOG_APM.md](docs/LOCAL_DATADOG_APM.md)  
+**Logging Configuration**: See [DATADOG_LOGGING.md](docs/DATADOG_LOGGING.md)
 
 ### Architecture & Quality
 
@@ -358,6 +369,7 @@ csharpier format .
 This application includes comprehensive Datadog observability:
 
 **Logging (Serilog → Datadog):**
+
 - Structured JSON logs with rich context
 - Direct HTTPS forwarding to Datadog cloud intake (us5.datadoghq.com)
 - Log enrichment with service, environment, and application metadata
@@ -367,17 +379,20 @@ This application includes comprehensive Datadog observability:
 - Daily log rotation with 7-day retention
 
 **APM & Metrics (Agent):**
+
 - Datadog agent listens on ports 8125 (StatsD) and 8126 (APM)
 - Automatic trace collection and performance monitoring
 - Custom metrics forwarding available
 
 **Configuration Files:**
+
 - Application logging: [src/App.Api/Program.cs](src/App.Api/Program.cs)
 - Log settings: [src/App.Api/appsettings.json](src/App.Api/appsettings.json)
 - Datadog log collection: [datadog-logs.yaml](datadog-logs.yaml)
 - Agent startup script: [run-datadog-agent.sh](run-datadog-agent.sh)
 
 **Viewing Logs:**
+
 - Datadog Dashboard: https://us5.datadoghq.com/logs
 - Filter by: `service:hexagon-dotnet-app`
 - Local logs: `src/App.Api/logs/app[YYYYMMDD].log`

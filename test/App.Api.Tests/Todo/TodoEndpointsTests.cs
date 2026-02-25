@@ -3,6 +3,7 @@ using App.Api.Todo;
 using App.Core.Entities;
 using App.Core.Todo;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -11,6 +12,7 @@ namespace App.Api.Tests.Todo;
 public class TodoEndpointsTests
 {
     private readonly Mock<ITodoRepository> _todoRepositoryMock;
+    private readonly Mock<ILogger<TodoEndpoints>> _loggerMock;
     private readonly TodoService _todoService;
     private readonly TodoEndpoints _todoEndpoints;
 
@@ -19,8 +21,9 @@ public class TodoEndpointsTests
         // Mock the repository and use the actual service
         // This provides integration-like testing of endpoints + service layers
         _todoRepositoryMock = new Mock<ITodoRepository>();
+        _loggerMock = new Mock<ILogger<TodoEndpoints>>();
         _todoService = new TodoService(_todoRepositoryMock.Object);
-        _todoEndpoints = new TodoEndpoints(_todoService);
+        _todoEndpoints = new TodoEndpoints(_todoService, _loggerMock.Object);
     }
 
     #region FindAllTodosAsync Tests

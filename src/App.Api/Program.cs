@@ -1,7 +1,11 @@
+using App.Api.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.Datadog.Logs;
+
+// Load environment variables from .env file
+DotNetEnv.Env.Load();
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +14,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
+    .Enrich.With(new OpenTelemetryTraceEnricher())
     .Enrich.WithProperty("Application", "App.Api")
     .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
     .Enrich.WithProperty("service", "hexagon-dotnet-app")
@@ -22,20 +27,16 @@ Log.Logger = new LoggerConfiguration()
         shared: true,
         flushToDiskInterval: TimeSpan.FromSeconds(1)
     )
-    .WriteTo.DatadogLogs(
-        apiKey: builder.Configuration["DD_API_KEY"]
-            ?? throw new InvalidOperationException(
-                "DD_API_KEY environment variable is required for Datadog logging"
-            ),
-        source: "csharp",
-        service: "hexagon-dotnet-app",
-        host: Environment.MachineName,
-        tags: new[] { $"env:{builder.Environment.EnvironmentName}", "version:1.0.0" },
-        configuration: new DatadogConfiguration
-        {
-            Url = "https://http-intake.logs.us5.datadoghq.com",
-        }
-    )
+    // For local Datadog agent: logs are written to file and agent tails them
+    // For production: uncomment DatadogLogs sink with cloud URL
+    // .WriteTo.DatadogLogs(
+    //     apiKey: builder.Configuration["DD_API_KEY"],
+    //     source: "csharp",
+    //     service: "hexagon-dotnet-app",
+    //     host: Environment.MachineName,
+    //     tags: new[] { $"env:{builder.Environment.EnvironmentName}", "version:1.0.0" },
+    //     configuration: new DatadogConfiguration { Url = "https://http-intake.logs.us5.datadoghq.com" }
+    // )
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -72,12 +73,17 @@ try
     Log.Information("Starting Hexagon .NET App");
     await app.RunAsync().ConfigureAwait(false);
 }
-catch (Exception ex)
+catch (Exception ex) when (LogFatalException(ex))
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
-    throw;
+    // Exception is logged in the when clause and never enters this block
 }
 finally
 {
     await Log.CloseAndFlushAsync().ConfigureAwait(false);
+}
+
+static bool LogFatalException(Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+    return false; // Ensures the exception continues to propagate
 }

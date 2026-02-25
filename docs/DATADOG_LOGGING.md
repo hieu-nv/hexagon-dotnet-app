@@ -17,7 +17,7 @@ The application uses **Serilog** with multiple sinks to forward logs:
 The application is configured in [Program.cs](../src/App.Api/Program.cs) with:
 
 - **Minimum log level**: Information (Warning for Microsoft.AspNetCore)
-- **Enrichment**: Application name, environment, service name, context
+- **Enrichment**: Application name, environment, service name, context, **trace_id and span_id** from OpenTelemetry
 - **File logging**: JSON format with daily rolling, 7-day retention at `logs/app.log`
 - **Datadog HTTP Intake**: Direct to Datadog cloud at `https://http-intake.logs.us5.datadoghq.com`
 
@@ -42,6 +42,7 @@ Configuration file: [datadog-logs.yaml](../datadog-logs.yaml)
 ```
 
 This script:
+
 - Starts the Datadog agent container
 - Exposes ports 8125 (StatsD) and 8126 (APM/Logs)
 - Mounts the log directory: `/var/log/hexagon-app`
@@ -94,9 +95,14 @@ Logs are written in JSON format with the following structure:
   "Application": "App.Api",
   "Environment": "Development",
   "service": "hexagon-dotnet-app",
-  "SourceContext": "Program"
+  "SourceContext": "Program",
+  "SpanId": "a1b2c3d4e5f6g7h8",
+  "TraceId": "0af7651916cd43dd8448eb211c80319c",
+  "ParentId": null
 }
 ```
+
+The `SpanId`, `TraceId`, and `ParentId` fields are automatically populated by the `Serilog.Enrichers.Span` package, which extracts them from the current OpenTelemetry Activity. This enables correlation between logs and APM traces in Datadog.
 
 ## Viewing Logs in Datadog
 
@@ -109,11 +115,13 @@ Logs are written in JSON format with the following structure:
 ### Filter Your Logs
 
 Use these filters in the search bar:
+
 ```
 service:hexagon-dotnet-app
 ```
 
 Or combine multiple filters:
+
 ```
 service:hexagon-dotnet-app source:csharp env:Development
 ```
@@ -144,16 +152,19 @@ If logs don't appear after 2-3 minutes:
 ### Logs not appearing in Datadog
 
 1. **Check log file permissions**:
+
    ```bash
    ls -la /var/log/hexagon-app/
    ```
 
 2. **Verify Datadog agent can read logs**:
+
    ```bash
    podman exec dd-agent ls -la /var/log/hexagon-app/
    ```
 
 3. **Check agent status**:
+
    ```bash
    podman exec dd-agent agent status
    ```

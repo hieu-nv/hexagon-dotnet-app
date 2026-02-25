@@ -1,0 +1,35 @@
+## Prometheus Check Configuration
+## This configures the Datadog Agent to scrape OpenTelemetry metrics
+## from the .NET application's Prometheus endpoint
+
+init_config:
+
+instances:
+  ## Scrape the application's /metrics endpoint
+  - prometheus_url: http://host.containers.internal:5112/metrics
+
+    ## Namespace prefix for all metrics sent to Datadog
+    namespace: hexagon_dotnet_app
+
+    ## Collect all exposed metrics (use specific metric names to limit)
+    metrics:
+      - "*"
+
+    ## Tags to apply to all metrics
+    tags:
+      - env:development
+      - service:hexagon-dotnet-app
+      - source:prometheus
+
+    ## Health check for the endpoint
+    health_service_check: true
+
+    ## Send histograms as distributions (better for Datadog)
+    send_histograms_buckets: true
+    send_distribution_buckets: true
+
+    ## Timeout for scraping
+    prometheus_timeout: 10
+
+    ## Maximum number of metrics to collect (adjust if needed)
+    max_returned_metrics: 2000
