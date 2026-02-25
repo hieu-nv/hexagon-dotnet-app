@@ -27,28 +27,16 @@ In Datadog, **logs** and **APM traces** are separate but can be correlated:
 
 ### 1. Set Your Datadog API Key
 
-The API key is required to send logs to Datadog cloud. You have two options:
+The API key is required to send logs to Datadog cloud.
 
-#### Option A: Environment Variable (Recommended)
+#### Set Environment Variable (Recommended)
 
 ```bash
-export DD_API_KEY="=********"
+export DD_API_KEY="YOUR_API_KEY_HERE"
 dotnet run --project src/App.Api
 ```
 
-#### Option B: Update launchSettings.json
-
-Edit `src/App.Api/Properties/launchSettings.json`:
-
-```json
-{
-  "environmentVariables": {
-    "DD_API_KEY": "=********"
-  }
-}
-```
-
-⚠️ **Security Warning**: Never commit real API keys to git! Add them to environment variables or use user secrets.
+⚠️ **Security Warning**: Never commit real API keys to git! Use environment variables or user secrets instead.
 
 ### 2. Start the Local Datadog Agent (Optional)
 
@@ -82,9 +70,9 @@ dotnet run --project src/App.Api
 
 The application will:
 
-1. Send **logs** directly to Datadog cloud via HTTPS (requires DD_API_KEY)
-2. Send **traces** to local agent via OTLP at http://localhost:4318
-3. Write logs locally to `logs/app.log`
+1. Send **logs** directly to Datadog cloud via HTTPS (if DD_API_KEY is set)
+2. Send **traces** via OTLP (to local agent at http://localhost:4318 if running, or nowhere if not)
+3. Write logs locally to `src/App.Api/logs/app.log`
 
 ### 4. Generate Test Traffic
 
@@ -95,15 +83,15 @@ Create some activity to generate logs and traces:
 curl http://localhost:5112/health
 
 # List todos
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 
 # Create a todo
-curl -X POST http://localhost:5112/todos \
+curl -X POST http://localhost:5112/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Test Datadog Integration","isCompleted":false}'
 
 # Get a Pokemon (generates external HTTP trace)
-curl http://localhost:5112/pokemon/pikachu
+curl http://localhost:5112/api/v1/pokemon/25
 ```
 
 ### 5. View Logs and Traces in Datadog
@@ -173,7 +161,7 @@ curl http://localhost:5112/health
 **Check 3: Logs are being written locally**
 
 ```bash
-cat logs/app.log
+cat src/App.Api/logs/app.log
 ```
 
 **Check 4: Check application startup logs**
@@ -206,9 +194,9 @@ docker logs dd-agent | grep -i otlp
 **Check 4: Verify OpenTelemetry configuration**
 
 ```bash
-# These should be set in launchSettings.json:
-# OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-# OTEL_SERVICE_NAME=hexagon-dotnet-app
+# Check if OTLP endpoint environment variable is set:
+echo $OTEL_EXPORTER_OTLP_ENDPOINT
+# If not set, the app will use Aspire's automatic configuration
 ```
 
 ### Logs Not Correlated with Traces
@@ -220,7 +208,7 @@ docker logs dd-agent | grep -i otlp
 **Check**: Look in logs for `TraceId` and `dd.trace_id` fields:
 
 ```bash
-cat logs/app.log | grep -o '"TraceId":"[^"]*"'
+cat src/App.Api/logs/app.log | grep -o '"TraceId":"[^"]*"'
 ```
 
 If these fields are missing, the enricher isn't running correctly.
@@ -229,17 +217,15 @@ If these fields are missing, the enricher isn't running correctly.
 
 If you don't want to run a local agent, you can send traces directly to Datadog cloud:
 
-### Update launchSettings.json
+### Set Environment Variables
 
-```json
-{
-  "environmentVariables": {
-    "DD_API_KEY": "your-api-key",
-    "DD_SITE": "us5.datadoghq.com",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.us5.datadoghq.com",
-    "OTEL_EXPORTER_OTLP_HEADERS": "dd-api-key=your-api-key"
-  }
-}
+```bash
+export DD_API_KEY="your-api-key"
+export DD_SITE="us5.datadoghq.com"
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.agent.us5.datadoghq.com:443"
+export OTEL_EXPORTER_OTLP_HEADERS="dd-api-key=your-api-key"
+
+dotnet run --project src/App.Api
 ```
 
 ⚠️ Replace `us5` with your actual Datadog site (check your Datadog URL).

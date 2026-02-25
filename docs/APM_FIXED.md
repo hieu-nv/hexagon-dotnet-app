@@ -1,61 +1,142 @@
-# FIXED: APM Logs Now Working ✅
+# Datadog APM Configuration Guide
 
-## The Problem
+## Understanding the OTLP Endpoint
 
-Your APM traces and logs weren't appearing in Datadog because of an **incorrect OTLP endpoint**.
+When sending traces directly to Datadog cloud (not using a local agent), the correct OTLP endpoint is:
 
-### What Was Wrong
+**✅ CORRECT:**
 
-**Before:**
+```
+OTEL_EXPORTER_OTLP_ENDPOINT=https://trace.agent.us5.datadoghq.com:443
+```
+
+**❌ INCORRECT (Returns 404):**
 
 ```
 OTEL_EXPORTER_OTLP_ENDPOINT=https://api.us5.datadoghq.com
 ```
 
-This endpoint returned **404 Not Found** errors:
+### Why This Matters
+
+The `api.us5.datadoghq.com` endpoint returns **404 Not Found** errors when trying to send traces:
 
 ```
 "StatusCode":404
 "Uri":"https://api.us5.datadoghq.com/v1/traces"
 ```
 
-### What Was Fixed
-
-**After:**
-
-```
-OTEL_EXPORTER_OTLP_ENDPOINT=https://trace.agent.us5.datadoghq.com:443
-```
-
-Now returns **202 Accepted** (success):
+The correct endpoint `trace.agent.us5.datadoghq.com:443` returns **202 Accepted** (success):
 
 ```
 "StatusCode":202
 "Uri":"https://trace.agent.us5.datadoghq.com/v1/traces"
 ```
 
-## Files Updated
+## Configuration Options
 
-1. **[launchSettings.json](src/App.Api/Properties/launchSettings.json)** - Changed OTLP endpoint
-2. **[.env](.env)** - Updated for consistency
+There are multiple ways to configure Datadog APM for this application:
+
+### Option 1: With .NET Aspire (Recommended for Development)
+
+The simplest approach using Aspire orchestration:
+
+```bash
+dotnet run --project src/App.AppHost
+```
+
+The Aspire dashboard automatically collects traces and displays them at `http://localhost:17123`.
+
+### Option 2: Direct to Datadog Cloud
+
+Set environment variables to send traces directly to Datadog:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.agent.us5.datadoghq.com:443"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_EXPORTER_OTLP_HEADERS="dd-api-key=YOUR_DD_API_KEY"
+export DD_API_KEY="YOUR_DD_API_KEY"
+export DD_SITE="us5.datadoghq.com"
+
+dotnet run --project src/App.Api
+```
+
+⚠️ **Replace `YOUR_DD_API_KEY`** with your actual Datadog API key.
+
+### Option 3: Via Local Datadog Agent
+
+For local testing with an agent:
+
+```bash
+# Terminal 1: Start the local agent
+./scripts/datadog-agent.sh
+
+# Terminal 2: Configure and run the app
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+dotnet run --project src/App.Api
+```
 
 ## How to Verify It's Working
 
 ### 1. Start the Application
 
+Choose the appropriate setup based on your configuration:
+
+**Option A: With .NET Aspire (Recommended for Development)**
+
 ```bash
-cd /Users/hieunv/Documents/tmp/hexagon-dotnet-app
+dotnet run --project src/App.AppHost
+```
+
+Open the Aspire Dashboard at `http://localhost:17123` to view traces.
+
+**Option B: With Datadog Cloud**
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.agent.us5.datadoghq.com:443"
+export OTEL_EXPORTER_OTLP_HEADERS="dd-api-key=YOUR_DD_API_KEY"
+export DD_API_KEY="YOUR_DD_API_KEY"
+
+dotnet run --project src/App.Api
+```
+
+**Option C: With Local Agent**
+
+```bash
+# Terminal 1: Start agent
+./scripts/datadog-agent.sh
+
+# Terminal 2: Run app
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
 dotnet run --project src/App.Api
 ```
 
 ### 2. Check Startup Messages
 
-You should see:
+You should see OpenTelemetry configuration messages:
+
+**With Datadog Cloud:**
 
 ```
 [OpenTelemetry] Configuring OTLP Exporter to: https://trace.agent.us5.datadoghq.com:443
 [OpenTelemetry] Service: hexagon-dotnet-app
-[OpenTelemetry] Exporters configured for traces, metrics, and logs
+[OpenTelemetry] OTLP exporter configured for TRACES only (cloud endpoint)
+[INF] Starting Hexagon .NET App
+```
+
+**With Local Agent:**
+
+```
+[OpenTelemetry] Configuring OTLP Exporter to: http://localhost:4318
+[OpenTelemetry] Service: hexagon-dotnet-app
+[OpenTelemetry] OTLP exporter configured for TRACES and METRICS (local agent)
+[INF] Starting Hexagon .NET App
+```
+
+**With Aspire:**
+
+```
+[OpenTelemetry] Running under Aspire - using automatic OTLP configuration
+[OpenTelemetry] Traces and Metrics will be exported to Aspire dashboard
 [INF] Starting Hexagon .NET App
 ```
 
@@ -66,18 +147,22 @@ You should see:
 curl http://localhost:5112/health
 
 # List todos
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 
 # Create todos
-curl -X POST http://localhost:5112/todos \
+curl -X POST http://localhost:5112/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Test APM Integration","isCompleted":false}'
 
 # Get Pokemon (external HTTP call)
-curl http://localhost:5112/pokemon/pikachu
+curl http://localhost:5112/api/v1/pokemon/25
 ```
 
-### 4. Check Logs for Success
+### 4. Verify Traces Are Being Sent
+
+**For Datadog Cloud Profile:**
+
+Check application logs for OTLP export status:
 
 ```bash
 tail -20 src/App.Api/logs/app$(date +%Y%m%d).log | grep StatusCode
@@ -91,7 +176,21 @@ Should show:
 ...
 ```
 
-**202 = Success!** Traces are being accepted by Datadog.
+**202 = Success!** Traces are being accepted by Datadog cloud.
+
+**For Local Agent Profile:**
+
+Check agent logs:
+
+```bash
+docker logs dd-agent | grep "trace" | tail -20
+# or with podman:
+podman logs dd-agent | grep "trace" | tail -20
+```
+
+**For Aspire:**
+
+Open the Aspire Dashboard at `http://localhost:17123` and navigate to the **Traces** section.
 
 ### 5. View in Datadog (Wait 1-2 Minutes)
 

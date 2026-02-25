@@ -7,8 +7,8 @@ This document describes how logs are forwarded from the Hexagon .NET App to the 
 The application uses **Serilog** with multiple sinks to forward logs:
 
 1. **Console Sink**: Logs to console for development/debugging
-2. **File Sink**: Writes JSON-formatted logs to `/var/log/hexagon-app/app.log`
-3. **Datadog Sink**: Sends logs directly to Datadog agent via HTTP
+2. **File Sink**: Writes JSON-formatted logs to `src/App.Api/logs/app.log`
+3. **Datadog Sink**: Sends logs directly to Datadog cloud via HTTP (when DD_API_KEY is set)
 
 ## Configuration
 
@@ -18,68 +18,92 @@ The application is configured in [Program.cs](../src/App.Api/Program.cs) with:
 
 - **Minimum log level**: Information (Warning for Microsoft.AspNetCore)
 - **Enrichment**: Application name, environment, service name, context, **trace_id and span_id** from OpenTelemetry
-- **File logging**: JSON format with daily rolling, 7-day retention at `logs/app.log`
+- **File logging**: JSON format with daily rolling, 7-day retention at `src/App.Api/logs/app.log`
 - **Datadog HTTP Intake**: Direct to Datadog cloud at `https://http-intake.logs.us5.datadoghq.com`
 
-**Note**: Logs are sent directly to Datadog's cloud intake API, not to the local agent. The local agent is only used for APM traces (port 8126) and metrics (port 8125).
+**Note**: Logs are sent directly to Datadog's cloud intake API when `DD_API_KEY` is set. The local agent (when running) can also collect logs via OTLP or file tailing.
 
-### Datadog Agent Configuration
+### Datadog Agent Configuration (Optional)
 
-The Datadog agent is configured to:
+When using a local Datadog agent, it can collect logs through multiple methods:
 
-1. **Collect logs from file**: Tails `/var/log/hexagon-app/app*.log`
-2. **Listen for direct HTTP logs**: Port 8126
+1. **OTLP Logs**: Direct integration via OpenTelemetry (port 4318)
+2. **File Tailing**: Reading from `src/App.Api/logs/app*.log` (requires volume mount)
 3. **StatsD metrics**: Port 8125
 
-Configuration file: [datadog-logs.yaml](../datadog-logs.yaml)
+Configuration file: `scripts/datadog-agent/datadog.yaml`
 
 ## Running the Setup
+
+### Option 1: Direct to Datadog Cloud (No Agent Required)
+
+This is the simplest setup for development:
+
+1. **Set your API key** as an environment variable:
+
+   ```bash
+   export DD_API_KEY="your-api-key-here"
+   ```
+
+2. **Run the application:**
+   ```bash
+   dotnet run --project src/App.Api
+   ```
+
+Logs will be sent directly to Datadog cloud via HTTPS.
+
+### Option 2: With Local Datadog Agent
+
+For local testing with an agent:
 
 ### 1. Start the Datadog Agent
 
 ```bash
-./run-datadog-agent.sh
+./scripts/datadog-agent.sh
 ```
 
 This script:
 
 - Starts the Datadog agent container
-- Exposes ports 8125 (StatsD) and 8126 (APM/Logs)
-- Mounts the log directory: `/var/log/hexagon-app`
-- Loads the log collection configuration
+- Exposes ports 4317, 4318 (OTLP), 8125 (StatsD) and 8126 (APM)
+- Configures the agent for local development
 
 ### 2. Verify the Agent is Running
 
 ```bash
-# Check if agent is running
+# Check if agent is running (use docker or podman depending on your setup)
+docker ps | grep dd-agent
+# or
 podman ps | grep dd-agent
 
 # View agent logs
+docker logs -f dd-agent
+# or
 podman logs -f dd-agent
-
-# Check port status
-netstat -naup | grep 8125
-netstat -natp | grep 8126
 ```
 
 ### 3. Run the Application
 
 ```bash
-cd src/App.Api
-dotnet run
+# If sending logs to Datadog cloud, set DD_API_KEY
+export DD_API_KEY="your-api-key-here"
+
+dotnet run --project src/App.Api
 ```
 
 ### 4. Verify Logs are Being Forwarded
 
-Check the application is writing logs:
+Check the application is writing logs locally:
 
 ```bash
-tail -f /var/log/hexagon-app/app*.log
+tail -f src/App.Api/logs/app*.log
 ```
 
-Check Datadog agent is processing logs:
+If using local agent, check agent is receiving logs:
 
 ```bash
+docker exec dd-agent agent status | grep -A 20 "Logs Agent"
+# or
 podman exec dd-agent agent status | grep -A 20 "Logs Agent"
 ```
 
@@ -139,67 +163,59 @@ service:hexagon-dotnet-app source:csharp env:Development
 
 If logs don't appear after 2-3 minutes:
 
-1. **Verify API Key**: Ensure the API key in Program.cs matches your Datadog account
+1. **Verify API Key**: Ensure `DD_API_KEY` is set in your environment or launchSettings.json
 2. **Check Network**: Logs are sent to `https://http-intake.logs.us5.datadoghq.com`
 3. **Verify Application**: Run `curl http://localhost:5112/health` to ensure app is running
 4. **Check Log Files**: Verify logs are being written locally:
    ```bash
-   tail -f /workspaces/hexagon-dotnet-app/src/App.Api/logs/app*.log
+   tail -f src/App.Api/logs/app*.log
    ```
 
 ## Troubleshooting
 
 ### Logs not appearing in Datadog
 
-1. **Check log file permissions**:
+1. **Verify DD_API_KEY is set:**
 
    ```bash
-   ls -la /var/log/hexagon-app/
+   echo $DD_API_KEY
    ```
 
-2. **Verify Datadog agent can read logs**:
+2. **Check application logs for errors:**
 
    ```bash
-   podman exec dd-agent ls -la /var/log/hexagon-app/
+   cat src/App.Api/logs/app*.log | grep -i error
    ```
 
-3. **Check agent status**:
+3. **If using local agent, check agent status:**
 
    ```bash
+   docker exec dd-agent agent status
+   # or
    podman exec dd-agent agent status
    ```
 
-4. **Verify ports are open**:
+4. **Test direct log submission:**
    ```bash
-   netstat -naup | grep 8125
-   netstat -natp | grep 8126
+   curl -X POST "https://http-intake.logs.us5.datadoghq.com/api/v2/logs" \
+     -H "Content-Type: application/json" \
+     -H "DD-API-KEY: $DD_API_KEY" \
+     -d '[{"message":"test","service":"hexagon-dotnet-app"}]'
    ```
-
-### Application can't write to log directory
-
-```bash
-# Create directory with proper permissions
-sudo mkdir -p /var/log/hexagon-app
-sudo chmod 777 /var/log/hexagon-app
-```
-
-### Agent not collecting logs from file
-
-Check the agent configuration is mounted correctly:
-
-```bash
-podman exec dd-agent cat /etc/datadog-agent/conf.d/hexagon-app.d/conf.yaml
-```
+   Should return `{"status":"ok"}` or similar.
 
 ## Configuration Files
 
 - **Application logging**: [src/App.Api/Program.cs](../src/App.Api/Program.cs)
 - **Log settings**: [src/App.Api/appsettings.json](../src/App.Api/appsettings.json)
-- **Datadog log config**: [datadog-logs.yaml](../datadog-logs.yaml)
-- **Agent startup**: [run-datadog-agent.sh](../run-datadog-agent.sh)
+- **Launch profiles**: [src/App.Api/Properties/launchSettings.json](../src/App.Api/Properties/launchSettings.json)
+- **Service defaults (OTel config)**: [src/App.ServiceDefaults/Extensions.cs](../src/App.ServiceDefaults/Extensions.cs)
+- **Agent startup script**: [scripts/datadog-agent.sh](../scripts/datadog-agent.sh)
+- **Agent configuration**: [scripts/datadog-agent/datadog.yaml](../scripts/datadog-agent/datadog.yaml)
 
 ## NuGet Packages Used
 
 - `Serilog.AspNetCore` - Serilog integration for ASP.NET Core
 - `Serilog.Sinks.Datadog.Logs` - Direct Datadog HTTP logging
-- `Serilog.Sinks.File` - File-based logging for agent tailing
+- `Serilog.Sinks.File` - File-based logging with daily rolling
+- `Serilog.Enrichers.Span` - OpenTelemetry trace context enrichment

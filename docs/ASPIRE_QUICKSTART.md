@@ -85,10 +85,10 @@ The Aspire dashboard shows the API endpoints with clickable links to test direct
 
 ```bash
 # Get all todos
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 
 # Create a new todo
-curl -X POST http://localhost:5112/todos \
+curl -X POST http://localhost:5112/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title": "Test Aspire", "isCompleted": false}'
 

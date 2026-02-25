@@ -29,8 +29,8 @@ The `App.AppHost` project is the entry point for running the distributed applica
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add the API project - SQLite connection is managed within App.Data layer
-var apiService = builder.AddProject<Projects.App_Api>("api")
-    .WithExternalHttpEndpoints();
+// Path is relative to the AppHost project directory
+builder.AddProject("api", "../App.Api/App.Api.csproj").WithExternalHttpEndpoints();
 
 builder.Build().Run();
 ```
@@ -213,11 +213,13 @@ This applies to:
 
 ## Environment Variables
 
-When running through AppHost, these are automatically set:
+When running through AppHost, these variables are configured:
 
-- `OTEL_EXPORTER_OTLP_ENDPOINT`: Dashboard telemetry endpoint
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: **Default**: `http://localhost:4318` (from `.env` file) - sends to local Datadog agent
 - `ASPNETCORE_ENVIRONMENT`: Development
 - Connection strings and service URLs (if using Aspire resources)
+
+> **Note**: The application is preconfigured in `.env` to use a local Datadog agent at `http://localhost:4318`. Aspire also exposes its own dashboard at `http://localhost:17123` for local trace viewing.
 
 ## Running Without Aspire
 
