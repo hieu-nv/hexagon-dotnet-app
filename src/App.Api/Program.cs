@@ -18,9 +18,9 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithProperty("Application", "App.Api")
     .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
     .Enrich.WithProperty("service", "hexagon-dotnet-app")
-    .WriteTo.Console()
+    .WriteTo.Console(new JsonFormatter(renderMessage: true))
     .WriteTo.File(
-        new JsonFormatter(),
+        new JsonFormatter(renderMessage: true),
         path: "logs/app.log",
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
