@@ -178,24 +178,60 @@ public static class AspireServiceDefaultsExtensions
                 $"[OpenTelemetry] Service: {builder.Configuration["OTEL_SERVICE_NAME"] ?? "hexagon-dotnet-app"}"
             );
 
-            // Datadog's OTLP endpoint only supports TRACES, not metrics or logs
-            // - Traces: Supported via OTLP ✅
-            // - Metrics: Use Prometheus + Datadog scraping OR StatsD ✅
-            // - Logs: Use Serilog HTTP sink (NOT OTLP) ✅
-
-            // Configure OTLP exporter ONLY for traces
-            builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
+            // When using Datadog agent (localhost:4318), export both traces AND metrics via OTLP
+            // The local agent accepts OTLP and forwards to Datadog cloud
+            if (
+                !string.IsNullOrEmpty(endpoint)
+                && (
+                    endpoint.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+                    || endpoint.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase)
+                )
+            )
             {
-                tracing.AddOtlpExporter();
-            });
+                // Configure OTLP exporter for both traces AND metrics (local agent supports both)
+                builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
+                {
+                    tracing.AddOtlpExporter();
+                });
 
-            Console.WriteLine("[OpenTelemetry] OTLP exporter configured for TRACES only");
+                builder.Services.ConfigureOpenTelemetryMeterProvider(metrics =>
+                {
+                    metrics.AddOtlpExporter();
+                });
+
+                Console.WriteLine(
+                    "[OpenTelemetry] OTLP exporter configured for TRACES and METRICS (local agent)"
+                );
+            }
+            else
+            {
+                // Datadog cloud OTLP endpoint only supports TRACES, not metrics or logs
+                // - Traces: Supported via OTLP ✅
+                // - Metrics: Use Prometheus + Datadog scraping OR StatsD ✅
+                // - Logs: Use Serilog HTTP sink (NOT OTLP) ✅
+
+                // Configure OTLP exporter ONLY for traces
+                builder.Services.ConfigureOpenTelemetryTracerProvider(tracing =>
+                {
+                    tracing.AddOtlpExporter();
+                });
+
+                Console.WriteLine(
+                    "[OpenTelemetry] OTLP exporter configured for TRACES only (cloud endpoint)"
+                );
+            }
+
             Console.WriteLine("[OpenTelemetry] Logs: Using Serilog HTTP sink directly");
         }
         else
         {
+            // No custom OTLP endpoint - running under Aspire dashboard
+            // Aspire automatically configures OTLP exporters for traces and metrics
             Console.WriteLine(
-                "[OpenTelemetry] OTLP Exporter disabled - no OTEL_EXPORTER_OTLP_ENDPOINT configured"
+                "[OpenTelemetry] Running under Aspire - using automatic OTLP configuration"
+            );
+            Console.WriteLine(
+                "[OpenTelemetry] Traces and Metrics will be exported to Aspire dashboard"
             );
         }
 
@@ -207,8 +243,13 @@ public static class AspireServiceDefaultsExtensions
 
     private static IHostApplicationBuilder AddMetricsExporters(this IHostApplicationBuilder builder)
     {
+        // Enable dual metrics export to support both Aspire dashboard and Datadog agent:
+        // 1. OTLP export (for Aspire dashboard - auto-configured by Aspire)
+        // 2. Prometheus export (for Datadog agent scraping)
+
         // Option 1: Prometheus exporter (recommended for Datadog integration)
         // Exposes metrics at /metrics endpoint for Datadog to scrape
+        // This works alongside OTLP export for Aspire
         var usePrometheus =
             builder.Configuration["METRICS_EXPORTER"] != "statsd"
             && builder.Configuration["METRICS_EXPORTER"] != "disabled";
@@ -226,7 +267,7 @@ public static class AspireServiceDefaultsExtensions
                 "[OpenTelemetry] Metrics: Prometheus exporter enabled at /metrics endpoint"
             );
             Console.WriteLine(
-                "[OpenTelemetry] Configure Datadog to scrape http://localhost:5112/metrics"
+                "[OpenTelemetry] Metrics will be available for both Aspire (OTLP) and Datadog (Prometheus)"
             );
         }
 
@@ -290,7 +331,8 @@ public static class AspireServiceDefaultsExtensions
             new HealthCheckOptions { Predicate = r => r.Tags.Contains("live") }
         );
 
-        // Map Prometheus metrics endpoint if enabled
+        // Map Prometheus metrics endpoint for Datadog agent scraping
+        // This works alongside OTLP export to Aspire dashboard
         var usePrometheus =
             app.Configuration["METRICS_EXPORTER"] != "statsd"
             && app.Configuration["METRICS_EXPORTER"] != "disabled";
@@ -299,6 +341,9 @@ public static class AspireServiceDefaultsExtensions
         {
             app.MapPrometheusScrapingEndpoint();
             Console.WriteLine("[OpenTelemetry] Prometheus metrics endpoint mapped at /metrics");
+            Console.WriteLine(
+                "[OpenTelemetry] Datadog agent can scrape metrics from http://localhost:5112/metrics"
+            );
         }
 
         return app;
