@@ -4,10 +4,22 @@ This guide explains how to configure and use the local Datadog agent for Applica
 
 ## Overview
 
-The application uses **OpenTelemetry (OTEL)** to send traces and metrics to Datadog. You can configure it to send data either:
+The application uses **OpenTelemetry (OTEL)** to send traces and metrics to Datadog.
 
-1. **Directly to Datadog Cloud** - For production or when you want data in Datadog immediately
-2. **To a Local Datadog Agent** - For local development, testing, or when working offline
+### Default Configuration: Local Agent Mode
+
+**The application is configured by default** (in `.env` file) to use a **local Datadog agent**:
+
+```dotenv
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+```
+
+**Architecture**: Application → Local Agent → Datadog Cloud (optional)
+
+You can configure it to send data either:
+
+1. **To a Local Datadog Agent** (default) - For local development, testing, or when working offline
+2. **Directly to Datadog Cloud** (alternative) - For production or when you want data in Datadog immediately
 
 ### Instrumentation Details
 
@@ -51,41 +63,58 @@ All instrumentation is configured in `src/App.ServiceDefaults/Extensions.cs` fol
 
 ## Configuration
 
-### Local Agent Setup (Current Configuration)
+### Default Configuration (Local Agent via .env)
 
-The application is currently configured to use the **local Datadog agent** for APM:
+**The application is preconfigured in `.env` to use a local Datadog agent**:
 
-#### launchSettings.json
+```dotenv
+# From .env file
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_SERVICE_NAME=hexagon-dotnet-app
+DD_ENV=development
+DD_SERVICE=hexagon-dotnet-app
+```
 
-Located at: `src/App.Api/Properties/launchSettings.json`
+When running via Aspire orchestration:
 
-```json
-{
-  "environmentVariables": {
-    "DD_AGENT_HOST": "localhost",
-    "DD_TRACE_AGENT_PORT": "8126",
-    "DD_DOGSTATSD_PORT": "8125",
-    "DD_ENV": "development",
-    "DD_SERVICE": "hexagon-dotnet-app",
-    "DD_VERSION": "1.0.0",
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-    "OTEL_SERVICE_NAME": "hexagon-dotnet-app",
-    "OTEL_RESOURCE_ATTRIBUTES": "deployment.environment=development,service.version=1.0.0"
-  }
-}
+```bash
+dotnet run --project src/App.AppHost
+```
+
+Traces flow through **both** paths:
+
+1. **Local Agent** (`localhost:4318`) → Datadog Cloud (if `DD_API_KEY` is set)
+2. **Aspire Dashboard** (`localhost:17123`) → Local viewing
+
+> **Note**: The `.env` file is loaded automatically by Aspire orchestration. You don't need to export variables manually unless running `src/App.Api` directly.
+
+### Manual Configuration (Without Aspire)
+
+If running `App.Api` directly without Aspire orchestration:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_SERVICE_NAME="hexagon-dotnet-app"
+export OTEL_RESOURCE_ATTRIBUTES="deployment.environment=development,service.version=1.0.0"
+export DD_ENV="development"
+export DD_SERVICE="hexagon-dotnet-app"
+export DD_VERSION="1.0.0"
+
+dotnet run --project src/App.Api
 ```
 
 **Key Settings:**
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: Points to local agent's OTLP HTTP receiver
-- `DD_AGENT_HOST`: Hostname of the Datadog agent
-- `DD_TRACE_AGENT_PORT`: Port for native Datadog APM traces (8126)
+- `OTEL_SERVICE_NAME`: Service name for traces
+- `DD_ENV`: Environment label (development, staging, production)
 - No API key required - the local agent handles forwarding to Datadog cloud
 
 ### Datadog Agent Configuration
 
-Located at: `.devcontainer/datadog.yaml`
+Located at: `scripts/datadog-agent/datadog.yaml`
 
 The agent is configured with:
 
@@ -120,7 +149,7 @@ apm_config:
 Run the provided script:
 
 ```bash
-./run-datadog-agent.sh
+./scripts/datadog-agent.sh
 ```
 
 This will:
@@ -153,7 +182,7 @@ docker exec dd-agent agent status | grep -A 10 "OTLP"
 ### 1. Start the Datadog Agent
 
 ```bash
-./run-datadog-agent.sh
+./scripts/datadog-agent.sh
 ```
 
 Wait for the agent to fully start (about 10-15 seconds).
@@ -192,15 +221,15 @@ If you provided a `DD_API_KEY`, traces will be forwarded to Datadog cloud after 
 curl http://localhost:5112/health
 
 # Get all todos
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 
 # Create a todo
-curl -X POST http://localhost:5112/todos \
+curl -X POST http://localhost:5112/api/v1/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Test APM","isCompleted":false}'
 
 # Get a Pokemon (tests external HTTP calls)
-curl http://localhost:5112/pokemon/pikachu
+curl http://localhost:5112/api/v1/pokemon/25
 ```
 
 ### Verify Traces in Agent
@@ -221,10 +250,10 @@ After generating traffic, you should see distributed traces with the following s
 ### HTTP Request Trace Example
 
 ```
-GET /todos
-├── ASP.NET Core HTTP GET /todos (root span)
+GET /api/v1/todos
+├── ASP.NET Core HTTP GET /api/v1/todos (root span)
 │   ├── http.request.method: GET
-│   ├── http.request.path: /todos
+│   ├── http.request.path: /api/v1/todos
 │   ├── http.response.status_code: 200
 │   └── EF Core SELECT operation
 │       ├── db.execution_time_ms: 5.2
@@ -237,10 +266,10 @@ GET /todos
 ### External API Call Trace Example
 
 ```
-GET /pokemon/pikachu
-├── ASP.NET Core HTTP GET /pokemon/{name} (root span)
-│   └── HTTP Client GET https://pokeapi.co/api/v2/pokemon/pikachu
-│       ├── http.request.uri: https://pokeapi.co/api/v2/pokemon/pikachu
+GET /api/v1/pokemon/25
+├── ASP.NET Core HTTP GET /api/v1/pokemon/{id} (root span)
+│   └── HTTP Client GET https://pokeapi.co/api/v2/pokemon/25
+│       ├── http.request.uri: https://pokeapi.co/api/v2/pokemon/25
 │       ├── http.response.status_code: 200
 │       └── duration: 250ms
 ```
@@ -271,25 +300,36 @@ All spans include:
 
 ## Switching Between Local and Cloud
 
-### To Use Cloud Directly (Skip Local Agent)
+### Default: Local Agent (Configured in .env)
 
-Update `launchSettings.json`:
+The application is **preconfigured to use the local agent** via the `.env` file:
 
-```json
-{
-  "environmentVariables": {
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.us5.datadoghq.com:443",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-    "OTEL_EXPORTER_OTLP_HEADERS": "dd-api-key=YOUR_API_KEY",
-    "OTEL_SERVICE_NAME": "hexagon-dotnet-app",
-    "OTEL_RESOURCE_ATTRIBUTES": "deployment.environment=development,service.version=1.0.0"
-  }
-}
+```bash
+dotnet run --project src/App.AppHost  # Uses .env automatically
 ```
 
-### To Use Local Agent (Current Configuration)
+This sends traces to:
 
-Use the configuration shown above in the "Local Agent Setup" section.
+- Local Agent at `http://localhost:4318` (buffered, supports traces + metrics)
+- Aspire Dashboard at `http://localhost:17123` (local viewing)
+- Datadog Cloud (if agent has `DD_API_KEY` configured)
+
+### Alternative: Direct to Cloud (Skip Local Agent)
+
+To bypass the local agent and send traces directly to Datadog cloud, override the `.env` configuration:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.agent.us5.datadoghq.com:443"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_EXPORTER_OTLP_HEADERS="dd-api-key=YOUR_API_KEY"
+export DD_API_KEY="YOUR_API_KEY"
+export OTEL_SERVICE_NAME="hexagon-dotnet-app"
+export OTEL_RESOURCE_ATTRIBUTES="deployment.environment=development,service.version=1.0.0"
+
+dotnet run --project src/App.Api
+```
+
+**Note**: Direct-to-cloud mode only supports OTLP traces. The local agent supports both traces and metrics. See `src/App.ServiceDefaults/Extensions.cs` (lines 185-209) for the endpoint detection logic.
 
 ## Troubleshooting
 
@@ -429,7 +469,7 @@ To start developing with local APM:
 dotnet run --project src/App.Api
 
 # 3. Generate some traffic
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 
 # 4. View traces in Aspire Dashboard
 dotnet run --project src/App.AppHost

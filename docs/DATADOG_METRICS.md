@@ -197,24 +197,14 @@ For scenarios where you can't use Prometheus scraping, you can send metrics dire
 
 ### Configuration
 
-Set environment variable to enable StatsD mode:
+Set environment variables to enable StatsD mode:
 
 ```bash
 export METRICS_EXPORTER=statsd
 export DD_AGENT_HOST=localhost
 export DD_DOGSTATSD_PORT=8125
-```
 
-Or in `launchSettings.json`:
-
-```json
-{
-  "environmentVariables": {
-    "METRICS_EXPORTER": "statsd",
-    "DD_AGENT_HOST": "localhost",
-    "DD_DOGSTATSD_PORT": "8125"
-  }
-}
+dotnet run --project src/App.Api
 ```
 
 ### Application Startup

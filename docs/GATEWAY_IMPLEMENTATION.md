@@ -173,8 +173,7 @@ The implementation follows the patterns described in:
 ### 1. Start the Application
 
 ```bash
-cd src/App.Api
-dotnet run
+dotnet run --project src/App.Api
 ```
 
 ### 2. Test the Endpoints

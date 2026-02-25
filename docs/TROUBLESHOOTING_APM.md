@@ -14,9 +14,11 @@ You have **two separate log/trace pipelines**:
 ### 2. **OpenTelemetry Traces** → Datadog APM (OTLP)
 
 - **From**: `ServiceDefaults/Extensions.cs` OpenTelemetry configuration
-- **To**: `https://api.us5.datadoghq.com/v1/traces`
+- **To**: **Default**: Local agent at `http://localhost:4318`, **Alternative**: Direct to cloud at `https://trace.agent.us5.datadoghq.com:443`
 - **Contains**: Performance traces, spans, distributed tracing
 - **Status**: ⚠️ This depends on correct OTLP configuration
+
+> **Note**: The application is configured by default to use a local agent (`localhost:4318`). See `.env` file.
 
 ## Common Issues
 
@@ -34,17 +36,28 @@ You have **two separate log/trace pipelines**:
 3. Firewall/network blocking OTLP traffic
 4. Wrong Datadog site (us5 vs us1, eu1, etc.)
 
-**Solution:**
-Check your environment variables in `launchSettings.json`:
+**Solution (for local agent - default):**
 
-```json
-{
-  "environmentVariables": {
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "https://api.us5.datadoghq.com",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
-    "OTEL_EXPORTER_OTLP_HEADERS": "dd-api-key=YOUR_ACTUAL_API_KEY"
-  }
-}
+1. Ensure local agent is running: `./scripts/datadog-agent.sh`
+2. Application should send to `http://localhost:4318` (configured in `.env`)
+3. Agent will forward to Datadog cloud if `DD_API_KEY` is set
+
+```bash
+# Verify agent is receiving traces
+docker exec dd-agent agent status | grep -A 10 "Trace Agent"
+```
+
+**Solution (for direct to cloud - alternative):**
+
+Override the `.env` configuration:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://trace.agent.us5.datadoghq.com:443"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_EXPORTER_OTLP_HEADERS="dd-api-key=YOUR_ACTUAL_API_KEY"
+export DD_API_KEY="YOUR_ACTUAL_API_KEY"
+
+dotnet run --project src/App.Api
 ```
 
 ### Issue 2: Logs Not Correlated with Traces
@@ -66,7 +79,7 @@ Check your environment variables in `launchSettings.json`:
 1. Check logs contain `dd.trace_id` and `dd.span_id`:
 
    ```bash
-   cat logs/app.log | grep "dd.trace_id"
+   cat src/App.Api/logs/app.log | grep "dd.trace_id"
    ```
 
 2. Verify service names match:
@@ -103,8 +116,8 @@ Check your environment variables in `launchSettings.json`:
 2. Generate traffic:
 
    ```bash
-   curl http://localhost:5112/todos
-   curl http://localhost:5112/pokemon/pikachu
+   curl http://localhost:5112/api/v1/todos
+   curl http://localhost:5112/api/v1/pokemon/25
    ```
 
 3. Wait 1-2 minutes for data to appear
@@ -120,7 +133,7 @@ dotnet run --project src/App.Api
 Look for:
 
 ```
-[OpenTelemetry] Configuring OTLP Exporter to: https://api.us5.datadoghq.com
+[OpenTelemetry] Configuring OTLP Exporter to: https://trace.agent.us5.datadoghq.com:443
 [OpenTelemetry] Service: hexagon-dotnet-app
 [OpenTelemetry] Exporters configured for traces, metrics, and logs
 ```
@@ -128,7 +141,7 @@ Look for:
 ### Step 2: Check Local Log File
 
 ```bash
-cat logs/app.log | tail -20
+cat src/App.Api/logs/app.log | tail -20
 ```
 
 Look for fields:
@@ -141,7 +154,7 @@ Look for fields:
 
 ```bash
 # Generate a request
-curl -v http://localhost:5112/todos
+curl -v http://localhost:5112/api/v1/todos
 
 # Check if OpenTelemetry Activity is created
 # Log should show TraceId in output
@@ -159,7 +172,7 @@ Should show:
 ```
 DD_API_KEY=7330e4f6...
 DD_SITE=us5.datadoghq.com
-OTEL_EXPORTER_OTLP_ENDPOINT=https://api.us5.datadoghq.com
+OTEL_EXPORTER_OTLP_ENDPOINT=https://trace.agent.us5.datadoghq.com:443
 OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=7330e4f6...
 OTEL_SERVICE_NAME=hexagon-dotnet-app
 ```
@@ -263,9 +276,9 @@ curl -s -X POST "https://http-intake.logs.us5.datadoghq.com/api/v2/logs" \
 
 echo ""
 echo "==> Checking local log file"
-if [ -f logs/app.log ]; then
+if [ -f src/App.Api/logs/app.log ]; then
   echo "Last log entry:"
-  tail -1 logs/app.log | jq '.'
+  tail -1 src/App.Api/logs/app.log | jq '.'
 else
   echo "❌ No log file found"
 fi

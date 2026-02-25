@@ -138,7 +138,7 @@ dotnet run --project src/App.Api
 curl http://localhost:5112/health
 
 # Make some requests to generate telemetry
-curl http://localhost:5112/todos
+curl http://localhost:5112/api/v1/todos
 curl http://localhost:5112/api/v1/pokemon?limit=5
 
 # Check logs for OpenTelemetry activity IDs
@@ -148,7 +148,7 @@ You would see correlation IDs in logs like:
 
 ```
 info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
-      Request starting HTTP/1.1 GET http://localhost:5112/todos - - -
+      Request starting HTTP/1.1 GET http://localhost:5112/api/v1/todos - - -
       ActivityId: 00-a1b2c3d4e5f6...
 ```
 
