@@ -8,6 +8,21 @@ What if I told you there's a better way? Instead of sending telemetry directly f
 
 In this comprehensive guide, I'll show you how to set up a **Datadog agent-based observability stack** for .NET 10 applications, covering logs, traces, and metrics—all with automatic correlation.
 
+## Table of Contents
+
+1. [Why Use a Local Datadog Agent?](#why-use-a-local-datadog-agent)
+2. [Architecture Overview](#architecture-overview)
+3. [Prerequisites](#prerequisites)
+4. [Quick Start (5 Minutes)](#quick-start-5-minutes)
+5. [Step 1: Setting Up the Datadog Agent](#step-1-setting-up-the-datadog-agent)
+6. [Step 2: Configure Your .NET Application](#step-2-configure-your-net-application)
+7. [Step 3: Sending Logs to the Agent](#step-3-sending-logs-to-the-agent)
+8. [Step 4: Testing Your Setup](#step-4-testing-your-setup)
+9. [Step 5: Advanced Agent Features](#step-5-advanced-agent-features)
+10. [Debugging Common Issues](#debugging-common-issues)
+11. [Performance Considerations](#performance-considerations)
+12. [Production Deployment](#production-deployment)
+
 ## Why Use a Local Datadog Agent?
 
 Before diving into implementation, let's understand why the agent-based approach is superior to direct cloud integration:
@@ -44,6 +59,20 @@ The agent becomes especially valuable in development environments where:
 - You want to test without affecting production metrics
 - You need to debug telemetry before it leaves your machine
 - You're working with multiple services that need unified collection
+
+### Comparison with Other Solutions
+
+For .NET developers familiar with other observability platforms:
+
+| Feature | Datadog Agent | Application Insights | Elastic APM |
+|---------|---------------|---------------------|------------|
+| **Local Agent** | ✅ Yes | ❌ No (direct to cloud) | ✅ Yes |
+| **Offline Development** | ✅ Yes | ❌ No | ✅ Yes (with local ES) |
+| **Multi-Cloud Support** | ✅ All clouds | ⚠️ Azure-optimized | ✅ All clouds |
+| **Cost Model** | Per GB ingested | Per GB + node count | Self-hosted or cloud |
+| **Trace Retention** | 15 days (configurable) | 90 days | Configurable |
+| **Learning Curve** | Medium | Low (if using Azure) | Medium-High |
+| **K8s Native** | ✅ DaemonSet pattern | ⚠️ Sidecar only | ✅ DaemonSet pattern |
 
 ## Architecture Overview
 
@@ -95,12 +124,35 @@ Here's how all the pieces fit together:
 
 ## Prerequisites
 
+**Estimated setup time:** 30-45 minutes
+
 Before we begin, ensure you have:
 
 - ✅ **.NET 10 SDK** installed
 - ✅ **Docker or Podman** (for running the agent)
 - ✅ **Datadog account** ([free trial available](https://www.datadoghq.com/))
 - ✅ **Datadog API key** (optional for local-only development)
+
+## Quick Start (5 Minutes)
+
+Want to get started immediately? Here's the fast path:
+
+```bash
+# 1. Start the agent (optional: set DD_API_KEY to send to cloud)
+export DD_API_KEY=your_key_here  # Optional
+./scripts/datadog-agent.sh
+
+# 2. Run your app
+dotnet run --project src/App.Api
+
+# 3. Verify agent is receiving data
+docker exec dd-agent agent status
+
+# 4. Generate test traffic
+curl http://localhost:5112/health
+```
+
+Now let's dive into the details...
 
 ## Step 1: Setting Up the Datadog Agent
 
@@ -244,10 +296,22 @@ echo "   Stop agent:    ${CONTAINER_RUNTIME} stop dd-agent"
 echo ""
 ```
 
+**Key improvements in this script:**
+- ✅ Automatic Docker/Podman detection
+- ✅ Proper error handling and validation
+- ✅ Helpful status messages and next steps
+- ✅ Handles existing containers gracefully
+
 Make it executable:
 
 ```bash
 chmod +x scripts/datadog-agent.sh
+```
+
+**Important Note:** The script uses environment variables for configuration instead of mounting a `datadog.yaml` file. This is simpler and more flexible for development. If you need advanced agent configuration, you can create a custom `datadog.yaml` and mount it with:
+
+```bash
+-v "${SCRIPT_DIR}/datadog-agent/datadog.yaml:/etc/datadog-agent/datadog.yaml:ro" \
 ```
 
 ### Start the Agent
@@ -263,11 +327,17 @@ Expected output:
 ✅ Datadog agent started successfully!
 
 📊 Agent Endpoints:
-   - OTLP HTTP:      localhost:4318
-   - OTLP gRPC:      localhost:4317
-   - StatsD:         localhost:8125
-   - APM:            localhost:8126
+   - OTLP HTTP:      localhost:4318  (OpenTelemetry - HTTP/Protobuf)
+   - OTLP gRPC:      localhost:4317  (OpenTelemetry - gRPC)
+   - StatsD:         localhost:8125  (Metrics)
+   - APM:            localhost:8126  (Native Datadog APM)
+
+💡 OTLP Protocol Choice:
+   HTTP: Easier debugging, works through proxies, firewall-friendly
+   gRPC: Better performance, lower overhead, ideal for production
 ```
+
+> **Note:** OTLP (OpenTelemetry Protocol) comes in two flavors. Use HTTP for development (simpler debugging with tools like curl) and consider gRPC for production (better performance). The agent accepts both simultaneously.
 
 ### Verify Agent Health
 
@@ -290,12 +360,22 @@ Look for these sections in the status output:
 ### Install Required Packages
 
 ```bash
+# OpenTelemetry tracing
+dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol
 dotnet add package OpenTelemetry.Instrumentation.AspNetCore
 dotnet add package OpenTelemetry.Instrumentation.Http
 dotnet add package OpenTelemetry.Instrumentation.EntityFrameworkCore
+
+# Resource detection
+dotnet add package OpenTelemetry.Resources.Host
+
+# Logging
 dotnet add package Serilog.AspNetCore
 dotnet add package Serilog.Sinks.File
+dotnet add package Serilog.Formatting.Compact
+
+# Configuration
 dotnet add package DotNetEnv
 ```
 
@@ -328,9 +408,11 @@ echo ".env" >> .gitignore
 
 ```csharp
 using DotNetEnv;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Formatting.Json;
 
 // Load .env file
 Env.Load();
@@ -356,15 +438,20 @@ builder.Services.AddOpenTelemetry()
         {
             new KeyValuePair<string, object>("deployment.environment",
                 Environment.GetEnvironmentVariable("DD_ENV") ?? "development")
-        }))
+        })
+        .AddEnvironmentVariableDetector()) // Reads OTEL_RESOURCE_ATTRIBUTES env var
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation(options =>
         {
             options.RecordException = true;
-            options.EnrichWithHttpRequest = (activity, request) =>
+            options.Enrich = (activity, eventName, rawObject) =>
             {
-                activity.SetTag("http.method", request.Method);
-                activity.SetTag("http.url", request.Path);
+                if (eventName == "OnStartActivity" && rawObject is HttpRequest request)
+                {
+                    activity.SetTag("http.method", request.Method);
+                    activity.SetTag("http.url", request.Path.Value);
+                    activity.SetTag("http.request_id", request.HttpContext.TraceIdentifier);
+                }
             };
         })
         .AddHttpClientInstrumentation(options =>
@@ -374,6 +461,7 @@ builder.Services.AddOpenTelemetry()
         .AddEntityFrameworkCoreInstrumentation(options =>
         {
             options.SetDbStatementForText = true;
+            options.SetDbStatementForStoredProcedure = true;
         })
         .AddOtlpExporter(options =>
         {
@@ -384,6 +472,17 @@ builder.Services.AddOpenTelemetry()
         }));
 
 var app = builder.Build();
+
+// Enable automatic HTTP request logging
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
+    };
+});
 
 // Minimal API endpoints
 app.MapGet("/", () => "Hello from .NET 10!");
@@ -410,6 +509,7 @@ using Serilog.Formatting.Json;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("service", "hexagon-dotnet-app")
     .Enrich.WithProperty("env", Environment.GetEnvironmentVariable("DD_ENV") ?? "development")
@@ -421,20 +521,24 @@ Log.Logger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         shared: true,
-        flushToDiskInterval: TimeSpan.FromSeconds(1)
+        flushToDiskInterval: TimeSpan.FromSeconds(10) // Batch for performance
     )
     .CreateLogger();
 ```
 
 ### Enable Log Collection in Agent
 
-The agent startup script already mounts the logs directory:
+**Note:** The basic agent script uses environment variables for configuration. For log file tailing, you need to mount both the logs directory and a custom configuration.
 
-```bash
--v "${SCRIPT_DIR}/../src/App.Api/logs:/app/logs:ro"
-```
+**Option 1: Simple Approach (Recommended for Development)**
 
-To enable log tailing, create `scripts/datadog-agent/conf.d/app-logs.d/conf.yaml`:
+Just use console and file logging from your app. The agent will collect container logs automatically if you're running in Docker/Kubernetes.
+
+**Option 2: Advanced File Tailing**
+
+If you want the agent to tail log files directly:
+
+1. Create `scripts/datadog-agent/conf.d/app-logs.d/conf.yaml`:
 
 ```yaml
 logs:
@@ -446,7 +550,15 @@ logs:
       - env:development
 ```
 
-Restart the agent to apply changes:
+2. Update your agent startup script to mount the config:
+
+```bash
+# Add these volume mounts to the docker run command:
+-v "${PROJECT_ROOT}/src/App.Api/logs:/app/logs:ro" \
+-v "${SCRIPT_DIR}/datadog-agent/conf.d:/etc/datadog-agent/conf.d:ro" \
+```
+
+3. Restart the agent:
 
 ```bash
 docker restart dd-agent
@@ -564,11 +676,18 @@ Send custom metrics using the StatsD protocol:
 dotnet add package DogStatsD-CSharp-Client
 ```
 
+**Configure in Program.cs:**
+
 ```csharp
 using StatsdClient;
 
-// Configure DogStatsD client
-var dogstatsdConfig = new StatsdConfig
+// Load .env file
+Env.Load();
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure DogStatsD client (do this early in startup)
+var dogstatsdConfig = new DogStatsdConfig
 {
     StatsdServerName = "localhost",
     StatsdPort = 8125,
@@ -577,14 +696,29 @@ var dogstatsdConfig = new StatsdConfig
 
 DogStatsd.Configure(dogstatsdConfig);
 
-// Send metrics
+// ... rest of configuration
+
+var app = builder.Build();
+
+// Send metrics in endpoints
 app.MapGet("/metrics-test", () =>
 {
-    DogStatsd.Increment("api.request");
-    DogStatsd.Gauge("api.active_connections", 42);
-    DogStatsd.Histogram("api.response_time", 123.45);
+    using (DogStatsd.StartTimer("api.response_time"))
+    {
+        DogStatsd.Increment("api.request", tags: new[] { "endpoint:metrics-test" });
+        DogStatsd.Gauge("api.active_connections", 42);
+        
+        // Simulate work
+        Thread.Sleep(100);
+        
+        return Results.Ok(new { message = "Metrics sent to agent!" });
+    }
+});
 
-    return Results.Ok(new { message = "Metrics sent to agent!" });
+// Don't forget to dispose on shutdown
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    DogStatsd.Dispose();
 });
 ```
 
@@ -627,6 +761,19 @@ DD_API_KEY=${STAGING_API_KEY} DD_ENV=staging ./scripts/datadog-agent.sh
 ```
 
 ## Debugging Common Issues
+
+### Pre-Flight Checklist
+
+Before diving into troubleshooting, verify these basics:
+
+- [ ] Agent container is running: `docker ps | grep dd-agent`
+- [ ] Required ports are exposed: `docker port dd-agent`
+- [ ] App can reach agent: `curl -v http://localhost:4318`
+- [ ] Agent status shows no errors: `docker exec dd-agent agent status`
+- [ ] API key is set (if using cloud): `echo $DD_API_KEY`
+- [ ] Logs directory exists: `ls -la src/App.Api/logs/`
+- [ ] No firewall blocking ports: `netstat -an | grep -E '4318|8125|8126'`
+- [ ] Container logs show no errors: `docker logs dd-agent | grep ERROR`
 
 ### Issue: Agent Not Receiving Traces
 
@@ -713,8 +860,9 @@ forwarder_retry_queue_payloads_max_size: 10485760 # 10MB
 The agent itself uses:
 
 - **CPU:** ~2-5% on modern hardware
-- **Memory:** 150-300MB typical workload
+- **Memory:** 300-500MB typical workload (can be higher with many integrations)
 - **Network:** Batches and compresses data (80% reduction)
+- **Disk:** Minimal (buffers in memory, uses /tmp for staging)
 
 ### Application Performance Impact
 
@@ -729,9 +877,14 @@ Using a local agent vs direct cloud:
 1. **Use sampling for high-volume traces:**
 
 ```csharp
+using OpenTelemetry.Trace;
+
 .AddAspNetCoreInstrumentation(options =>
 {
-    options.Sampler = new TraceIdRatioBasedSampler(0.1); // 10% sampling
+    // Use parent-based sampling to respect upstream decisions
+    options.Sampler = new ParentBasedSampler(
+        new TraceIdRatioBasedSampler(0.1)  // 10% sampling for root spans
+    );
 })
 ```
 
@@ -753,6 +906,29 @@ apm_config:
       - "http.url:/health"
       - "http.url:/metrics"
 ```
+
+### Cost Estimation
+
+Understanding Datadog costs helps you optimize your observability spend:
+
+**Monthly Cost Estimates (as of 2026):**
+
+| Metric | Small App (10K req/day) | Medium App (1M req/day) | Large App (10M req/day) |
+|--------|------------------------|-------------------------|------------------------|
+| **Traces** | ~5GB → $12/mo | ~50GB (10% sampled) → $120/mo | ~500GB (1% sampled) → $1,200/mo |
+| **Logs** | ~10GB → $10/mo | ~100GB (filtered) → $100/mo | ~1TB (aggressive filtering) → $1,000/mo |
+| **Metrics** | ~250 custom → $15/mo | ~1,000 custom → $60/mo | ~5,000 custom → $300/mo |
+| **Total** | **~$37/mo** | **~$280/mo** | **~$2,500/mo** |
+
+**Cost Optimization Strategies:**
+
+1. **Use agent-side filtering** (covered in Step 5)
+2. **Implement smart sampling** (health checks, static assets at 1%, business logic at 100%)
+3. **Set appropriate retention** (7 days for debug logs, 30 days for errors)
+4. **Use log indexes** to separate hot vs cold data
+5. **Archive to S3** for compliance (much cheaper long-term storage)
+
+**Pro Tip:** Enable cost tracking in Datadog by tagging resources with `cost_center` and `team` tags.
 
 ## Production Deployment
 
@@ -776,7 +952,7 @@ spec:
               value: "http://localhost:4318"
 
         - name: datadog-agent
-          image: gcr.io/datadoghq/agent:latest
+          image: gcr.io/datadoghq/agent:7.50.0  # Pin to specific version
           env:
             - name: DD_API_KEY
               valueFrom:
@@ -784,7 +960,15 @@ spec:
                   name: datadog-secret
                   key: api-key
             - name: DD_SITE
-              value: "us5.datadoghq.com"
+              valueFrom:
+                configMapKeyRef:
+                  name: datadog-config
+                  key: site
+            - name: DD_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: datadog-config
+                  key: environment
           ports:
             - containerPort: 4318
             - containerPort: 8125
@@ -800,17 +984,36 @@ kind: DaemonSet
 metadata:
   name: datadog-agent
 spec:
+  selector:
+    matchLabels:
+      app: datadog-agent
   template:
+    metadata:
+      labels:
+        app: datadog-agent
     spec:
       containers:
         - name: agent
-          image: gcr.io/datadoghq/agent:latest
+          image: gcr.io/datadoghq/agent:7.50.0
           env:
             - name: DD_KUBERNETES_KUBELET_HOST
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: datadog-secret
+                  key: api-key
       hostNetwork: true
+      # Optional: Target specific nodes
+      nodeSelector:
+        observability: enabled
+      # Optional: Tolerate node taints
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
 ```
 
 ### Agent in Docker Compose
@@ -822,17 +1025,22 @@ services:
     build: .
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://datadog-agent:4318
+      ASPNETCORE_ENVIRONMENT: Development
     depends_on:
       - datadog-agent
 
   datadog-agent:
-    image: gcr.io/datadoghq/agent:latest
+    image: gcr.io/datadoghq/agent:7.50.0
     environment:
       DD_API_KEY: ${DD_API_KEY}
       DD_SITE: us5.datadoghq.com
+      DD_APM_ENABLED: "true"
+      DD_LOGS_ENABLED: "true"
+      DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT: 0.0.0.0:4318
     ports:
       - "4318:4318"
       - "8125:8125/udp"
+      - "8126:8126"
 ```
 
 ## When to Use Agent vs Direct Cloud
@@ -852,28 +1060,52 @@ services:
 ### Create Agent Health Check Endpoint
 
 ```csharp
+using System.Net.Sockets;
+
 app.MapGet("/agent-health", async () =>
 {
-    using var httpClient = new HttpClient();
-
-    try
+    var endpoints = new[] 
+    { 
+        ("OTLP", "localhost", 4318),
+        ("StatsD", "localhost", 8125),
+        ("APM", "localhost", 8126)
+    };
+    
+    var results = new List<object>();
+    
+    foreach (var (name, host, port) in endpoints)
     {
-        var response = await httpClient.GetAsync("http://localhost:4318/");
-        return Results.Ok(new
+        try
         {
-            agent = "reachable",
-            endpoint = "http://localhost:4318",
-            status = response.StatusCode
-        });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(new
+            using var tcpClient = new TcpClient();
+            var connectTask = tcpClient.ConnectAsync(host, port);
+            
+            if (await Task.WhenAny(connectTask, Task.Delay(1000)) == connectTask)
+            {
+                results.Add(new { endpoint = name, port, status = "reachable" });
+            }
+            else
+            {
+                results.Add(new { endpoint = name, port, status = "timeout" });
+            }
+        }
+        catch (Exception ex)
         {
-            agent = "unreachable",
-            error = ex.Message
-        });
+            results.Add(new { endpoint = name, port, status = "unreachable", error = ex.Message });
+        }
     }
+    
+    var allReachable = results.All(r => ((dynamic)r).status == "reachable");
+    
+    return allReachable 
+        ? Results.Ok(new { agent = "healthy", endpoints = results })
+        : Results.Problem(
+            title: "Agent partially unreachable",
+            detail: "Some agent endpoints are not responding",
+            statusCode: 503,
+            instance: "/agent-health",
+            extensions: new Dictionary<string, object?> { ["endpoints"] = results }
+        );
 });
 ```
 
@@ -883,7 +1115,10 @@ The agent exposes its own metrics:
 
 ```bash
 # Agent internal metrics
-docker exec dd-agent agent status --json | jq '.aggregatorStats'
+docker exec dd-agent agent status --json | jq '.aggregator_stats // .aggregatorStats'
+
+# Or get full status
+docker exec dd-agent agent status
 ```
 
 Track these in Datadog:
