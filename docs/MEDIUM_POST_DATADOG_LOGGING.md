@@ -6,6 +6,19 @@ Effective logging is the backbone of observability in modern applications. When 
 
 In this comprehensive guide, I'll walk you through setting up **Datadog logging** in a .NET 10 application with full **trace correlation**—a powerful feature that allows you to see logs in the context of distributed traces, making debugging exponentially easier.
 
+## Table of Contents
+
+1. [What We'll Build](#what-well-build)
+2. [Why This Stack?](#why-datadog--serilog--opentelemetry)
+3. [Architecture Overview](#architecture-overview)
+4. [Prerequisites](#prerequisites)
+5. [Step-by-Step Setup](#step-1-install-required-nuget-packages)
+6. [Testing & Verification](#step-8-testing-your-setup)
+7. [Advanced Topics](#advanced-custom-log-properties)
+8. [Production Considerations](#production-considerations)
+9. [Troubleshooting](#troubleshooting-common-issues)
+10. [Real-World Example](#real-world-example-debugging-a-slow-request)
+
 ## What We'll Build
 
 By the end of this guide, you'll have:
@@ -61,6 +74,8 @@ This provides buffering, retry logic, and offline development capability.
 
 ## Prerequisites
 
+**Estimated setup time:** 30-45 minutes
+
 Before we begin, ensure you have:
 
 1. **.NET 10 SDK** installed
@@ -73,12 +88,14 @@ Before we begin, ensure you have:
 Add these packages to your ASP.NET Core project:
 
 ```bash
-dotnet add package Serilog.AspNetCore --version 10.0.0
-dotnet add package Serilog.Sinks.Datadog.Logs --version 0.6.0
-dotnet add package Serilog.Sinks.File --version 7.0.0
-dotnet add package Serilog.Enrichers.Span --version 3.1.0
-dotnet add package DotNetEnv --version 3.2.0
+dotnet add package Serilog.AspNetCore
+dotnet add package Serilog.Sinks.Datadog.Logs
+dotnet add package Serilog.Sinks.File
+dotnet add package Serilog.Enrichers.Span
+dotnet add package DotNetEnv
 ```
+
+> **Note:** Omitting version numbers installs the latest stable versions. As of February 2026, verify current versions at [nuget.org](https://www.nuget.org/).
 
 **What each package does:**
 
@@ -114,34 +131,92 @@ internal sealed class OpenTelemetryTraceEnricher : ILogEventEnricher
         }
 
         // Add W3C trace IDs (hex format)
+        var traceId = activity.TraceId.ToString();
+        var spanId = activity.SpanId.ToString();
+        
         logEvent.AddPropertyIfAbsent(
-            propertyFactory.CreateProperty("TraceId", activity.TraceId.ToString())
+            propertyFactory.CreateProperty("TraceId", traceId)
         );
         logEvent.AddPropertyIfAbsent(
-            propertyFactory.CreateProperty("SpanId", activity.SpanId.ToString())
+            propertyFactory.CreateProperty("SpanId", spanId)
         );
 
         // Add Datadog-specific trace IDs (decimal format)
         // Datadog expects the lower 64 bits of the trace ID as a decimal number
-        logEvent.AddPropertyIfAbsent(
-            propertyFactory.CreateProperty(
-                "dd.trace_id",
-                Convert.ToUInt64(activity.TraceId.ToString().Substring(16), 16).ToString()
-            )
-        );
-        logEvent.AddPropertyIfAbsent(
-            propertyFactory.CreateProperty(
-                "dd.span_id",
-                Convert.ToUInt64(activity.SpanId.ToString(), 16).ToString()
-            )
-        );
+        try
+        {
+            // Extract lower 64 bits (last 16 hex characters) of the 128-bit trace ID
+            if (traceId.Length >= 16)
+            {
+                var lower64Bits = traceId.Substring(Math.Max(0, traceId.Length - 16));
+                var ddTraceId = Convert.ToUInt64(lower64Bits, 16).ToString();
+                logEvent.AddPropertyIfAbsent(
+                    propertyFactory.CreateProperty("dd.trace_id", ddTraceId)
+                );
+            }
+
+            if (spanId.Length > 0)
+            {
+                var ddSpanId = Convert.ToUInt64(spanId, 16).ToString();
+                logEvent.AddPropertyIfAbsent(
+                    propertyFactory.CreateProperty("dd.span_id", ddSpanId)
+                );
+            }
+        }
+        catch (FormatException)
+        {
+            // Skip Datadog IDs if conversion fails - W3C IDs are still present
+        }
     }
 }
 ```
 
-**Why this matters:** OpenTelemetry uses hexadecimal trace IDs (W3C format), but Datadog expects decimal trace IDs. This enricher converts between formats, enabling seamless correlation.
+**Why this matters:** OpenTelemetry uses hexadecimal trace IDs (W3C Trace Context format), but Datadog expects decimal trace IDs. This enricher safely converts between formats with error handling, enabling seamless correlation.
 
-## Step 3: Configure Serilog in Program.cs
+## Step 3: Configure OpenTelemetry Tracing
+
+Before configuring logging, set up OpenTelemetry tracing to generate the trace IDs we'll correlate:
+
+```csharp
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+// Add OpenTelemetry tracing
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "hexagon-dotnet-app",
+            serviceVersion: "1.0.0"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, request) =>
+            {
+                activity.SetTag("http.client_ip", request.HttpContext.Connection.RemoteIpAddress);
+            };
+        })
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(options =>
+        {
+            // Send to local Datadog agent (or directly to Datadog if configured)
+            options.Endpoint = new Uri(
+                Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") 
+                ?? "http://localhost:4318"
+            );
+        }));
+```
+
+**Required NuGet packages:**
+
+```bash
+dotnet add package OpenTelemetry.Extensions.Hosting
+dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+dotnet add package OpenTelemetry.Instrumentation.Http
+dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol
+```
+
+## Step 4: Configure Serilog in Program.cs
 
 Now let's wire everything together in `Program.cs`:
 
@@ -158,9 +233,10 @@ DotNetEnv.Env.Load();
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog with multiple sinks
-Log.Logger = new LoggerConfiguration()
+var loggerConfiguration = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.With(new OpenTelemetryTraceEnricher()) // 🔥 This enables trace correlation
     .Enrich.WithProperty("Application", "App.Api")
@@ -173,10 +249,19 @@ Log.Logger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         shared: true,
-        flushToDiskInterval: TimeSpan.FromSeconds(1)
-    )
-    .WriteTo.DatadogLogs(
-        apiKey: Environment.GetEnvironmentVariable("DD_API_KEY"),
+        flushToDiskInterval: TimeSpan.FromSeconds(10) // Reduced frequency for performance
+    );
+
+// Only send logs to Datadog in non-development environments
+if (!builder.Environment.IsDevelopment())
+{
+    var ddApiKey = Environment.GetEnvironmentVariable("DD_API_KEY")
+        ?? throw new InvalidOperationException(
+            "DD_API_KEY environment variable is required for non-development environments"
+        );
+
+    loggerConfiguration.WriteTo.DatadogLogs(
+        apiKey: ddApiKey,
         source: "csharp",
         service: "hexagon-dotnet-app",
         host: Environment.MachineName,
@@ -185,15 +270,29 @@ Log.Logger = new LoggerConfiguration()
             "version:1.0.0" 
         },
         configuration: new DatadogConfiguration { 
-            Url = "https://http-intake.logs.us5.datadoghq.com" 
+            Url = Environment.GetEnvironmentVariable("DD_LOG_INTAKE_URL") 
+                ?? "https://http-intake.logs.us5.datadoghq.com" 
         }
-    )
-    .CreateLogger();
+    );
+}
+
+Log.Logger = loggerConfiguration.CreateLogger();
 
 builder.Host.UseSerilog();
 
 // Rest of your application setup...
 WebApplication app = builder.Build();
+
+// Enable automatic HTTP request/response logging
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
+    };
+});
 
 try
 {
@@ -210,7 +309,15 @@ finally
 }
 ```
 
-## Step 4: Configure Environment Variables
+**Key improvements in this configuration:**
+
+1. ✅ **Environment-aware**: Datadog sink only active in production
+2. ✅ **Null safety**: API key validation prevents runtime errors
+3. ✅ **Request logging**: Automatic HTTP logging with `UseSerilogRequestLogging`
+4. ✅ **Performance**: 10-second file flush interval (not 1 second)
+5. ✅ **Enrichment**: HTTP context automatically added to logs
+
+## Step 5: Configure Environment Variables
 
 Create a `.env` file in your project root:
 
@@ -221,10 +328,14 @@ DD_SITE=us5.datadoghq.com
 DD_ENV=development
 DD_SERVICE=hexagon-dotnet-app
 DD_VERSION=1.0.0
+DD_LOG_INTAKE_URL=https://http-intake.logs.us5.datadoghq.com
 
 # OpenTelemetry Configuration (for traces)
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 OTEL_SERVICE_NAME=hexagon-dotnet-app
+
+# For production, set:
+# ASPNETCORE_ENVIRONMENT=Production
 ```
 
 ⚠️ **Security Note:** Never commit `.env` files with real API keys to version control! Add `.env` to your `.gitignore`:
@@ -233,7 +344,7 @@ OTEL_SERVICE_NAME=hexagon-dotnet-app
 echo ".env" >> .gitignore
 ```
 
-## Step 5: Understanding Log Output
+## Step 6: Understanding Log Output
 
 With this configuration, each log entry becomes a rich JSON object:
 
@@ -259,7 +370,7 @@ Notice the four trace-related fields:
 
 These fields enable Datadog to link logs with traces automatically.
 
-## Step 6: Setting Up Local Datadog Agent (Optional)
+## Step 7: Setting Up Local Datadog Agent (Optional)
 
 For local development, running a Datadog agent provides several benefits:
 
@@ -272,9 +383,25 @@ Create a script `scripts/datadog-agent.sh`:
 
 ```bash
 #!/bin/bash
+set -e
 
 # Start Datadog agent with OpenTelemetry support
-docker run -d \
+# Works with both docker and podman
+CONTAINER_CMD="${CONTAINER_CMD:-docker}"
+
+if ! command -v "$CONTAINER_CMD" &> /dev/null; then
+    echo "Error: $CONTAINER_CMD not found. Install Docker or Podman."
+    exit 1
+fi
+
+if [ -z "$DD_API_KEY" ]; then
+    echo "Error: DD_API_KEY environment variable not set"
+    exit 1
+fi
+
+echo "Starting Datadog agent using $CONTAINER_CMD..."
+
+$CONTAINER_CMD run -d \
   --name dd-agent \
   -e DD_API_KEY="${DD_API_KEY}" \
   -e DD_SITE="${DD_SITE:-us5.datadoghq.com}" \
@@ -287,16 +414,32 @@ docker run -d \
   -p 8126:8126 \
   -p 8125:8125/udp \
   datadog/agent:latest
+
+echo "Waiting for agent to be ready..."
+sleep 5
+
+if $CONTAINER_CMD ps | grep -q dd-agent; then
+    echo "✓ Datadog agent started successfully"
+    echo "View logs: $CONTAINER_CMD logs -f dd-agent"
+else
+    echo "✗ Failed to start Datadog agent"
+    exit 1
+fi
 ```
 
 Run it:
 
 ```bash
 chmod +x scripts/datadog-agent.sh
+
+# Using Docker
 ./scripts/datadog-agent.sh
+
+# Using Podman
+CONTAINER_CMD=podman ./scripts/datadog-agent.sh
 ```
 
-## Step 7: Testing Your Setup
+## Step 8: Testing Your Setup
 
 ### Generate Test Logs
 
@@ -327,7 +470,24 @@ Check the console output and log file:
 tail -f logs/app.log
 ```
 
-You should see structured JSON logs with trace IDs.
+You should see structured JSON logs with trace IDs. Verify the enricher is working by checking for these fields:
+
+```bash
+# Check if trace IDs are present
+cat logs/app.log | jq 'select(.TraceId != null) | {TraceId, SpanId, "dd.trace_id", "dd.span_id"}'
+```
+
+Expected output:
+```json
+{
+  "TraceId": "0af7651916cd43dd8448eb211c80319c",
+  "SpanId": "a1b2c3d4e5f6g7h8",
+  "dd.trace_id": "9553762204513133084",
+  "dd.span_id": "11644864782168674360"
+}
+```
+
+If trace IDs are missing, ensure you've made at least one HTTP request (traces are request-scoped).
 
 ### Verify in Datadog
 
@@ -335,7 +495,7 @@ You should see structured JSON logs with trace IDs.
 2. Search for: `service:hexagon-dotnet-app`
 3. Wait 1-2 minutes for logs to appear (slight ingestion delay)
 
-## Step 8: Log-Trace Correlation in Action
+## Step 9: Log-Trace Correlation in Action
 
 The real power emerges when you view logs within traces:
 
@@ -385,14 +545,49 @@ For high-throughput applications, consider log sampling:
 
 ### 2. Sensitive Data Filtering
 
-Never log sensitive information:
+Never log sensitive information. Configure destructuring policies:
 
 ```csharp
-.Destructure.ByTransforming<User>(u => new {
-    u.Id,
-    Email = "***REDACTED***", // Don't log PII
-    u.Username
-})
+Log.Logger = new LoggerConfiguration()
+    // ... other config
+    .Destructure.ByTransforming<User>(u => new {
+        u.Id,
+        Email = "***REDACTED***", // Don't log PII
+        u.Username
+    })
+    .Destructure.ByTransforming<CreditCard>(cc => new {
+        LastFour = cc.Number.Substring(cc.Number.Length - 4),
+        MaskedNumber = "****-****-****-" + cc.Number.Substring(cc.Number.Length - 4)
+    })
+    .CreateLogger();
+```
+
+Or use a custom policy for all sensitive properties:
+
+```csharp
+public class SensitiveDataDestructuringPolicy : IDestructuringPolicy
+{
+    public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, 
+        out LogEventPropertyValue result)
+    {
+        if (value is string str && IsSensitive(str))
+        {
+            result = new ScalarValue("***REDACTED***");
+            return true;
+        }
+        
+        result = null;
+        return false;
+    }
+    
+    private bool IsSensitive(string value) => 
+        value.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("token", StringComparison.OrdinalIgnoreCase) ||
+        value.Contains("apikey", StringComparison.OrdinalIgnoreCase);
+}
+
+// Register it
+.Destructure.With<SensitiveDataDestructuringPolicy>()
 ```
 
 ### 3. Performance Impact
@@ -405,11 +600,36 @@ Logging to Datadog cloud adds ~5-10ms per request. For critical paths:
 
 ### 4. Cost Optimization
 
-Datadog charges by log volume:
+Datadog charges by log volume. Understanding costs helps you optimize:
 
-- Set appropriate retention policies (7-15 days for most logs)
-- Use log exclusion filters for noisy logs
-- Archive old logs to S3 for compliance
+**Pricing Context (as of 2026):**
+- Free tier: 150GB logs/month (15 days retention)
+- Standard logs: ~$0.10 per GB ingested
+- Example calculation:
+  - 1M requests/day × 10 logs per request = 10M logs/day
+  - ~10 logs/day × 500 bytes avg = ~5GB/day
+  - 5GB/day × 30 days × $0.10 = **$150/month**
+
+**Optimization strategies:**
+
+```csharp
+// 1. Sample high-frequency logs (keep 1 in 10 health checks)
+.Filter.ByExcluding(logEvent => 
+    logEvent.MessageTemplate.Text.Contains("HealthCheck") 
+    && Random.Shared.Next(10) != 0)
+
+// 2. Use log levels appropriately
+.MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+.MinimumLevel.Override("System", LogEventLevel.Warning)
+
+// 3. Only log to Datadog in production (as shown in Step 4)
+```
+
+**In Datadog UI:**
+- Set up **exclusion filters** for noisy logs (e.g., health checks)
+- Use **log indexes** with different retention periods
+- Archive old logs to S3 for compliance (much cheaper)
+- Set up **log sampling** at 10% for debug-level logs
 
 ## Troubleshooting Common Issues
 
@@ -434,15 +654,12 @@ Should return: `{"status":"ok"}`
 
 ### Trace IDs Not Appearing
 
-Ensure OpenTelemetry instrumentation is configured:
+This is covered in Step 3, but verify:
 
-```csharp
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-    );
-```
+1. OpenTelemetry packages are installed
+2. `AddOpenTelemetry()` is called in `Program.cs`
+3. The enricher is registered: `.Enrich.With(new OpenTelemetryTraceEnricher())`
+4. At least one HTTP request has been made (traces are request-scoped)
 
 ### Logs and Traces Not Correlating
 

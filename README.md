@@ -151,6 +151,44 @@ Before running the application, ensure you have:
 
 > **Note**: This application uses Aspire 13.1.1 which works directly with .NET 10 using the new SDK pattern (no workload installation required).
 
+### ✅ What's Included
+
+✅ **Aspire Dashboard** - Visual orchestration and monitoring  
+✅ **OpenTelemetry** - Distributed tracing and metrics  
+✅ **Health Checks** - `/health` (readiness) and `/alive` (liveness)  
+✅ **HTTP Resilience** - Automatic retry, circuit breaker, timeout  
+✅ **Service Discovery** - Ready for multi-service scenarios  
+✅ **.NET 10** - Latest .NET runtime
+
+### What Changed in Aspire 13.1.1
+
+The project has been upgraded from Aspire 9.0.0 to **Aspire 13.1.1** using the new SDK pattern:
+
+**Before (Aspire 9.0.0):**
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
+  </ItemGroup>
+</Project>
+```
+
+**After (Aspire 13.1.1):**
+```xml
+<Project Sdk="Aspire.AppHost.Sdk/13.1.1">
+  <!-- Aspire.Hosting packages now included automatically by SDK -->
+</Project>
+```
+
+**Key Improvements:**
+1. **Simplified SDK** - Uses `Aspire.AppHost.Sdk/13.1.1` directly
+2. **No Workload Required** - Pure NuGet package approach
+3. **Full .NET 10 Support** - No compatibility issues
+4. **Cleaner Project Files** - Removed boilerplate package references
+
+For detailed migration information, see [ASPIRE_INTEGRATION.md](docs/ASPIRE_INTEGRATION.md).
+
 ### Datadog Agent Setup (Optional)
 
 The application logs are sent directly to Datadog cloud, but you can optionally run the Datadog agent for APM traces and metrics:
@@ -180,12 +218,14 @@ cd hexagon-dotnet-app
 dotnet run --project src/App.AppHost
 ```
 
-This will start:
+**Access Points:**
 
-- **Aspire Dashboard**: `http://localhost:17123` (view logs, traces, metrics)
-- **API Service**: `http://localhost:5112`
+- 🎯 **Aspire Dashboard**: http://localhost:17123 _(HTTP only - no SSL errors!)_
+- 🌐 **API**: http://localhost:5112
+- 🏥 **Health Check**: http://localhost:5112/health
+- 💓 **Liveness**: http://localhost:5112/alive
 
-> **Note**: The dashboard runs on HTTP (not HTTPS) in development to avoid SSL certificate errors. This is configured via `ASPIRE_ALLOW_UNSECURED_TRANSPORT=true` in launch settings.
+> **Note**: The dashboard runs on **HTTP** to eliminate SSL certificate errors in development. Configured via `ASPIRE_ALLOW_UNSECURED_TRANSPORT=true`.
 
 The dashboard provides:
 
@@ -194,7 +234,7 @@ The dashboard provides:
 - Metrics and performance data
 - Resource management
 
-**Option 2: Direct API Execution**
+**Option 2: Direct API Execution (Without Dashboard)**
 
 You can also run the API service independently:
 
@@ -202,7 +242,11 @@ You can also run the API service independently:
 dotnet run --project src/App.Api
 ```
 
-The API will be available at `http://localhost:5112`.
+**Access Points:**
+
+- 🌐 **API**: http://localhost:5112
+- 🏥 **Health Check**: http://localhost:5112/health
+- 💓 **Liveness**: http://localhost:5112/alive
 
 **Option 3: Using the Watch Command (Development)**
 
@@ -214,20 +258,69 @@ dotnet watch --project src/App.Api
 
 ### Build and Test
 
+Build the entire solution:
+
 ```bash
 dotnet build src/App.slnx
 ```
 
-Run all tests:
+Run all tests (48 tests):
 
 ```bash
 dotnet test src/App.slnx
 ```
 
-Run tests with coverage:
+Run tests with code coverage:
 
 ```bash
 dotnet test src/App.slnx --collect:"XPlat Code Coverage"
+```
+
+All tests pass! ✅
+
+### Test the API
+
+#### Health Checks
+
+```bash
+# Readiness check (dependencies healthy)
+curl http://localhost:5112/health
+
+# Liveness check (application running)
+curl http://localhost:5112/alive
+```
+
+#### Todo Examples
+
+```bash
+# Get all todos
+curl http://localhost:5112/api/v1/todos
+
+# Create a new todo
+curl -X POST http://localhost:5112/api/v1/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Test Aspire Integration", "isCompleted": false}'
+
+# Get completed todos
+curl http://localhost:5112/api/v1/todos/completed
+
+# Update a todo
+curl -X PUT http://localhost:5112/api/v1/todos/1 \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Updated Todo", "isCompleted": true}'
+
+# Delete a todo
+curl -X DELETE http://localhost:5112/api/v1/todos/1
+```
+
+#### Pokemon API Examples (External Gateway)
+
+```bash
+# Get first 3 Pokemon
+curl "http://localhost:5112/api/v1/pokemon?limit=3"
+
+# Get specific Pokemon by ID
+curl http://localhost:5112/api/v1/pokemon/25
 ```
 
 ### API Documentation
@@ -247,6 +340,59 @@ Application logs are automatically forwarded to Datadog:
 3. View structured logs with enriched properties (environment, application, operation details)
 
 Local JSON log files are also available at `src/App.Api/logs/` for debugging.
+
+### Troubleshooting
+
+#### Port Already in Use
+
+If you see `Failed to bind to address https://127.0.0.1:22222: address already in use`:
+
+```bash
+# Find and kill process on the port
+lsof -ti:22222 | xargs kill -9
+
+# Or on Windows:
+netstat -ano | findstr :22222
+taskkill /PID <PID> /F
+
+# Then run again
+dotnet run --project src/App.AppHost
+```
+
+#### SSL Certificate Warnings
+
+**✅ SSL has been disabled in development!** The dashboard now runs on plain HTTP to eliminate all certificate errors.
+
+Configuration changes made:
+
+- Dashboard URL: `http://localhost:17123` (was https://localhost:22222)
+- Environment variable: `ASPIRE_ALLOW_UNSECURED_TRANSPORT=true`
+- All Aspire endpoints use HTTP in development
+
+**No more SSL errors!** 🎉
+
+> **Production Note**: In production, you should use HTTPS with proper certificates. The HTTP configuration is **only for development** to avoid certificate issues.
+
+#### Database Issues
+
+If you encounter database errors:
+
+```bash
+# Delete the database file
+rm src/App.Api/app.db
+
+# Restart the application (database will be recreated)
+dotnet run --project src/App.Api
+```
+
+#### Datadog Logs Not Appearing
+
+If logs aren't showing up in Datadog:
+
+1. Verify `DD_API_KEY` environment variable is set
+2. Check network connectivity to Datadog intake URL
+3. View local log files: `tail -f src/App.Api/logs/app*.log`
+4. Check Datadog site setting matches your account region
 
 ## API Endpoints
 
