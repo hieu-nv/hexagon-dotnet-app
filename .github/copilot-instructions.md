@@ -109,3 +109,7 @@ csharpier format .                             # Format all files
 3. **API**: Create endpoints handler and extensions in `App.Api/{Domain}/`
 4. **Wire up**: Add `Use{Domain}()` calls to `Program.cs`
 5. **Tests**: Add service tests in `test/App.Core.Tests/{Domain}/`
+
+## Container
+
+This project use podman instead of using docker.

@@ -9,6 +9,19 @@ The application uses **OpenTelemetry (OTEL)** to send traces and metrics to Data
 1. **Directly to Datadog Cloud** - For production or when you want data in Datadog immediately
 2. **To a Local Datadog Agent** - For local development, testing, or when working offline
 
+### Instrumentation Details
+
+The application includes comprehensive OpenTelemetry instrumentation:
+
+- **ASP.NET Core Instrumentation**: HTTP request/response tracing with enriched metadata
+- **HTTP Client Instrumentation**: Outgoing HTTP request tracing (PokeAPI calls)
+- **Entity Framework Core Instrumentation**: Database query execution tracing with command text
+- **SQL Client Instrumentation**: Low-level database query tracing with execution time
+- **Runtime Instrumentation**: .NET CLR metrics (GC, memory, thread pool)
+- **Process Instrumentation**: Process-level metrics (CPU, memory usage)
+
+All instrumentation is configured in `src/App.ServiceDefaults/Extensions.cs` following the **Aspire service defaults** pattern.
+
 ## Architecture
 
 ```
@@ -201,6 +214,61 @@ Look for:
 - `Receiver Stats` showing received traces
 - `Trace Writer` showing processed spans
 
+## What Traces You'll See in Datadog
+
+After generating traffic, you should see distributed traces with the following spans:
+
+### HTTP Request Trace Example
+
+```
+GET /todos
+├── ASP.NET Core HTTP GET /todos (root span)
+│   ├── http.request.method: GET
+│   ├── http.request.path: /todos
+│   ├── http.response.status_code: 200
+│   └── EF Core SELECT operation
+│       ├── db.execution_time_ms: 5.2
+│       ├── db.statement: SELECT * FROM TODOS
+│       └── SQL Client Query
+│           ├── db.system: sqlite
+│           └── db.execution_time: 5ms
+```
+
+### External API Call Trace Example
+
+```
+GET /pokemon/pikachu
+├── ASP.NET Core HTTP GET /pokemon/{name} (root span)
+│   └── HTTP Client GET https://pokeapi.co/api/v2/pokemon/pikachu
+│       ├── http.request.uri: https://pokeapi.co/api/v2/pokemon/pikachu
+│       ├── http.response.status_code: 200
+│       └── duration: 250ms
+```
+
+### Metrics Available
+
+- **Request Rate**: Requests per second by endpoint
+- **Error Rate**: 4xx/5xx responses
+- **Latency**: p50, p75, p95, p99 response times
+- **Database Query Time**: Average query execution time
+- **External API Latency**: Time spent calling external services
+- **GC Metrics**: Garbage collection frequency and duration
+- **Memory Usage**: Heap size, allocations
+- **Thread Pool**: Active threads, queue length
+
+### Trace Context and Enrichment
+
+All spans include:
+
+- `service.name`: hexagon-dotnet-app
+- `service.version`: 1.0.0
+- `deployment.environment`: development
+- `service.namespace`: hexagon
+- `host.name`: Your machine name
+- `process.runtime.name`: .NET
+- `process.runtime.version`: 10.0.x
+- `telemetry.sdk.language`: dotnet
+
 ## Switching Between Local and Cloud
 
 ### To Use Cloud Directly (Skip Local Agent)
@@ -317,7 +385,7 @@ If you see "connection refused" errors:
 
 | Variable              | Description      | Example              |
 | --------------------- | ---------------- | -------------------- |
-| `DD_API_KEY`          | Datadog API key  | `7330e4f63...`       |
+| `DD_API_KEY`          | Datadog API key  | `=********...`       |
 | `DD_SITE`             | Datadog site     | `us5.datadoghq.com`  |
 | `DD_ENV`              | Environment name | `development`        |
 | `DD_SERVICE`          | Service name     | `hexagon-dotnet-app` |
