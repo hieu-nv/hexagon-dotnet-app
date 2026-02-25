@@ -6,7 +6,9 @@ init_config:
 
 instances:
   ## Scrape the application's /metrics endpoint
-  - prometheus_url: http://host.containers.internal:5112/metrics
+  ## Use host.docker.internal for Docker, or the host's actual IP for Podman
+  ## For macOS with Podman, use the host gateway IP
+  - prometheus_url: http://host.docker.internal:5112/metrics
 
     ## Namespace prefix for all metrics sent to Datadog
     namespace: hexagon_dotnet_app
