@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Cleanup unnecessary skills from ~/.agent/skills/
-# Keeps only skills relevant to .NET hexagonal architecture projects
+# Copy necessary skills from antigravity-awesome-skills to .github/skills
+# Only copies skills relevant to .NET hexagonal architecture projects
+#
+# Usage: ./agent-skills-cleanup.sh [-f]
+#   -f    Force copy, overwrite existing skills
 
-SKILLS_DIR="$HOME/.agent/skills"
+SOURCE_SKILLS_DIR="../../antigravity-awesome-skills/skills"
+DEST_SKILLS_DIR="../.github/skills"
+FORCE=false
 
-# Skills to keep for .NET hexagonal architecture project
-KEEP_SKILLS=(
+# Parse arguments
+while getopts "f" opt; do
+    case $opt in
+        f) FORCE=true ;;
+        *) echo "Usage: $0 [-f]" >&2; exit 1 ;;
+    esac
+done
+
+# Skills to copy for .NET hexagonal architecture project
+COPY_SKILLS=(
     "dotnet-architect"
     "dotnet-backend"
     "dotnet-backend-patterns"
@@ -51,55 +64,56 @@ KEEP_SKILLS=(
     "sql-pro"
 )
 
-# Check if skills directory exists
-if [[ ! -d "$SKILLS_DIR" ]]; then
-    echo "Error: Skills directory not found at $SKILLS_DIR"
+# Check if source directory exists
+if [[ ! -d "$SOURCE_SKILLS_DIR" ]]; then
+    echo "Error: Source skills directory not found at $SOURCE_SKILLS_DIR"
     exit 1
 fi
 
-echo "Starting cleanup of $SKILLS_DIR"
+# Create destination directory if it doesn't exist
+mkdir -p "$DEST_SKILLS_DIR"
+
+echo "Copying skills from $SOURCE_SKILLS_DIR to $DEST_SKILLS_DIR"
 echo "=================================================="
 echo ""
 
-removed_count=0
-kept_count=0
+copied_count=0
+skipped_count=0
+notfound_count=0
 
-# Function to check if skill should be kept
-should_keep() {
-    local skill="$1"
-    for keep in "${KEEP_SKILLS[@]}"; do
-        if [[ "$skill" == "$keep" ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-# Process each directory in skills folder
-cd "$SKILLS_DIR"
-for dir in */; do
-    # Remove trailing slash
-    dir_name="${dir%/}"
+# Copy each skill
+for skill in "${COPY_SKILLS[@]}"; do
+    source_skill="$SOURCE_SKILLS_DIR/$skill"
+    dest_skill="$DEST_SKILLS_DIR/$skill"
     
-    # Skip if it's a file or special directory
-    if [[ ! -d "$dir_name" ]]; then
+    if [[ ! -e "$source_skill" ]]; then
+        echo "✗ Not found: $skill"
+        ((notfound_count++))
         continue
     fi
     
-    # Check if directory should be kept
-    if should_keep "$dir_name"; then
-        echo "✓ Keep:   $dir_name"
-        ((kept_count++))
-    else
-        echo "✗ Remove: $dir_name"
-        rm -rf "$dir_name"
-        ((removed_count++))
+    # If destination already exists and not forcing, skip
+    if [[ -e "$dest_skill" && "$FORCE" == false ]]; then
+        echo "⊘ Skip:     $skill (already exists)"
+        ((skipped_count++))
+        continue
     fi
+    
+    # If forcing and destination exists, remove it first
+    if [[ -e "$dest_skill" && "$FORCE" == true ]]; then
+        rm -rf "$dest_skill"
+    fi
+    
+    # Copy the skill (file or directory)
+    cp -r "$source_skill" "$dest_skill"
+    echo "✓ Copy:     $skill"
+    ((copied_count++))
 done
 
 echo ""
 echo "=================================================="
-echo "Cleanup Complete!"
-echo "  Kept:    $kept_count skills"
-echo "  Removed: $removed_count skills"
+echo "Copy Complete!"
+echo "  Copied:   $copied_count skills"
+echo "  Skipped:  $skipped_count skills"
+echo "  Not found: $notfound_count skills"
 echo "=================================================="
