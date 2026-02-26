@@ -27,16 +27,6 @@ Log.Logger = new LoggerConfiguration()
         shared: true,
         flushToDiskInterval: TimeSpan.FromSeconds(1)
     )
-    // For local Datadog agent: logs are written to file and agent tails them
-    // For production: uncomment DatadogLogs sink with cloud URL
-    // .WriteTo.DatadogLogs(
-    //     apiKey: builder.Configuration["DD_API_KEY"],
-    //     source: "csharp",
-    //     service: "hexagon-dotnet-app",
-    //     host: Environment.MachineName,
-    //     tags: new[] { $"env:{builder.Environment.EnvironmentName}", "version:1.0.0" },
-    //     configuration: new DatadogConfiguration { Url = "https://http-intake.logs.us5.datadoghq.com" }
-    // )
     .CreateLogger();
 
 builder.Host.UseSerilog();
