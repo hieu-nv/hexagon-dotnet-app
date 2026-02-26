@@ -16,7 +16,8 @@ public static class AppCore
     /// <exception cref="ArgumentNullException">Thrown when the builder is null.</exception>
     public static WebApplicationBuilder UseAppCore(this WebApplicationBuilder builder)
     {
-        builder?.Services.AddScoped<TodoService>();
-        return builder ?? throw new ArgumentNullException(nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.Services.AddScoped<TodoService>();
+        return builder;
     }
 }

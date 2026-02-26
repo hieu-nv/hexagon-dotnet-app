@@ -12,7 +12,6 @@ namespace App.Api.Todo;
 /// </summary>
 /// <param name="todoService">Service for managing to-do items.</param>
 /// <param name="logger">Logger for tracking operations.</param>
-[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoints> logger)
 {
     /// <summary>
@@ -33,8 +32,8 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         _logger.LogInformation("Retrieving all todos");
         try
         {
-            var todos = await _todoService.FindAllAsync().ConfigureAwait(false);
-            _logger.LogInformation("Successfully retrieved {TodoCount} todos", todos.Count());
+            var todos = (await _todoService.FindAllAsync().ConfigureAwait(false)).ToList();
+            _logger.LogInformation("Successfully retrieved {TodoCount} todos", todos.Count);
             return Results.Ok(todos);
         }
         catch (Exception ex)
@@ -99,8 +98,8 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         _logger.LogInformation("Retrieving completed todos");
         try
         {
-            var todos = await _todoService.FindCompletedAsync().ConfigureAwait(false);
-            _logger.LogInformation("Successfully retrieved {CompletedCount} completed todos", todos.Count());
+            var todos = (await _todoService.FindCompletedAsync().ConfigureAwait(false)).ToList();
+            _logger.LogInformation("Successfully retrieved {CompletedCount} completed todos", todos.Count);
             return Results.Ok(todos);
         }
         catch (Exception ex)
@@ -122,8 +121,8 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         _logger.LogInformation("Retrieving incomplete todos");
         try
         {
-            var todos = await _todoService.FindIncompleteAsync().ConfigureAwait(false);
-            _logger.LogInformation("Successfully retrieved {IncompleteCount} incomplete todos", todos.Count());
+            var todos = (await _todoService.FindIncompleteAsync().ConfigureAwait(false)).ToList();
+            _logger.LogInformation("Successfully retrieved {IncompleteCount} incomplete todos", todos.Count);
             return Results.Ok(todos);
         }
         catch (Exception ex)

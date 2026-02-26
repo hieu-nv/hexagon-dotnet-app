@@ -20,18 +20,20 @@ public static class AppData
     /// <param name="builder">The web application builder.</param>
     public static WebApplicationBuilder UseAppData(this WebApplicationBuilder builder)
     {
-        builder?.Services.AddDbContext<AppDbContext>(options =>
+        ArgumentNullException.ThrowIfNull(builder);
+        
+        builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(
                 builder.Configuration.GetConnectionString("DefaultConnection")
                     ?? "Data Source=app.db"
             )
         );
 
-        builder?.Services.AddScoped<ITodoRepository, TodoRepository>();
+        builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
-        builder?.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+        builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
-        builder?.Services.ConfigureHttpJsonOptions(options =>
+        builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.TypeInfoResolverChain.Insert(
                 0,
@@ -39,7 +41,7 @@ public static class AppData
             );
         });
 
-        return builder ?? throw new ArgumentNullException(nameof(builder));
+        return builder;
     }
 
     /// <summary>

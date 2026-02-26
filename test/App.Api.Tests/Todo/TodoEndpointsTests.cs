@@ -54,7 +54,7 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindAllTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<IEnumerable<TodoEntity>>>(result);
+        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
         Assert.Equal(expectedTodos, okResult.Value);
         _todoRepositoryMock.Verify(x => x.FindAllAsync(), Times.Once);
     }
@@ -204,7 +204,7 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindCompletedTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<IEnumerable<TodoEntity>>>(result);
+        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
         Assert.Equal(completedTodos, okResult.Value);
         Assert.All(okResult.Value, todo => Assert.True(todo.IsCompleted));
         _todoRepositoryMock.Verify(x => x.FindCompletedTodosAsync(), Times.Once);
@@ -261,7 +261,7 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindIncompleteTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<IEnumerable<TodoEntity>>>(result);
+        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
         Assert.Equal(incompleteTodos, okResult.Value);
         Assert.All(okResult.Value, todo => Assert.False(todo.IsCompleted));
         _todoRepositoryMock.Verify(x => x.FindIncompleteTodosAsync(), Times.Once);

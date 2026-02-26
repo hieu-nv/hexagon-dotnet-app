@@ -11,6 +11,135 @@ This application demonstrates the implementation of a hexagonal (ports and adapt
 
 It provides a structured approach to building maintainable and testable applications by separating business logic from external concerns.
 
+## 🎯 Roadmap to 10/10
+
+**Current Status: 9/10** - A professionally architected codebase demonstrating best practices for building maintainable, observable, hexagonal .NET applications.
+
+### Phase 1: Architectural Consistency (🔴 Critical)
+
+- [ ] **1.1 Create Pokemon Service Layer**
+  - [ ] Create `src/App.Core/Pokemon/PokemonService.cs`
+  - [ ] Add business logic, validation, error handling
+  - [ ] Register PokemonService in `AppCore.cs`
+  - [ ] Update PokemonEndpoints to inject service instead of gateway
+  - [ ] Add XML documentation
+
+- [ ] **1.2 Add Response DTOs**
+  - [ ] Create `src/App.Api/Todo/TodoDto.cs` (TodoResponse, CreateTodoRequest, UpdateTodoRequest)
+  - [ ] Create `src/App.Api/Pokemon/PokemonDto.cs` (PokemonResponse, PokemonListResponse)
+  - [ ] Update all endpoints to use DTOs instead of entities
+  - [ ] Add mapping logic (consider AutoMapper or Mapperly)
+  - [ ] Document breaking changes
+
+- [ ] **1.3 API Versioning**
+  - [ ] Add versioning to Todo endpoints (`/api/v1/todos`)
+  - [ ] Add versioning to Pokemon endpoints (`/api/v1/pokemon`)
+  - [ ] Update Swagger to group by version
+  - [ ] Document versioning strategy
+
+### Phase 2: Test Coverage (🔴 Critical)
+
+- [ ] **2.1 Pokemon Gateway Tests**
+  - [ ] Create `test/App.Gateway.Tests/` project
+  - [ ] Write `Pokemon/PokemonGatewayTests.cs`
+  - [ ] Write `Client/PokeClientTests.cs`
+  - [ ] Test scenarios: success, 404, timeout, malformed responses
+  - [ ] Mock HTTP responses with MockHttp
+
+- [ ] **2.2 Pokemon Service Tests**
+  - [ ] Create `test/App.Core.Tests/Pokemon/PokemonServiceTests.cs`
+  - [ ] Test service logic with mocked gateway
+  - [ ] Test validation and error handling
+  - [ ] Test edge cases
+
+- [ ] **2.3 Integration Tests**
+  - [ ] Create `test/App.Api.Tests/Integration/TodoIntegrationTests.cs`
+  - [ ] Create `test/App.Api.Tests/Integration/PokemonIntegrationTests.cs`
+  - [ ] Create `IntegrationTestWebAppFactory.cs` with WebApplicationFactory
+  - [ ] Test full CRUD flows with real database (SQLite in-memory)
+  - [ ] Test health checks and error responses
+
+- [ ] **2.4 Code Coverage Reporting**
+  - [ ] Create `.github/workflows/ci.yml`
+  - [ ] Add coverage collection and reporting
+  - [ ] Enforce 80% minimum threshold
+  - [ ] Add coverage badge to README
+
+### Phase 3: Production Hardening (🟡 High)
+
+- [ ] **3.1 Input Validation with FluentValidation**
+  - [ ] Install `FluentValidation.AspNetCore`
+  - [ ] Create `src/App.Api/Validators/CreateTodoRequestValidator.cs`
+  - [ ] Create `src/App.Api/Validators/UpdateTodoRequestValidator.cs`
+  - [ ] Register validators in DI
+  - [ ] Add validation middleware
+
+- [ ] **3.2 Standardized Error Responses**
+  - [ ] Create `src/App.Api/Middleware/GlobalExceptionHandler.cs`
+  - [ ] Implement RFC 7807 ProblemDetails
+  - [ ] Add correlation IDs to all errors
+  - [ ] Ensure no stack traces in production
+  - [ ] Update all endpoints to use standard error format
+
+- [ ] **3.3 Security Hardening**
+  - [ ] Add rate limiting (`AspNetCoreRateLimit`)
+  - [ ] Configure CORS policy
+  - [ ] Add security headers (`NetEscapades.AspNetCore.SecurityHeaders`)
+  - [ ] Add request/response logging middleware
+  - [ ] Audit for SQL injection vulnerabilities
+
+- [ ] **3.4 Performance Optimization**
+  - [ ] Add database indexes on `TodoEntity.IsCompleted` and `TodoEntity.DueBy`
+  - [ ] Implement response caching for Pokemon endpoints
+  - [ ] Add output caching configuration
+  - [ ] Review and optimize database queries
+  - [ ] Add connection pooling configuration
+
+### Phase 4: Documentation & DevOps (🟢 Medium)
+
+- [ ] **4.1 Architecture Diagrams**
+  - [ ] Create `docs/architecture/C4-context.md` with system context
+  - [ ] Create `docs/architecture/C4-container.md` with container diagram
+  - [ ] Create `docs/architecture/hexagon-diagram.md` with hexagonal architecture
+  - [ ] Add data flow diagrams
+  - [ ] Use Mermaid or PlantUML for diagrams
+
+- [ ] **4.2 CI/CD Pipeline**
+  - [ ] Create `.github/workflows/ci.yml` (build, test, coverage)
+  - [ ] Create `.github/workflows/cd.yml` (deployment)
+  - [ ] Add SonarCloud integration
+  - [ ] Add build status badge to README
+  - [ ] Configure automated deployments
+
+- [ ] **4.3 Docker Production Optimization**
+  - [ ] Create multi-stage Dockerfile
+  - [ ] Use non-root user
+  - [ ] Add health checks to Docker container
+  - [ ] Optimize layer caching
+  - [ ] Create `docker-compose.yml` for local development
+  - [ ] Create `.dockerignore`
+
+- [ ] **4.4 Enhanced Documentation**
+  - [ ] Add badges (build, coverage, version) to README
+  - [ ] Create `CONTRIBUTING.md` with contribution guidelines
+  - [ ] Create `CHANGELOG.md` with version history
+  - [ ] Create `docs/API.md` with detailed API documentation
+  - [ ] Add getting started video or tutorial
+  - [ ] Document deployment procedures
+
+### Success Criteria for 10/10
+
+- ✅ **Test Coverage:** >80% across all projects
+- ✅ **Architectural Consistency:** Pokemon matches Todo pattern (service layer)
+- ✅ **API Standards:** DTOs, versioning, RFC 7807 errors
+- ✅ **Production Ready:** Security headers, rate limiting, CORS
+- ✅ **CI/CD:** Automated testing and deployment pipeline
+- ✅ **Documentation:** Architecture diagrams, API docs, contributing guide
+- ✅ **No Errors:** Zero compiler warnings or analyzer violations
+- ✅ **Performance:** Database indexes, caching strategy, optimized queries
+
+**Estimated Timeline:** 2-3 weeks (1 developer)
+
 **Key Technologies:**
 
 - .NET Aspire 13.1.1 (Orchestration and Observability)
@@ -165,6 +294,7 @@ Before running the application, ensure you have:
 The project has been upgraded from Aspire 9.0.0 to **Aspire 13.1.1** using the new SDK pattern:
 
 **Before (Aspire 9.0.0):**
+
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
@@ -175,6 +305,7 @@ The project has been upgraded from Aspire 9.0.0 to **Aspire 13.1.1** using the n
 ```
 
 **After (Aspire 13.1.1):**
+
 ```xml
 <Project Sdk="Aspire.AppHost.Sdk/13.1.1">
   <!-- Aspire.Hosting packages now included automatically by SDK -->
@@ -182,6 +313,7 @@ The project has been upgraded from Aspire 9.0.0 to **Aspire 13.1.1** using the n
 ```
 
 **Key Improvements:**
+
 1. **Simplified SDK** - Uses `Aspire.AppHost.Sdk/13.1.1` directly
 2. **No Workload Required** - Pure NuGet package approach
 3. **Full .NET 10 Support** - No compatibility issues
