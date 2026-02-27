@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
+using App.Core.Auth;
 using App.Core.Entities;
 using App.Core.Todo;
 using App.Data;
+using App.Data.Auth;
 using App.Data.Todo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Microsoft.AspNetCore.Builder;
 
 /// <summary>
-/// Provides methods to configure the application data layer, including database context and repositories.
+/// Provides methods to configure the application data layer, including database context, repositories, and authentication adapters.
 /// </summary>
 public static class AppData
 {
@@ -21,7 +23,7 @@ public static class AppData
     public static WebApplicationBuilder UseAppData(this WebApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        
+
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(
                 builder.Configuration.GetConnectionString("DefaultConnection")
@@ -30,6 +32,7 @@ public static class AppData
         );
 
         builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+        builder.Services.AddScoped<ISamlClaimsExtractor, SamlClaimsExtractor>();
 
         builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 

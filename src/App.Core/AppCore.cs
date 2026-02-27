@@ -1,10 +1,11 @@
+using App.Core.Auth;
 using App.Core.Todo;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Builder;
 
 /// <summary>
-/// Provides methods to configure the application core, including services for managing to-do items.
+/// Provides methods to configure the application core, including services for managing to-do items and authentication.
 /// </summary>
 public static class AppCore
 {
@@ -18,6 +19,7 @@ public static class AppCore
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.AddScoped<TodoService>();
+        builder.Services.AddScoped<AuthService>();
         return builder;
     }
 }

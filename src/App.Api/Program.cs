@@ -1,3 +1,4 @@
+using App.Api.Auth;
 using App.Api.Logging;
 using Serilog;
 using Serilog.Events;
@@ -34,8 +35,20 @@ builder.Host.UseSerilog();
 // Filter out verbose HTTP resilience logs (404s are expected for invalid Pokemon IDs)
 builder.Logging.AddFilter("Microsoft.Extensions.Http.Resilience", LogLevel.Warning);
 
+// Configure authorization policies for SAML authentication
+if (builder.Configuration.GetValue<bool>("Saml2:Enabled", false))
+{
+    builder.Services.AddSaml2AuthorizationPolicies();
+}
+
 // Add Aspire service defaults (OpenTelemetry, service discovery, resilience)
 builder.AddServiceDefaults();
+
+// Configure SAML2 authentication (only if enabled in configuration)
+if (builder.Configuration.GetValue<bool>("Saml2:Enabled", false))
+{
+    builder.AddSaml2Authentication();
+}
 
 builder.UseAppCore();
 builder.UseAppData();
@@ -53,6 +66,14 @@ app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     _ = app.UseDeveloperExceptionPage();
+}
+
+// Use SAML authentication if enabled
+if (app.Configuration.GetValue<bool>("Saml2:Enabled", false))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.UseSaml2();
 }
 
 app.UseTodo();

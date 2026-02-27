@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  keycloak:
+    image: keycloak/keycloak:latest
+    container_name: hexagon-keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: sqlite
+      KC_DB_URL: "jdbc:sqlite:/data/keycloak.db"
+      KC_DB_USERNAME: ""
+      KC_DB_PASSWORD: ""
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_PROXY: reencrypt
+      KC_HTTP_ENABLED: true
+      PROXY_ADDRESS_FORWARDING: "true"
+    volumes:
+      - keycloak_data:/data
+    command:
+      - "start-dev"
+    networks:
+      - hexagon-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  keycloak_data:
+    driver: local
+
+networks:
+  hexagon-net:
+    driver: bridge
