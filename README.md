@@ -15,54 +15,54 @@ It provides a structured approach to building maintainable and testable applicat
 
 **Current Status: 9/10** - A professionally architected codebase demonstrating best practices for building maintainable, observable, hexagonal .NET applications.
 
-### Phase 1: Architectural Consistency (🔴 Critical)
+### Phase 1: Architectural Consistency (✅ Complete)
 
-- [ ] **1.1 Create Pokemon Service Layer**
-  - [ ] Create `src/App.Core/Pokemon/PokemonService.cs`
-  - [ ] Add business logic, validation, error handling
-  - [ ] Register PokemonService in `AppCore.cs`
-  - [ ] Update PokemonEndpoints to inject service instead of gateway
-  - [ ] Add XML documentation
+- [x] **1.1 Create Pokemon Service Layer**
+  - [x] Create `src/App.Core/Pokemon/PokemonService.cs`
+  - [x] Add business logic, validation, error handling
+  - [x] Register PokemonService in `AppCore.cs`
+  - [x] Update PokemonEndpoints to inject service instead of gateway
+  - [x] Add XML documentation
 
-- [ ] **1.2 Add Response DTOs**
-  - [ ] Create `src/App.Api/Todo/TodoDto.cs` (TodoResponse, CreateTodoRequest, UpdateTodoRequest)
-  - [ ] Create `src/App.Api/Pokemon/PokemonDto.cs` (PokemonResponse, PokemonListResponse)
-  - [ ] Update all endpoints to use DTOs instead of entities
-  - [ ] Add mapping logic (consider AutoMapper or Mapperly)
-  - [ ] Document breaking changes
+- [x] **1.2 Add Response DTOs**
+  - [x] Create `src/App.Api/Todo/TodoDto.cs` (TodoResponse, CreateTodoRequest, UpdateTodoRequest)
+  - [x] Create `src/App.Api/Pokemon/PokemonDto.cs` (PokemonResponse, PokemonListResponse)
+  - [x] Update all endpoints to use DTOs instead of entities
+  - [x] Add mapping logic (consider AutoMapper or Mapperly)
+  - [x] Document breaking changes
 
-- [ ] **1.3 API Versioning**
-  - [ ] Add versioning to Todo endpoints (`/api/v1/todos`)
-  - [ ] Add versioning to Pokemon endpoints (`/api/v1/pokemon`)
-  - [ ] Update Swagger to group by version
-  - [ ] Document versioning strategy
+- [x] **1.3 API Versioning**
+  - [x] Add versioning to Todo endpoints (`/api/v1/todos`)
+  - [x] Add versioning to Pokemon endpoints (`/api/v1/pokemon`)
+  - [x] Update Swagger to group by version
+  - [x] Document versioning strategy
 
-### Phase 2: Test Coverage (🔴 Critical)
+### Phase 2: Test Coverage (✅ Complete)
 
-- [ ] **2.1 Pokemon Gateway Tests**
-  - [ ] Create `test/App.Gateway.Tests/` project
-  - [ ] Write `Pokemon/PokemonGatewayTests.cs`
-  - [ ] Write `Client/PokeClientTests.cs`
-  - [ ] Test scenarios: success, 404, timeout, malformed responses
-  - [ ] Mock HTTP responses with MockHttp
+- [x] **2.1 Pokemon Gateway Tests**
+  - [x] Create `test/App.Gateway.Tests/` project
+  - [x] Write `Pokemon/PokemonGatewayTests.cs`
+  - [x] Write `Client/PokeClientTests.cs`
+  - [x] Test scenarios: success, 404, timeout, malformed responses
+  - [x] Mock HTTP responses with FakeHttpMessageHandler
 
-- [ ] **2.2 Pokemon Service Tests**
-  - [ ] Create `test/App.Core.Tests/Pokemon/PokemonServiceTests.cs`
-  - [ ] Test service logic with mocked gateway
-  - [ ] Test validation and error handling
-  - [ ] Test edge cases
+- [x] **2.2 Pokemon Service Tests**
+  - [x] Create `test/App.Core.Tests/Pokemon/PokemonServiceTests.cs`
+  - [x] Test service logic with mocked gateway
+  - [x] Test validation and error handling
+  - [x] Test edge cases
 
-- [ ] **2.3 Integration Tests**
-  - [ ] Create `test/App.Api.Tests/Integration/TodoIntegrationTests.cs`
-  - [ ] Create `test/App.Api.Tests/Integration/PokemonIntegrationTests.cs`
-  - [ ] Create `IntegrationTestWebAppFactory.cs` with WebApplicationFactory
-  - [ ] Test full CRUD flows with real database (SQLite in-memory)
-  - [ ] Test health checks and error responses
+- [x] **2.3 Integration Tests**
+  - [x] Create `test/App.Api.Tests/Integration/TodoIntegrationTests.cs`
+  - [x] Create `test/App.Api.Tests/Integration/PokemonIntegrationTests.cs`
+  - [x] Create `IntegrationTestWebAppFactory.cs` with WebApplicationFactory
+  - [x] Test full CRUD flows with real database (SQLite in-memory)
+  - [x] Test health checks and error responses
 
-- [ ] **2.4 Code Coverage Reporting**
-  - [ ] Create `.github/workflows/ci.yml`
-  - [ ] Add coverage collection and reporting
-  - [ ] Enforce 80% minimum threshold
+- [x] **2.4 Code Coverage Reporting**
+  - [x] Create `.github/workflows/ci.yml`
+  - [x] Add coverage collection and reporting
+  - [x] Enforce 80% minimum threshold
   - [ ] Add coverage badge to README
 
 ### Phase 3: Production Hardening (🟡 High)
@@ -105,7 +105,7 @@ It provides a structured approach to building maintainable and testable applicat
   - [ ] Use Mermaid or PlantUML for diagrams
 
 - [ ] **4.2 CI/CD Pipeline**
-  - [ ] Create `.github/workflows/ci.yml` (build, test, coverage)
+  - [x] Create `.github/workflows/ci.yml` (build, test, coverage)
   - [ ] Create `.github/workflows/cd.yml` (deployment)
   - [ ] Add SonarCloud integration
   - [ ] Add build status badge to README
@@ -139,6 +139,8 @@ It provides a structured approach to building maintainable and testable applicat
 - ✅ **Performance:** Database indexes, caching strategy, optimized queries
 
 **Estimated Timeline:** 2-3 weeks (1 developer)
+
+**Total Tests:** 81 (31 Core + 11 Gateway + 39 API)
 
 **Key Technologies:**
 
@@ -396,7 +398,7 @@ Build the entire solution:
 dotnet build src/App.slnx
 ```
 
-Run all tests (48 tests):
+Run all tests (81 tests):
 
 ```bash
 dotnet test src/App.slnx
@@ -630,14 +632,26 @@ csharpier format .
 │       │   └── PokemonGateway.cs      # Pokemon gateway implementation
 │       └── App.Gateway.csproj
 └── test/
-    ├── App.Api.Tests/                # API Integration Tests
+    ├── App.Api.Tests/                # API Unit & Integration Tests
     │   ├── Todo/
     │   │   └── TodoEndpointsTests.cs
+    │   ├── Integration/
+    │   │   ├── IntegrationTestWebAppFactory.cs
+    │   │   ├── TodoIntegrationTests.cs
+    │   │   └── PokemonIntegrationTests.cs
     │   └── App.Api.Tests.csproj
-    └── App.Core.Tests/               # Unit Tests
-        ├── Todo/
-        │   └── TodoServiceTests.cs
-        └── App.Core.Tests.csproj
+    ├── App.Core.Tests/               # Core Unit Tests
+    │   ├── Todo/
+    │   │   └── TodoServiceTests.cs
+    │   ├── Pokemon/
+    │   │   └── PokemonServiceTests.cs
+    │   └── App.Core.Tests.csproj
+    └── App.Gateway.Tests/            # Gateway Unit Tests
+        ├── Client/
+        │   └── PokeClientTests.cs
+        ├── Pokemon/
+        │   └── PokemonGatewayTests.cs
+        └── App.Gateway.Tests.csproj
 ```
 
 ## Observability

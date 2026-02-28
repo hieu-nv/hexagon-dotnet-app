@@ -1,15 +1,16 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="App.AppHost\App.AppHost.csproj" Type="Classic C#" />
-    <Project Path="App.Api\App.Api.csproj" Type="Classic C#" />
-    <Project Path="App.Data\App.Data.csproj" Type="Classic C#" />
-    <Project Path="App.Core\App.Core.csproj" Type="Classic C#" />
-    <Project Path="App.Gateway\App.Gateway.csproj" Type="Classic C#" />
-    <Project Path="App.ServiceDefaults\App.ServiceDefaults.csproj" Type="Classic C#" />
+    <Project Path="App.AppHost\App.AppHost.csproj" Type="C#" />
+    <Project Path="App.Api\App.Api.csproj" Type="C#" />
+    <Project Path="App.Data\App.Data.csproj" Type="C#" />
+    <Project Path="App.Core\App.Core.csproj" Type="C#" />
+    <Project Path="App.Gateway\App.Gateway.csproj" Type="C#" />
+    <Project Path="App.ServiceDefaults\App.ServiceDefaults.csproj" Type="C#" />
   </Folder>
   <Folder Name="/test/">
-    <Project Path="..\test\App.Api.Tests\App.Api.Tests.csproj" Type="Classic C#" />
-    <Project Path="..\test\App.Core.Tests\App.Core.Tests.csproj" Type="Classic C#" />
+    <Project Path="..\test\App.Api.Tests\App.Api.Tests.csproj" Type="C#" />
+    <Project Path="..\test\App.Core.Tests\App.Core.Tests.csproj" Type="C#" />
+    <Project Path="../test/App.Gateway.Tests/App.Gateway.Tests.csproj" Type="C#" />
   </Folder>
   <Properties Name="Configuration">
     <Property Name="Debug|Any CPU" />
