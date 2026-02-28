@@ -8,3 +8,4 @@ commit-message.txt
 logs/
 .env
 .github/skills
+.playwright-mcp/
