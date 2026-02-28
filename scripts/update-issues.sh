@@ -1,163 +1,36 @@
 #!/bin/bash
-# Script to create GitHub Issues for Keycloak SSO Implementation
-# This version creates labels first, then issues
-# Usage: ./create-github-issues.sh
-
 set -e
 
-echo "🚀 Creating GitHub Issues for Keycloak SSO Implementation..."
+echo "🚀 Finding existing Phase issues..."
 echo ""
 
-# Function to create a label if it doesn't exist
-create_label() {
-    local name="$1"
-    local color="$2"
-    local description="$3"
-    
-    # Check if label already exists
-    if gh label list --limit 999 | grep -q "^$name"; then
-        echo "  ℹ️  Label '$name' already exists"
-    else
-        echo "  ✓ Creating label: $name"
-        gh label create "$name" --color "$color" --description "$description" 2>/dev/null || echo "    ⚠️  Label creation may have failed"
-    fi
-}
+# Find issue numbers for each phase
+PHASE1=$(gh issue list --label phase-1 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE2=$(gh issue list --label phase-2 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE3=$(gh issue list --label phase-3 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE4=$(gh issue list --label phase-4 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE5=$(gh issue list --label phase-5 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE6=$(gh issue list --label phase-6 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE7=$(gh issue list --label phase-7 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE8=$(gh issue list --label phase-8 --json number --jq '.[0].number' 2>/dev/null || echo "")
+PHASE9=$(gh issue list --label phase-9 --json number --jq '.[0].number' 2>/dev/null || echo "")
 
-# Function to create an issue
-create_issue() {
-    local title="$1"
-    local labels_str="$2"
-    local body="$3"
-    
-    echo "Creating: $title"
-    
-    # Create issue without labels first (to avoid label not found errors)
-    issue_url=$(gh issue create \
-        --title "$title" \
-        --body "$body" \
-        2>&1)
-    
-    if [ $? -eq 0 ]; then
-        echo "  ✓ Created"
-        
-        # Extract issue number from URL
-        issue_num=$(echo "$issue_url" | grep -o '[0-9]*$')
-        
-        # Add labels if they exist
-        if [ -n "$labels_str" ]; then
-            IFS=',' read -ra LABELS <<< "$labels_str"
-            for label in "${LABELS[@]}"; do
-                # Trim whitespace
-                label=$(echo "$label" | xargs)
-                gh issue edit "$issue_num" --add-label "$label" 2>/dev/null || true
-            done
-        fi
-        echo "  ✓ Issue #$issue_num created with labels"
-    else
-        echo "  ❌ Failed to create issue"
-        echo "  Error: $issue_url"
-    fi
-    echo ""
-}
-
-# Step 1: Create all labels
-echo "📌 Step 1: Setting up labels..."
+echo "Found issues:"
+echo "  Phase 1: #$PHASE1"
+echo "  Phase 2: #$PHASE2"
+echo "  Phase 3: #$PHASE3"
+echo "  Phase 4: #$PHASE4"
+echo "  Phase 5: #$PHASE5"
+echo "  Phase 6: #$PHASE6"
+echo "  Phase 7: #$PHASE7"
+echo "  Phase 8: #$PHASE8"
+echo "  Phase 9: #$PHASE9"
 echo ""
 
-# Phase labels
-create_label "phase-1" "e8f4f8" "Phase 1: Setup"
-create_label "phase-2" "d4e6f1" "Phase 2: Foundational (Blocking)"
-create_label "phase-3" "aed6f1" "Phase 3: User Story 1"
-create_label "phase-4" "85c1e2" "Phase 4: User Story 2"
-create_label "phase-5" "5d9cec" "Phase 5: User Story 3"
-create_label "phase-6" "3498db" "Phase 6: User Story 4"
-create_label "phase-7" "2e86c1" "Phase 7: User Story 5"
-create_label "phase-8" "1b4f72" "Phase 8: User Story 6"
-create_label "phase-9" "f9e79f" "Phase 9: Polish & Documentation"
-
-echo ""
-
-# User story labels
-create_label "user-story-1" "fef5e7" "User Story 1"
-create_label "user-story-2" "fdeaa8" "User Story 2"
-create_label "user-story-3" "f8c471" "User Story 3"
-create_label "user-story-4" "f5b041" "User Story 4"
-create_label "user-story-5" "f39c12" "User Story 5"
-create_label "user-story-6" "d68910" "User Story 6"
-
-echo ""
-
-# Priority labels
-create_label "p1-priority" "c1121f" "Priority 1 (P1) - Critical"
-create_label "p2-priority" "e74c3c" "Priority 2 (P2) - Important"
-create_label "p3-priority" "f5b7b1" "Priority 3 (P3) - Nice-to-have"
-
-echo ""
-
-# Domain labels
-create_label "oauth2" "52be80" "OAuth2/OpenID Connect"
-create_label "keycloak" "1e8449" "Keycloak Identity Provider"
-create_label "authentication" "76d7c4" "Authentication"
-create_label "authorization" "48c9b0" "Authorization"
-create_label "claims" "a9dfbf" "Claims Extraction"
-create_label "endpoints" "76d7c4" "API Endpoints"
-create_label "logout" "5499c7" "Logout Functionality"
-
-echo ""
-
-# Special labels
-create_label "mvp" "f1c40f" "MVP Scope (User Stories 1-3)"
-create_label "blocking" "c0392b" "Blocking Dependency"
-create_label "setup" "95a5a6" "Project Setup"
-create_label "foundational" "7f8c8d" "Foundational Infrastructure"
-create_label "infrastructure" "bdc3c7" "Infrastructure"
-create_label "documentation" "3498db" "Documentation"
-create_label "polish" "d7bde2" "Polish & Testing"
-create_label "testing" "af7ac5" "Testing & Quality Assurance"
-
-echo ""
-echo "✅ All labels created!"
-echo ""
-
-# Step 2: Create issues
-echo "📋 Step 2: Creating GitHub issues..."
-echo ""
-
-LABELS_PHASE1="phase-1,setup,oauth2,infrastructure"
-LABELS_PHASE2="phase-2,foundational,blocking,authentication"
-LABELS_PHASE3="phase-3,user-story-1,p1-priority,keycloak,mvp"
-LABELS_PHASE4="phase-4,user-story-2,p1-priority,oauth2,mvp"
-LABELS_PHASE5="phase-5,user-story-3,p1-priority,claims,mvp"
-LABELS_PHASE6="phase-6,user-story-4,p2-priority,authorization"
-LABELS_PHASE7="phase-7,user-story-5,p2-priority,endpoints"
-LABELS_PHASE8="phase-8,user-story-6,p3-priority,logout"
-LABELS_PHASE9="phase-9,documentation,polish,testing"
-
-# Phase 1
-create_issue \
-    "[Phase 1] Setup & Project Configuration (5 tasks)" \
-    "$LABELS_PHASE1" \
-    "Initialize OAuth2/OpenID Connect infrastructure and NuGet dependencies.
-
-## Tasks
-- [ ] T001 Add NuGet dependencies to App.Api.csproj
-- [ ] T002 Create Authentication configuration structure  
-- [ ] T003 Create Authorization configuration structure
-- [ ] T004 Update copilot-instructions.md with OAuth patterns
-- [ ] T005 Create Keycloak configuration directory
-
-## Checkpoint
-✓ Project structure initialized
-✓ NuGet dependencies added  
-✓ Ready for Phase 2
-
-**Enables**: Phase 2: Foundational"
-
-# Phase 2  
-create_issue \
-    "[Phase 2] Foundational - Port Interfaces & DI (9 tasks) ⚠️ BLOCKING" \
-    "$LABELS_PHASE2" \
-    "Establish port interfaces and foundational value objects that all user stories depend on.
+# Update Phase 2
+if [ -n "$PHASE2" ]; then
+  echo "Updating Phase 2 (#$PHASE2)..."
+  gh issue edit $PHASE2 --body "Establish port interfaces and foundational value objects that all user stories depend on.
 
 ⚠️ **CRITICAL**: Phase 2 MUST complete before any user story implementation begins. These are the contracts and domain models for the entire OAuth2 authentication system.
 
@@ -195,12 +68,12 @@ create_issue \
 
 **Enables**: All subsequent user stories (Phases 3-8)
 **Depends On**: Phase 1"
+fi
 
-# Phase 3
-create_issue \
-    "[Phase 3] US1 - Keycloak Admin Setup (7 tasks) 🚀 MVP" \
-    "$LABELS_PHASE3" \
-    "Automate Keycloak infrastructure: realm, OAuth2 client, test users, and roles configuration. First user story in MVP scope.
+# Update Phase 3
+if [ -n "$PHASE3" ]; then
+  echo "Updating Phase 3 (#$PHASE3)..."
+  gh issue edit $PHASE3 --body "Automate Keycloak infrastructure: realm, OAuth2 client, test users, and roles configuration. First user story in MVP scope.
 
 ## Acceptance Criteria
 - Administrator runs setup script that creates Keycloak realm 'hexagon'
@@ -239,12 +112,12 @@ create_issue \
 
 **Enables**: Phase 4 (OAuth2 configuration in app) and Phase 5 (Claims extraction)
 **Depends On**: Phase 1, Phase 2"
+fi
 
-# Phase 4
-create_issue \
-    "[Phase 4] US2 - OAuth2 Configuration (8 tasks) 🚀 MVP" \
-    "$LABELS_PHASE4" \
-    "Enable OpenID Connect middleware in application. Developer configures OAuth2 in settings and app redirects to Keycloak login. Second user story in MVP scope.
+# Update Phase 4
+if [ -n "$PHASE4" ]; then
+  echo "Updating Phase 4 (#$PHASE4)..."
+  gh issue edit $PHASE4 --body "Enable OpenID Connect middleware in application. Developer configures OAuth2 in settings and app redirects to Keycloak login. Second user story in MVP scope.
 
 ## Acceptance Criteria
 - When OAuth2 disabled: all endpoints accessible without authentication
@@ -303,12 +176,12 @@ create_issue \
 
 **Enables**: Phase 5 (Claims extraction) to complete MVP
 **Depends On**: Phase 1, Phase 2, Phase 3"
+fi
 
-# Phase 5
-create_issue \
-    "[Phase 5] US3 - Claims Extraction (8 tasks) 🚀 MVP" \
-    "$LABELS_PHASE5" \
-    "Extract user identity from OAuth2 ID tokens into AuthenticatedUser objects. Third user story in MVP scope - completes end-to-end OAuth2 authentication.
+# Update Phase 5
+if [ -n "$PHASE5" ]; then
+  echo "Updating Phase 5 (#$PHASE5)..."
+  gh issue edit $PHASE5 --body "Extract user identity from OAuth2 ID tokens into AuthenticatedUser objects. Third user story in MVP scope - completes end-to-end OAuth2 authentication.
 
 ## Acceptance Criteria
 - AuthService.GetAuthenticatedUser() extracts user identity from OAuth2 ClaimsPrincipal
@@ -379,12 +252,12 @@ create_issue \
 
 **Enables**: MVP is complete! Phases 6-9 are independent enhancements
 **Depends On**: Phase 1, Phase 2, Phase 3, Phase 4"
+fi
 
-# Phase 6
-create_issue \
-    "[Phase 6] US4 - Authorization Policies (7 tasks)" \
-    "$LABELS_PHASE6" \
-    "Create flexible authorization policy system for role-based access control. No Keycloak required for these tests - uses mock AuthenticatedUser objects.
+# Update Phase 6
+if [ -n "$PHASE6" ]; then
+  echo "Updating Phase 6 (#$PHASE6)..."
+  gh issue edit $PHASE6 --body "Create flexible authorization policy system for role-based access control. No Keycloak required for these tests - uses mock AuthenticatedUser objects.
 
 ## Acceptance Criteria
 - Developers can define authorization policies (e.g., 'AdminOnly', 'TodoAccess')
@@ -442,100 +315,179 @@ create_issue \
 **Parallel to**: Can run while Phase 7 endpoint protection is being implemented
 
 **Depends On**: Phase 2 (AuthenticationPolicy value object)"
+fi
 
-# Phase 7
-create_issue \
-    "[Phase 7] US5 - Endpoint Protection (6 tasks)" \
-    "$LABELS_PHASE7" \
-    "Make it easy to protect endpoints with [Authorize] attributes and policies.
+# Update Phase 7
+if [ -n "$PHASE7" ]; then
+  echo "Updating Phase 7 (#$PHASE7)..."
+  gh issue edit $PHASE7 --body "Protect API endpoints with OAuth2 authentication and authorization. Endpoints return 401 (unauthenticated) and 403 (unauthorized) when appropriate.
 
-## Goal
-Endpoints return 401 (unauthenticated) and 403 (unauthorized). Verified via HTTP integration tests.
-
-## Tasks
-- [ ] T045 [P] AuthorizedEndpointsTests.cs
-- [ ] T046 [P] AuthenticationContractTests.cs OpenAPI verification
-- [ ] T047 [P] AuthorizationMiddleware.cs
-- [ ] T048 TodoEndpoints.cs protect with [Authorize]
-- [ ] T049 AdminEndpoints.cs protected endpoints example
-- [ ] T050 Swagger/OpenAPI config
-- [ ] T051 EndpointAuthorizationExtensions.cs fluent API
-- [ ] T052 AuthorizationLogging.cs audit logging
-
-## Success Criteria
-✓ All endpoints protected
-✓ Authentication & authorization enforced
-✓ Swagger documents security
-✓ All tests pass
-
-**Priority**: P2 (after MVP delivered)"
-
-# Phase 8
-create_issue \
-    "[Phase 8] US6 - Logout (5 tasks)" \
-    "$LABELS_PHASE8" \
-    "Implement logout endpoint that clears OAuth2 session.
-
-## Goal  
-Logout clears session. Protected endpoints redirect to Keycloak after logout.
+## Acceptance Criteria
+- Endpoints without [Authorize] attribute are accessible without authentication
+- Endpoints with [Authorize] return 401 for unauthenticated users
+- Endpoints with [Authorize(\"policy\")] return 403 for unauthorized users
+- Protected endpoints return 200 for authorized users
+- Swagger/OpenAPI properly documents authentication requirements
 
 ## Tasks
-- [ ] T053 [P] LogoutTests.cs integration test
-- [ ] T054 [P] AuthLogoutEndpoints.cs POST/GET /auth/logout
-- [ ] T055 LogoutService.cs build logout redirect
-- [ ] T056 LogoutExtensions.cs convenience methods
-- [ ] T057 logout-success.html post-logout page
-- [ ] T058 KEYCLOAK_SETUP.md logout documentation
+- [ ] T045 [P] Create AuthorizedEndpointsTests.cs integration tests:
+  - Endpoint without [Authorize] accessible without authentication
+  - Endpoint with [Authorize] returns 401 unauthenticated
+  - Endpoint with [Authorize(\"AdminOnly\")] returns 403 for non-admin
+  - Endpoint with [Authorize(\"AdminOnly\")] returns 200 for admin
+  - Endpoint with [Authorize(\"TodoAccess\")] accessible to user and admin roles
+- [ ] T046 [P] Create AuthenticationContractTests.cs tests:
+  - Swagger/OpenAPI documents [Authorize] requirements
+  - 401 response defined for unauthenticated
+  - 403 response defined for unauthorized
+  - Security scheme configured in OpenAPI spec
+- [ ] T047 [P] Create AuthorizationMiddleware.cs helper:
+  - Middleware that checks if endpoint requires authentication
+  - Returns 401 for missing/invalid token
+  - Returns 403 for insufficient permissions
+  - Works with ASP.NET Core's built-in [Authorize] attribute
+- [ ] T048 Update TodoEndpoints.cs with authorization:
+  - Protect POST /todos with [Authorize(\"TodoAccess\")]
+  - Protect DELETE /todos/{id} with [Authorize]
+  - Protect PUT /todos/{id} with [Authorize(\"TodoAccess\")]
+  - GET /todos accessible to all or authenticated only (per requirements)
+  - Document which endpoints require authentication in XML comments
+- [ ] T049 Create AdminEndpoints.cs example protected endpoint:
+  - GET /admin/stats with [Authorize(\"AdminOnly\")]
+  - Returns system statistics (only for admins)
+  - Demonstrates admin-only endpoint pattern for other developers
+  - Uses AuthorizationHelpers for clear authorization logic
+- [ ] T050 Update Swagger/OpenAPI configuration in Program.cs:
+  - Register OpenID Connect security scheme in Swagger
+  - Mark [Authorize] endpoints as requiring authentication in generated spec
+  - Include 401/403 responses in generated OpenAPI spec
+  - Provide 'Authorize' button in Swagger UI for interactive testing
+- [ ] T051 Create EndpointAuthorizationExtensions.cs fluent API:
+  - Extension method: RequireAuthorization(this RouteHandlerBuilder, string? policy)
+  - Alternative to [Authorize] attribute for minimal APIs
+  - Enable authorization without changing handler signature
+  - Works with TodoEndpoints, AdminEndpoints, etc.
+- [ ] T052 Add AuthorizationLogging.cs audit logging:
+  - Log which user (email) accessed which endpoint
+  - Log authorization decision (allowed/denied with reason)
+  - Include correlation IDs for audit trails
+  - Respect log levels (info for access, warning for denial)
 
 ## Success Criteria
-✓ Logout functional  
-✓ Session completely cleared
-✓ All tests pass
+✓ All endpoints properly protected with [Authorize] attributes
+✓ Authentication & authorization enforced (401, 403 status codes)
+✓ Swagger documents security requirements
+✓ Audit logging tracks all authorization decisions
+✓ All integration tests pass (6+ endpoint protection tests)
 
-✅ **FEATURE COMPLETE**: All 6 user stories done
+**Priority**: P2 (after MVP delivered)
+**Parallel to**: Can run while Phase 6 authorization policies are being finalized
 
-**Priority**: P3 (nice-to-have)"
+**Depends On**: Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6"
+fi
 
-# Phase 9
-create_issue \
-    "[Phase 9] Polish & Documentation (13 tasks)" \
-    "$LABELS_PHASE9" \
-    "Documentation, edge cases, performance, completeness.
+# Update Phase 8
+if [ -n "$PHASE8" ]; then
+  echo "Updating Phase 8 (#$PHASE8)..."
+  gh issue edit $PHASE8 --body "Implement logout endpoint that clears OAuth2 session and cookies. User must re-authenticate after logout.
 
-## Documentation
-- [ ] T059 OAUTH2_ARCHITECTURE.md
-- [ ] T060 OAUTH2_TROUBLESHOOTING.md  
-- [ ] T063 OAUTH2_SECURITY.md
-- [ ] T064 OAUTH2_CONFIG_REFERENCE.md
-- [ ] T065 OAUTH2_EXAMPLES.md
-- [ ] T070 README.md update
-- [ ] T071 GitHub issue templates
+## Acceptance Criteria
+- User can access POST/GET /auth/logout endpoint
+- Calling logout clears authentication cookie and session
+- After logout, accessing protected endpoint redirects to Keycloak
+- Logout gracefully handles edge cases (double logout, invalid requests)
 
-## Testing & Quality
-- [ ] T061 [P] OAuth2IntegrationTests.cs (real Keycloak)
-- [ ] T062 [P] AuthenticationPerformanceTests.cs (<10ms claims, <5ms auth)
-- [ ] T067 [P] Edge case handling
-- [ ] T066 Swagger/OpenAPI complete
-- [ ] T068 Code review (docs, nullability, async)
-- [ ] T069 test-coverage.md (40+ tests, 80%+ coverage)
+## Tasks
+- [ ] T053 [P] Create LogoutTests.cs integration test verifying logout behavior
+- [ ] T054 [P] Create AuthLogoutEndpoints.cs with POST/GET /auth/logout handlers
+- [ ] T055 Implement LogoutService.cs building logout redirect URIs
+- [ ] T056 Create LogoutExtensions.cs convenience methods
+- [ ] T057 Create logout-success.html post-logout confirmation page
+- [ ] T058 Update KEYCLOAK_SETUP.md with logout flow documentation
 
-## Final Validation
+## Success Criteria
+✓ Logout functional and tested
+✓ Session completely cleared after logout
+✓ All integration tests pass
+✓ Logout flow documented
+
+✅ **FEATURE COMPLETE**: All 6 user stories implemented and working!
+- US1: Keycloak setup ✓
+- US2: OAuth2 configuration ✓
+- US3: Claims extraction ✓
+- US4: Authorization policies ✓
+- US5: Endpoint protection ✓
+- US6: Logout ✓
+
+**Priority**: P3 (nice-to-have after MVP)
+**Depends On**: Phase 1-5"
+fi
+
+# Update Phase 9
+if [ -n "$PHASE9" ]; then
+  echo "Updating Phase 9 (#$PHASE9)..."
+  gh issue edit $PHASE9 --body "Documentation, edge case handling, performance validation, and feature completeness. All user stories implemented - now production-harden and document.
+
+## Documentation (7 tasks)
+- [ ] T059 Create OAUTH2_ARCHITECTURE.md with component diagrams and data flows
+- [ ] T060 Create OAUTH2_TROUBLESHOOTING.md with common errors and solutions
+- [ ] T063 Create OAUTH2_SECURITY.md with hardening checklist (HTTPS, secrets, PKCE, CORS)
+- [ ] T064 Create OAUTH2_CONFIG_REFERENCE.md with all configuration options
+- [ ] T065 Create OAUTH2_EXAMPLES.md with code samples for common tasks
+- [ ] T070 Update README.md with OAuth2 authentication section
+- [ ] T071 Create GitHub issue templates for auth bugs/features (.github/ISSUE_TEMPLATE/)
+
+## Testing & Performance (6 tasks)
+- [ ] T061 [P] Create OAuth2IntegrationTests.cs with real Keycloak container
+  - End-to-end authentication flow
+  - Token refresh (if implemented)
+  - Session timeout scenarios
+  - Token expiration handling
+- [ ] T062 [P] Create AuthenticationPerformanceTests.cs with benchmarks:
+  - Claims extraction: <10ms per operation (NFR-001)
+  - Authorization check: <5ms per operation
+  - Batch operations (100 concurrent requests) under load
+- [ ] T067 [P] Handle edge cases in authentication and authorization:
+  - Keycloak unavailable during token validation (graceful degradation)
+  - Token validation timeout (configurable with sensible default)
+  - Malformed ID tokens (detailed error messages)
+  - Missing required claims in valid JWT (clear error messages)
+  - User roles change in Keycloak (requires re-login, documented)
+  - OAuth2 disabled in configuration (all endpoints accessible)
+- [ ] T066 Update OpenAPI/Swagger documentation:
+  - Security scheme configuration for OIDC in OpenAPI spec
+  - [Authorize] attributes propagated to generated spec
+  - All endpoints marked as public or authenticated
+  - /auth/status, /auth/me, /auth/logout documented
+- [ ] T068 Code quality review against project standards:
+  - All public APIs have XML documentation (csharp-docs skill)
+  - Nullable reference types: zero warnings
+  - Async methods use ConfigureAwait(false) (csharp-async skill)
+  - No hardcoded values (all configuration-driven)
+  - SOLID principles followed
+- [ ] T069 Create test coverage summary in specs/001-keycloak-sso/checklists/test-coverage.md:
+  - Authentication tests: 15+ tests ✓
+  - Authorization tests: 10+ tests ✓
+  - Integration tests: 8+ tests ✓
+  - Edge case tests: 8+ tests ✓
+  - Total: 40+ tests per SC-001 ✓
+  - Coverage: 80%+ for auth modules per SC-002 ✓
+
+## Final Validation Checklist
 ✅ All 71 tasks complete
-✅ 100% auth tests pass
-✅ All 84 app tests pass
-✅ Zero build errors  
-✅ 80%+ auth coverage
-✅ Complete documentation
+✅ 6/6 user stories implemented
+✅ 40+ unit tests passing
+✅ 80%+ code coverage (auth modules)
+✅ Zero build errors
+✅ All integration tests pass
+✅ Keycloak setup <30 seconds
+✅ Token validation <100ms
+✅ 7+ documentation pages
+✅ Production-ready
 
-✅ **FEATURE COMPLETE & PRODUCTION-READY**"
+**Priority**: 📚 Final polish and documentation
+**Depends On**: Phase 1-8 complete"
+fi
 
 echo ""
-echo "✅ All GitHub issues created successfully!"
-echo ""
-echo "📊 View issues:"
-echo "  gh issue list --label phase-1"
-echo "  gh issue list --label mvp"
-echo "  gh issue list --label p1-priority"
-echo ""
-echo "🔗 See all Keycloak SSO issues:"
-echo "  gh issue list --label oauth2"
+echo "✅ All GitHub issues updated successfully!"
