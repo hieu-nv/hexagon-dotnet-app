@@ -54,8 +54,11 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindAllTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
-        Assert.Equal(expectedTodos, okResult.Value);
+        var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        var responseList = okResult.Value.ToList();
+        Assert.Equal(2, responseList.Count);
+        Assert.Equal(expectedTodos[0].Id, responseList[0].Id);
+        Assert.Equal(expectedTodos[1].Id, responseList[1].Id);
         _todoRepositoryMock.Verify(x => x.FindAllAsync(), Times.Once);
     }
 
@@ -102,8 +105,9 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindTodoByIdAsync(todoId);
 
         // Assert
-        var okResult = Assert.IsType<Ok<TodoEntity>>(result);
-        Assert.Equal(expectedTodo, okResult.Value);
+        var okResult = Assert.IsType<Ok<TodoResponse>>(result);
+        Assert.Equal(expectedTodo.Id, okResult.Value.Id);
+        Assert.Equal(expectedTodo.Title, okResult.Value.Title);
         _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
     }
 
@@ -204,9 +208,10 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindCompletedTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
-        Assert.Equal(completedTodos, okResult.Value);
-        Assert.All(okResult.Value, todo => Assert.True(todo.IsCompleted));
+        var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        var responseList = okResult.Value.ToList();
+        Assert.Equal(2, responseList.Count);
+        Assert.All(responseList, todo => Assert.True(todo.IsCompleted));
         _todoRepositoryMock.Verify(x => x.FindCompletedTodosAsync(), Times.Once);
     }
 
@@ -261,9 +266,10 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.FindIncompleteTodosAsync();
 
         // Assert
-        var okResult = Assert.IsType<Ok<List<TodoEntity>>>(result);
-        Assert.Equal(incompleteTodos, okResult.Value);
-        Assert.All(okResult.Value, todo => Assert.False(todo.IsCompleted));
+        var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        var responseList = okResult.Value.ToList();
+        Assert.Equal(2, responseList.Count);
+        Assert.All(responseList, todo => Assert.False(todo.IsCompleted));
         _todoRepositoryMock.Verify(x => x.FindIncompleteTodosAsync(), Times.Once);
     }
 
@@ -296,7 +302,7 @@ public class TodoEndpointsTests
     public async Task CreateTodoAsync_WithValidEntity_ShouldReturnCreated()
     {
         // Arrange
-        var newTodo = new TodoEntity { Title = "New Todo", IsCompleted = false };
+        var newTodo = new CreateTodoRequest("New Todo", false, null);
 
         var createdTodo = new TodoEntity
         {
@@ -313,9 +319,9 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.CreateTodoAsync(newTodo);
 
         // Assert
-        var createdResult = Assert.IsType<Created<TodoEntity>>(result);
-        Assert.Equal($"/todos/{createdTodo.Id}", createdResult.Location);
-        Assert.Equal(createdTodo, createdResult.Value);
+        var createdResult = Assert.IsType<Created<TodoResponse>>(result);
+        Assert.Equal($"/api/v1/todos/{createdTodo.Id}", createdResult.Location);
+        Assert.Equal(createdTodo.Id, createdResult.Value.Id);
         _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Once);
     }
 
@@ -323,14 +329,14 @@ public class TodoEndpointsTests
     public async Task CreateTodoAsync_WithNullEntity_ShouldReturnBadRequest()
     {
         // Arrange
-        TodoEntity? nullEntity = null;
+        CreateTodoRequest? nullEntity = null;
 
         // Act
         var result = await _todoEndpoints.CreateTodoAsync(nullEntity!);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Equal("Todo item is required", badRequestResult.Value);
+        Assert.Equal("Todo item request is required", badRequestResult.Value);
         _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
@@ -338,7 +344,7 @@ public class TodoEndpointsTests
     public async Task CreateTodoAsync_WithEmptyTitle_ShouldReturnBadRequest()
     {
         // Arrange
-        var invalidTodo = new TodoEntity { Title = "", IsCompleted = false };
+        var invalidTodo = new CreateTodoRequest("", false, null);
 
         // Act
         var result = await _todoEndpoints.CreateTodoAsync(invalidTodo);
@@ -352,7 +358,7 @@ public class TodoEndpointsTests
     public async Task CreateTodoAsync_WhenExceptionThrown_ShouldReturnProblem()
     {
         // Arrange
-        var newTodo = new TodoEntity { Title = "New Todo", IsCompleted = false };
+        var newTodo = new CreateTodoRequest("New Todo", false, null);
 
         _todoRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<TodoEntity>()))
@@ -380,12 +386,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 1;
-        var updateData = new TodoEntity
-        {
-            Title = "Updated Title",
-            IsCompleted = true,
-            DueBy = new DateOnly(2026, 3, 15),
-        };
+        var updateData = new UpdateTodoRequest("Updated Title", true, new DateOnly(2026, 3, 15));
 
         var existingTodo = new TodoEntity
         {
@@ -411,7 +412,7 @@ public class TodoEndpointsTests
         var result = await _todoEndpoints.UpdateTodoAsync(todoId, updateData);
 
         // Assert
-        var okResult = Assert.IsType<Ok<TodoEntity>>(result);
+        var okResult = Assert.IsType<Ok<TodoResponse>>(result);
         Assert.Equal(updatedTodo.Id, okResult.Value.Id);
         Assert.Equal("Updated Title", okResult.Value.Title);
         Assert.True(okResult.Value.IsCompleted);
@@ -424,7 +425,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 999;
-        var updateData = new TodoEntity { Title = "Updated Title", IsCompleted = true };
+        var updateData = new UpdateTodoRequest("Updated Title", true, null);
 
         _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync((TodoEntity?)null);
 
@@ -442,7 +443,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var invalidId = 0;
-        var updateData = new TodoEntity { Title = "Updated Title", IsCompleted = true };
+        var updateData = new UpdateTodoRequest("Updated Title", true, null);
 
         // Act
         var result = await _todoEndpoints.UpdateTodoAsync(invalidId, updateData);
@@ -459,7 +460,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var invalidId = -1;
-        var updateData = new TodoEntity { Title = "Updated Title", IsCompleted = true };
+        var updateData = new UpdateTodoRequest("Updated Title", true, null);
 
         // Act
         var result = await _todoEndpoints.UpdateTodoAsync(invalidId, updateData);
@@ -476,14 +477,14 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 1;
-        TodoEntity? nullEntity = null;
+        UpdateTodoRequest? nullEntity = null;
 
         // Act
         var result = await _todoEndpoints.UpdateTodoAsync(todoId, nullEntity!);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Equal("Todo item is required", badRequestResult.Value);
+        Assert.Equal("Todo update request is required", badRequestResult.Value);
         _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
         _todoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
@@ -493,7 +494,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 1;
-        var invalidData = new TodoEntity { Title = "", IsCompleted = true };
+        var invalidData = new UpdateTodoRequest("", true, null);
 
         var existingTodo = new TodoEntity
         {
@@ -517,7 +518,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 1;
-        var updateData = new TodoEntity { Title = "Updated Title", IsCompleted = true };
+        var updateData = new UpdateTodoRequest("Updated Title", true, null);
 
         _todoRepositoryMock
             .Setup(x => x.FindByIdAsync(todoId))

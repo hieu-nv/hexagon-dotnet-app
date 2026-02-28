@@ -24,12 +24,19 @@ internal static class PokemonEndpointsExtensions
     /// Maps the PokemonEndpoints to the specified route builder.
     /// </summary>
     /// <param name="endpointRouteBuilder">The endpoint route builder.</param>
+    /// <param name="apiVersionSet">The API version set.</param>
     /// <returns>The endpoint route builder.</returns>
-    public static IEndpointRouteBuilder UsePokemon(this IEndpointRouteBuilder endpointRouteBuilder)
+    public static IEndpointRouteBuilder UsePokemon(
+        this IEndpointRouteBuilder endpointRouteBuilder,
+        Asp.Versioning.Builder.ApiVersionSet apiVersionSet
+    )
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
 
-        var group = endpointRouteBuilder.MapGroup("/api/v1/pokemon").WithTags("Pokemon");
+        var group = endpointRouteBuilder
+            .MapGroup("/api/v{version:apiVersion}/pokemon")
+            .WithApiVersionSet(apiVersionSet)
+            .WithTags("Pokemon");
 
         // GET endpoints
         group
@@ -41,7 +48,7 @@ internal static class PokemonEndpointsExtensions
             .WithName("GetPokemonList")
             .WithSummary("Get a list of Pokemon from PokeAPI")
             .WithDescription("Fetches Pokemon from the external PokeAPI with pagination support")
-            .Produces<IEnumerable<Pokemon>>(200)
+            .Produces<PokemonListResponse>(200)
             .Produces(502);
 
         group
@@ -52,7 +59,7 @@ internal static class PokemonEndpointsExtensions
             .WithName("GetPokemonById")
             .WithSummary("Get a specific Pokemon by ID")
             .WithDescription("Fetches details of a specific Pokemon from the external PokeAPI")
-            .Produces<Pokemon>(200)
+            .Produces<PokemonResponse>(200)
             .Produces(404);
 
         return endpointRouteBuilder;

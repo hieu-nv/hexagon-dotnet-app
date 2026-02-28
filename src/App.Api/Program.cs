@@ -41,8 +41,21 @@ builder.UseAppCore();
 builder.UseAppData();
 builder.UseAppGateway();
 
-builder.UseTodo();
-builder.UsePokemon();
+builder
+    .Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+ builder.UseTodo();
+ builder.UsePokemon();
 
 WebApplication app = builder.Build();
 app.UseAppData();
@@ -55,8 +68,13 @@ if (app.Environment.IsDevelopment())
     _ = app.UseDeveloperExceptionPage();
 }
 
-app.UseTodo();
-app.UsePokemon();
+var apiVersionSet = app.NewApiVersionSet()
+    .HasApiVersion(new Asp.Versioning.ApiVersion(1, 0))
+    .ReportApiVersions()
+    .Build();
+
+app.UseTodo(apiVersionSet);
+app.UsePokemon(apiVersionSet);
 
 try
 {

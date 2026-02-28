@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using App.Core.Entities;
 using App.Core.Todo;
-
 using Microsoft.Extensions.Logging;
 
 namespace App.Api.Todo;
@@ -33,8 +32,9 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         try
         {
             var todos = (await _todoService.FindAllAsync().ConfigureAwait(false)).ToList();
+            var response = todos.Select(t => t.ToResponse());
             _logger.LogInformation("Successfully retrieved {TodoCount} todos", todos.Count);
-            return Results.Ok(todos);
+            return Results.Ok(response);
         }
         catch (Exception ex)
         {
@@ -66,7 +66,7 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
             if (todo is not null)
             {
                 _logger.LogInformation("Successfully retrieved todo with ID: {TodoId}", id);
-                return Results.Ok(todo);
+                return Results.Ok(todo.ToResponse());
             }
             else
             {
@@ -99,8 +99,12 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         try
         {
             var todos = (await _todoService.FindCompletedAsync().ConfigureAwait(false)).ToList();
-            _logger.LogInformation("Successfully retrieved {CompletedCount} completed todos", todos.Count);
-            return Results.Ok(todos);
+            var response = todos.Select(t => t.ToResponse());
+            _logger.LogInformation(
+                "Successfully retrieved {CompletedCount} completed todos",
+                todos.Count
+            );
+            return Results.Ok(response);
         }
         catch (Exception ex)
         {
@@ -122,8 +126,12 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         try
         {
             var todos = (await _todoService.FindIncompleteAsync().ConfigureAwait(false)).ToList();
-            _logger.LogInformation("Successfully retrieved {IncompleteCount} incomplete todos", todos.Count);
-            return Results.Ok(todos);
+            var response = todos.Select(t => t.ToResponse());
+            _logger.LogInformation(
+                "Successfully retrieved {IncompleteCount} incomplete todos",
+                todos.Count
+            );
+            return Results.Ok(response);
         }
         catch (Exception ex)
         {
@@ -139,21 +147,32 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     /// <summary>
     /// Creates a new to-do item.
     /// </summary>
-    /// <param name="entity">The to-do item to create.</param>
-    public async Task<IResult> CreateTodoAsync(TodoEntity entity)
+    /// <param name="request">The to-do item creation request.</param>
+    public async Task<IResult> CreateTodoAsync(CreateTodoRequest request)
     {
-        _logger.LogInformation("Creating new todo with title: {Title}", entity?.Title);
+        _logger.LogInformation("Creating new todo with title: {Title}", request?.Title);
         try
         {
-            if (entity == null)
+            if (request == null)
             {
-                _logger.LogWarning("Create todo failed: entity is null");
-                return Results.BadRequest("Todo item is required");
+                _logger.LogWarning("Create todo failed: request is null");
+                return Results.BadRequest("Todo item request is required");
             }
 
+            var entity = new TodoEntity
+            {
+                Title = request.Title,
+                IsCompleted = request.IsCompleted,
+                DueBy = request.DueBy,
+            };
+
             var created = await _todoService.CreateAsync(entity).ConfigureAwait(false);
-            _logger.LogInformation("Successfully created todo with ID: {TodoId}, Title: {Title}", created.Id, created.Title);
-            return Results.Created($"/todos/{created.Id}", created);
+            _logger.LogInformation(
+                "Successfully created todo with ID: {TodoId}, Title: {Title}",
+                created.Id,
+                created.Title
+            );
+            return Results.Created($"/api/v1/todos/{created.Id}", created.ToResponse());
         }
         catch (ValidationException ex)
         {
@@ -175,8 +194,8 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     /// Updates an existing to-do item.
     /// </summary>
     /// <param name="id">The ID of the to-do item to update.</param>
-    /// <param name="entity">The updated to-do item data.</param>
-    public async Task<IResult> UpdateTodoAsync(int id, TodoEntity entity)
+    /// <param name="request">The to-do item update request.</param>
+    public async Task<IResult> UpdateTodoAsync(int id, UpdateTodoRequest request)
     {
         _logger.LogInformation("Updating todo with ID: {TodoId}", id);
         try
@@ -187,17 +206,29 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
                 return Results.BadRequest("Invalid ID. ID must be greater than zero.");
             }
 
-            if (entity == null)
+            if (request == null)
             {
-                _logger.LogWarning("Update todo failed: entity is null for ID: {TodoId}", id);
-                return Results.BadRequest("Todo item is required");
+                _logger.LogWarning("Update todo failed: request is null for ID: {TodoId}", id);
+                return Results.BadRequest("Todo update request is required");
             }
+
+            var entity = new TodoEntity
+            {
+                Id = id,
+                Title = request.Title,
+                IsCompleted = request.IsCompleted,
+                DueBy = request.DueBy,
+            };
 
             var updated = await _todoService.UpdateAsync(id, entity).ConfigureAwait(false);
             if (updated is not null)
             {
-                _logger.LogInformation("Successfully updated todo with ID: {TodoId}, Title: {Title}", id, updated.Title);
-                return Results.Ok(updated);
+                _logger.LogInformation(
+                    "Successfully updated todo with ID: {TodoId}, Title: {Title}",
+                    id,
+                    updated.Title
+                );
+                return Results.Ok(updated.ToResponse());
             }
             else
             {
@@ -207,7 +238,12 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
         }
         catch (ValidationException ex)
         {
-            _logger.LogWarning(ex, "Validation failed while updating todo ID {TodoId}: {Message}", id, ex.Message);
+            _logger.LogWarning(
+                ex,
+                "Validation failed while updating todo ID {TodoId}: {Message}",
+                id,
+                ex.Message
+            );
             return Results.BadRequest(ex.Message);
         }
         catch (ArgumentOutOfRangeException ex)

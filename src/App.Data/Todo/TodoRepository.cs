@@ -51,8 +51,7 @@ public class TodoRepository(AppDbContext dbContext) : ITodoRepository
     public async Task<IEnumerable<TodoEntity>> FindAllAsync()
     {
         return await DbContext
-            .Todos
-            .AsNoTracking()
+            .Todos.AsNoTracking()
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync()
             .ConfigureAwait(false);
@@ -65,8 +64,8 @@ public class TodoRepository(AppDbContext dbContext) : ITodoRepository
     /// <returns>The to-do item if found, null otherwise.</returns>
     public async Task<TodoEntity?> FindByIdAsync(int id)
     {
-        return await DbContext.Todos
-            .AsNoTracking()
+        return await DbContext
+            .Todos.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id)
             .ConfigureAwait(false);
     }
@@ -78,8 +77,7 @@ public class TodoRepository(AppDbContext dbContext) : ITodoRepository
     public async Task<IEnumerable<TodoEntity>> FindCompletedTodosAsync()
     {
         return await DbContext
-            .Todos
-            .AsNoTracking()
+            .Todos.AsNoTracking()
             .Where(t => t.IsCompleted)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync()
@@ -93,8 +91,7 @@ public class TodoRepository(AppDbContext dbContext) : ITodoRepository
     public async Task<IEnumerable<TodoEntity>> FindIncompleteTodosAsync()
     {
         return await DbContext
-            .Todos
-            .AsNoTracking()
+            .Todos.AsNoTracking()
             .Where(t => !t.IsCompleted)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync()
