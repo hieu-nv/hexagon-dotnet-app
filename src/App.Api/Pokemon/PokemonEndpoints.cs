@@ -8,12 +8,12 @@ namespace App.Api.Pokemon;
 /// <param name="pokemonGateway">The Pokemon gateway for accessing external API.</param>
 /// <param name="logger">The logger for tracking endpoint activity.</param>
 internal sealed class PokemonEndpoints(
-    IPokemonGateway pokemonGateway,
+    PokemonService pokemonService,
     ILogger<PokemonEndpoints> logger
 )
 {
-    private readonly IPokemonGateway _pokemonGateway =
-        pokemonGateway ?? throw new ArgumentNullException(nameof(pokemonGateway));
+    private readonly PokemonService _pokemonService =
+        pokemonService ?? throw new ArgumentNullException(nameof(pokemonService));
     private readonly ILogger<PokemonEndpoints> _logger =
         logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -31,8 +31,8 @@ internal sealed class PokemonEndpoints(
             offset
         );
 
-        var pokemon = await _pokemonGateway
-            .FetchPokemonListAsync(limit, offset)
+        var pokemon = await _pokemonService
+            .GetPokemonListAsync(limit, offset)
             .ConfigureAwait(false);
 
         if (pokemon == null)
@@ -56,7 +56,17 @@ internal sealed class PokemonEndpoints(
             offset
         );
 
-        return Results.Ok(pokemon);
+        var results = pokemon.Select(p => p.ToResponse());
+        string? next =
+            count == limit ? $"/api/v1/pokemon?limit={limit}&offset={offset + limit}" : null;
+        string? previous =
+            offset > 0
+                ? $"/api/v1/pokemon?limit={limit}&offset={Math.Max(0, offset - limit)}"
+                : null;
+
+        var response = new PokemonListResponse(count, next, previous, results);
+
+        return Results.Ok(response);
     }
 
     /// <summary>
@@ -68,7 +78,7 @@ internal sealed class PokemonEndpoints(
     {
         _logger.LogInformation("Fetching Pokemon by ID: {PokemonId}", id);
 
-        var pokemon = await _pokemonGateway.FetchPokemonByIdAsync(id).ConfigureAwait(false);
+        var pokemon = await _pokemonService.GetPokemonByIdAsync(id).ConfigureAwait(false);
 
         if (pokemon == null)
         {
@@ -82,6 +92,6 @@ internal sealed class PokemonEndpoints(
             id
         );
 
-        return Results.Ok(pokemon);
+        return Results.Ok(pokemon.ToResponse());
     }
 }

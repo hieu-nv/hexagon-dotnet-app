@@ -20,57 +20,64 @@ internal static class TodoEndpointsExtensions
     /// <summary>
     /// Maps the TodoEndpoints to the specified route builder.
     /// </summary>
-    public static IEndpointRouteBuilder UseTodo(this IEndpointRouteBuilder endpointRouteBuilder)
+    public static IEndpointRouteBuilder UseTodo(
+        this IEndpointRouteBuilder endpointRouteBuilder,
+        Asp.Versioning.Builder.ApiVersionSet apiVersionSet
+    )
     {
-        var group = endpointRouteBuilder.MapGroup("/api/v1/todos").WithTags("Todos");
+        var group = endpointRouteBuilder
+            .MapGroup("/api/v{version:apiVersion}/todos")
+            .WithApiVersionSet(apiVersionSet)
+            .WithTags("Todos");
 
         // GET endpoints
         group
             .MapGet("/", (TodoEndpoints handler) => handler.FindAllTodosAsync())
             .WithName("GetAllTodos")
             .WithSummary("Get all to-do items")
-            .Produces<IEnumerable<TodoEntity>>(200);
+            .Produces<IEnumerable<TodoResponse>>(200);
 
         group
             .MapGet("/{id:int}", (TodoEndpoints handler, int id) => handler.FindTodoByIdAsync(id))
             .WithName("GetTodoById")
             .WithSummary("Get a to-do item by ID")
-            .Produces<TodoEntity>(200)
+            .Produces<TodoResponse>(200)
             .Produces(404);
 
         group
             .MapGet("/completed", (TodoEndpoints handler) => handler.FindCompletedTodosAsync())
             .WithName("GetCompletedTodos")
             .WithSummary("Get all completed to-do items")
-            .Produces<IEnumerable<TodoEntity>>(200);
+            .Produces<IEnumerable<TodoResponse>>(200);
 
         group
             .MapGet("/incomplete", (TodoEndpoints handler) => handler.FindIncompleteTodosAsync())
             .WithName("GetIncompleteTodos")
             .WithSummary("Get all incomplete to-do items")
-            .Produces<IEnumerable<TodoEntity>>(200);
+            .Produces<IEnumerable<TodoResponse>>(200);
 
         // POST endpoint
         group
             .MapPost(
                 "/",
-                (TodoEndpoints handler, TodoEntity entity) => handler.CreateTodoAsync(entity)
+                (TodoEndpoints handler, CreateTodoRequest request) =>
+                    handler.CreateTodoAsync(request)
             )
             .WithName("CreateTodo")
             .WithSummary("Create a new to-do item")
-            .Produces<TodoEntity>(201)
+            .Produces<TodoResponse>(201)
             .Produces(400);
 
         // PUT endpoint
         group
             .MapPut(
                 "/{id:int}",
-                (TodoEndpoints handler, int id, TodoEntity entity) =>
-                    handler.UpdateTodoAsync(id, entity)
+                (TodoEndpoints handler, int id, UpdateTodoRequest request) =>
+                    handler.UpdateTodoAsync(id, request)
             )
             .WithName("UpdateTodo")
             .WithSummary("Update an existing to-do item")
-            .Produces<TodoEntity>(200)
+            .Produces<TodoResponse>(200)
             .Produces(404)
             .Produces(400);
 

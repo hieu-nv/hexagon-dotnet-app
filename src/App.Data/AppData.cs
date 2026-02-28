@@ -21,7 +21,7 @@ public static class AppData
     public static WebApplicationBuilder UseAppData(this WebApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        
+
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(
                 builder.Configuration.GetConnectionString("DefaultConnection")
