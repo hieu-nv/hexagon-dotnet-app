@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/App.slnx
+
+      - name: Build
+        run: dotnet build src/App.slnx --no-restore --configuration Release
+
+      - name: Test with coverage
+        run: |
+          dotnet test src/App.slnx \
+            --no-build \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:"coverage/**/coverage.cobertura.xml" \
+            -targetdir:"coverage/report" \
+            -reporttypes:"Cobertura;TextSummary"
+
+      - name: Display coverage summary
+        run: cat coverage/report/Summary.txt
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(grep -oP 'Line coverage: \K[0-9.]+' coverage/report/Summary.txt || echo "0")
+          echo "Line coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "::error::Code coverage ($COVERAGE%) is below the 80% threshold"
+            exit 1
+          fi
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/report/

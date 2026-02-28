@@ -54,8 +54,8 @@ builder
         options.SubstituteApiVersionInUrl = true;
     });
 
- builder.UseTodo();
- builder.UsePokemon();
+builder.UseTodo();
+builder.UsePokemon();
 
 WebApplication app = builder.Build();
 app.UseAppData();

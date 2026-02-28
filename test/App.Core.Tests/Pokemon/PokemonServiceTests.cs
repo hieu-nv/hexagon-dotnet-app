@@ -1,0 +1,181 @@
+using App.Core.Pokemon;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
+
+namespace App.Core.Tests.Pokemon;
+
+public class PokemonServiceTests
+{
+    private readonly Mock<IPokemonGateway> _gatewayMock;
+    private readonly Mock<ILogger<PokemonService>> _loggerMock;
+    private readonly PokemonService _service;
+
+    public PokemonServiceTests()
+    {
+        _gatewayMock = new Mock<IPokemonGateway>();
+        _loggerMock = new Mock<ILogger<PokemonService>>();
+        _service = new PokemonService(_gatewayMock.Object, _loggerMock.Object);
+    }
+
+    #region GetPokemonListAsync Tests
+
+    [Fact]
+    public async Task GetPokemonListAsync_WithValidParams_ShouldReturnList()
+    {
+        // Arrange
+        var expected = new List<App.Core.Pokemon.Pokemon>
+        {
+            new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
+            new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
+        };
+
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(expected);
+
+        // Act
+        var result = await _service.GetPokemonListAsync(20, 0);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPokemonListAsync_WithNegativeLimit_ShouldDefaultTo20()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+
+        // Act
+        await _service.GetPokemonListAsync(-5, 0);
+
+        // Assert - the service should have corrected the limit to 20
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPokemonListAsync_WithZeroLimit_ShouldDefaultTo20()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+
+        // Act
+        await _service.GetPokemonListAsync(0, 0);
+
+        // Assert
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPokemonListAsync_WithLimitOver100_ShouldCapAt100()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(100, 0))
+            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+
+        // Act
+        await _service.GetPokemonListAsync(200, 0);
+
+        // Assert - the service should have capped the limit to 100
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(100, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPokemonListAsync_WithNegativeOffset_ShouldDefaultTo0()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+
+        // Act
+        await _service.GetPokemonListAsync(20, -10);
+
+        // Assert - the service should have corrected the offset to 0
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPokemonListAsync_WhenGatewayReturnsNull_ShouldReturnNull()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync((IEnumerable<App.Core.Pokemon.Pokemon>?)null);
+
+        // Act
+        var result = await _service.GetPokemonListAsync();
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    #endregion
+
+    #region GetPokemonByIdAsync Tests
+
+    [Fact]
+    public async Task GetPokemonByIdAsync_WithValidId_ShouldReturnPokemon()
+    {
+        // Arrange
+        var expected = new App.Core.Pokemon.Pokemon
+        {
+            Name = "pikachu",
+            Url = "https://pokeapi.co/api/v2/pokemon/25/",
+        };
+
+        _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(expected);
+
+        // Act
+        var result = await _service.GetPokemonByIdAsync(25);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("pikachu", result.Name);
+    }
+
+    [Fact]
+    public async Task GetPokemonByIdAsync_WithZeroId_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.GetPokemonByIdAsync(0));
+
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message);
+        _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPokemonByIdAsync_WithNegativeId_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.GetPokemonByIdAsync(-1)
+        );
+
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message);
+        _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPokemonByIdAsync_WhenGatewayReturnsNull_ShouldReturnNull()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonByIdAsync(999))
+            .ReturnsAsync((App.Core.Pokemon.Pokemon?)null);
+
+        // Act
+        var result = await _service.GetPokemonByIdAsync(999);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    #endregion
+}
