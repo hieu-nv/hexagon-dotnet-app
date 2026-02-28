@@ -1,6 +1,9 @@
 using App.Core.Pokemon;
+using App.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -9,11 +12,21 @@ namespace App.Api.Tests.Integration;
 /// <summary>
 /// Custom WebApplicationFactory for integration tests.
 /// Replaces external dependencies (Pokemon gateway) with mocks
-/// and uses an in-memory SQLite database.
+/// and uses a dedicated in-memory SQLite database per factory instance.
 /// </summary>
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
 {
+    // Keep the connection open for the lifetime of the factory so the
+    // in-memory database is not destroyed between requests.
+    private readonly SqliteConnection _connection;
+
     public Mock<IPokemonGateway> PokemonGatewayMock { get; } = new();
+
+    public IntegrationTestWebAppFactory()
+    {
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -21,6 +34,21 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
+            // Remove the existing AppDbContext registration added by UseAppData()
+            var dbContextDescriptor = services.SingleOrDefault(d =>
+                d.ServiceType == typeof(DbContextOptions<AppDbContext>)
+            );
+            if (dbContextDescriptor != null)
+            {
+                services.Remove(dbContextDescriptor);
+            }
+
+            // Register AppDbContext with the shared in-memory SQLite connection
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlite(_connection);
+            });
+
             // Replace the IPokemonGateway with a mock to avoid external HTTP calls
             var gatewayDescriptor = services.SingleOrDefault(d =>
                 d.ServiceType == typeof(IPokemonGateway)
@@ -32,5 +60,14 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
 
             services.AddScoped(_ => PokemonGatewayMock.Object);
         });
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing)
+        {
+            _connection.Dispose();
+        }
     }
 }
