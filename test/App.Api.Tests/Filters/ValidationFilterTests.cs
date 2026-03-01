@@ -56,7 +56,7 @@ public class ValidationFilterTests
             .Returns(validatorMock.Object);
 
         var context = new DefaultHttpContext { RequestServices = serviceProviderMock.Object };
-        var filterContext = new DefaultEndpointFilterInvocationContext(context, request);
+        var filterContext = new DefaultEndpointFilterInvocationContext(context, new object?[] { request });
         
         EndpointFilterDelegate next = (invocationContext) => ValueTask.FromResult<object?>(Results.Ok());
 
@@ -66,7 +66,57 @@ public class ValidationFilterTests
         var result = await filter.InvokeAsync(filterContext, next);
 
         // Assert
-        // We expect a ValidationProblem result (which implements IStatusCodeHttpResult and IValueHttpResult)
+        var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenValidatorNotFound_ShouldCallNext()
+    {
+        // Arrange
+        var request = new TestRequest { Name = "Valid" };
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        serviceProviderMock.Setup(s => s.GetService(typeof(IValidator<TestRequest>)))
+            .Returns(null);
+
+        var context = new DefaultHttpContext { RequestServices = serviceProviderMock.Object };
+        var filterContext = new DefaultEndpointFilterInvocationContext(context, request);
+        
+        bool nextCalled = false;
+        EndpointFilterDelegate next = (invocationContext) => {
+            nextCalled = true;
+            return ValueTask.FromResult<object?>(Results.Ok());
+        };
+
+        var filter = new ValidationFilter<TestRequest>();
+
+        // Act
+        await filter.InvokeAsync(filterContext, next);
+
+        // Assert
+        Assert.True(nextCalled);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenArgumentIsNull_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        serviceProviderMock.Setup(s => s.GetService(typeof(IValidator<TestRequest>)))
+            .Returns(new Mock<IValidator<TestRequest>>().Object);
+
+        var context = new DefaultHttpContext { RequestServices = serviceProviderMock.Object };
+        // Pass an array containing null to simulate null argument without making Arguments null
+        var filterContext = new DefaultEndpointFilterInvocationContext(context, new object?[] { null });
+        
+        EndpointFilterDelegate next = (invocationContext) => ValueTask.FromResult<object?>(Results.Ok());
+
+        var filter = new ValidationFilter<TestRequest>();
+
+        // Act
+        var result = await filter.InvokeAsync(filterContext, next);
+
+        // Assert
         var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
     }

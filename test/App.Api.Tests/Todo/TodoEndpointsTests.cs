@@ -479,6 +479,28 @@ public class TodoEndpointsTests
     }
 
     [Fact]
+    public async Task UpdateTodoAsync_WhenServiceThrowsArgumentOutOfRangeException_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var todoId = 1;
+        var updateData = new UpdateTodoRequest("Updated Title", true, null);
+
+        _todoRepositoryMock
+            .Setup(x => x.FindByIdAsync(todoId))
+            .ReturnsAsync(new TodoEntity { Id = todoId, Title = "Original" });
+        _todoRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TodoEntity>()))
+            .ThrowsAsync(new ArgumentOutOfRangeException("Id", "Invalid ID"));
+
+        // Act
+        var result = await _todoEndpoints.UpdateTodoAsync(todoId, updateData);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequest<string>>(result);
+        Assert.Contains("Invalid ID", badRequestResult.Value);
+    }
+
+    [Fact]
     public async Task UpdateTodoAsync_WhenExceptionThrown_ShouldReturnProblem()
     {
         // Arrange
@@ -728,6 +750,23 @@ public class TodoEndpointsTests
         var resultList = okResult.Value.ToList();
         Assert.Equal(3, resultList.Count);
         Assert.All(resultList, todo => Assert.False(todo.IsCompleted));
+    }
+
+    #endregion
+
+    #region Debugger Tests
+
+    [Fact]
+    public void GetDebuggerDisplay_ReturnsString()
+    {
+        // Act
+        var method = _todoEndpoints.GetType()
+            .GetMethod("GetDebuggerDisplay", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var result = method?.Invoke(_todoEndpoints, null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsType<string>(result);
     }
 
     #endregion

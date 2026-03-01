@@ -115,4 +115,38 @@ public class PokemonGatewayTests
     }
 
     #endregion
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithNullClient_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new PokemonGateway(null!));
+    }
+
+    #endregion
+
+    #region DTO Tests
+
+    [Fact]
+    public void PokeResponse_Properties_CanBeSet()
+    {
+        // Arrange
+        var response = new PokeResponse<string>
+        {
+            Count = 100,
+            Next = "next-url",
+            Previous = "prev-url",
+            Results = ["test"]
+        };
+
+        // Assert
+        Assert.Equal(100, response.Count);
+        Assert.Equal("next-url", response.Next);
+        Assert.Equal("prev-url", response.Previous);
+        Assert.Single(response.Results);
+    }
+
+    #endregion
 }
