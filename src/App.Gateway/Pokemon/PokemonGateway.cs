@@ -63,7 +63,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
     /// <summary>
     /// Internal class for deserializing Pokemon list items from PokeAPI.
     /// </summary>
-    private class PokemonItem
+    internal class PokemonItem
     {
         public string Name { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
@@ -72,7 +72,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
     /// <summary>
     /// Internal class for deserializing Pokemon details from PokeAPI.
     /// </summary>
-    private class PokemonDetail
+    internal class PokemonDetail
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
