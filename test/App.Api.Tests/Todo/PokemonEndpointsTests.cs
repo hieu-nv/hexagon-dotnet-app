@@ -1,4 +1,5 @@
 using App.Core.Pokemon;
+using App.Api.Pokemon;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
@@ -17,8 +18,8 @@ public class PokemonEndpointsTests
     private readonly Mock<IPokemonGateway> _gatewayMock;
     private readonly Mock<ILogger<PokemonService>> _serviceLoggerMock;
     private readonly PokemonService _pokemonService;
-    private readonly Mock<ILogger<App.Api.Pokemon.PokemonEndpoints>> _loggerMock;
-    private readonly App.Api.Pokemon.PokemonEndpoints _pokemonEndpoints;
+    private readonly Mock<ILogger<PokemonEndpoints>> _loggerMock;
+    private readonly PokemonEndpoints _pokemonEndpoints;
 
     public PokemonEndpointsTests()
     {
@@ -28,8 +29,8 @@ public class PokemonEndpointsTests
 
         // Create real service with mocked dependencies
         _pokemonService = new PokemonService(_gatewayMock.Object, _serviceLoggerMock.Object);
-        _loggerMock = new Mock<ILogger<App.Api.Pokemon.PokemonEndpoints>>();
-        _pokemonEndpoints = new App.Api.Pokemon.PokemonEndpoints(
+        _loggerMock = new Mock<ILogger<PokemonEndpoints>>();
+        _pokemonEndpoints = new PokemonEndpoints(
             _pokemonService,
             _loggerMock.Object
         );
@@ -54,7 +55,7 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonListAsync(20, 0);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonListResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal(3, okResult.Value.Count);
         Assert.NotNull(okResult.Value.Results);
@@ -79,11 +80,28 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonListAsync(10, 50);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonListResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal(1, okResult.Value.Count);
 
         _gatewayMock.Verify(x => x.FetchPokemonListAsync(10, 50), Times.Once);
+    }
+
+    [Fact]
+    public async Task FetchPokemonListAsync_WhenGatewayReturnsEmpty_ShouldReturnOkWithEmptyList()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(It.IsAny<int>(), It.IsAny<int>()))
+            .ReturnsAsync(Enumerable.Empty<PokemonEntity>());
+
+        // Act
+        var result = await _pokemonEndpoints.FetchPokemonListAsync();
+
+        // Assert
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.Equal(0, okResult.Value.Count);
+        Assert.Empty(okResult.Value.Results);
     }
 
     [Fact]
@@ -114,7 +132,7 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonListAsync(20, 0);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonListResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal(0, okResult.Value.Count);
         // Next should be null since count is 0 (not equal to limit)
@@ -122,6 +140,7 @@ public class PokemonEndpointsTests
         // Previous should be null since offset is 0
         Assert.Null(okResult.Value.Previous);
     }
+
 
     [Fact]
     public async Task FetchPokemonListAsync_WithFullPage_ShouldIncludeNextLink()
@@ -142,10 +161,10 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonListAsync(20, 0);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonListResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.NotNull(okResult.Value.Next);
-        Assert.Contains("offset=20", okResult.Value.Next);
+        Assert.Contains("offset=20", okResult.Value.Next, StringComparison.OrdinalIgnoreCase);
         Assert.Null(okResult.Value.Previous); // offset is 0
     }
 
@@ -168,12 +187,12 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonListAsync(20, 20);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonListResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.NotNull(okResult.Value.Previous);
-        Assert.Contains("offset=0", okResult.Value.Previous);
+        Assert.Contains("offset=0", okResult.Value.Previous, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(okResult.Value.Next);
-        Assert.Contains("offset=40", okResult.Value.Next);
+        Assert.Contains("offset=40", okResult.Value.Next, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -196,7 +215,7 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonByIdAsync(25);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal("pikachu", okResult.Value.Name);
         Assert.Equal("https://pokeapi.co/api/v2/pokemon/25/", okResult.Value.Url);
@@ -236,7 +255,7 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonByIdAsync(1);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal("bulbasaur", okResult.Value.Name);
     }
@@ -257,7 +276,7 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonByIdAsync(493);
 
         // Assert
-        var okResult = Assert.IsType<Ok<App.Api.Pokemon.PokemonResponse>>(result);
+        var okResult = Assert.IsType<Ok<PokemonResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal("arceus", okResult.Value.Name);
         Assert.Equal("https://pokeapi.co/api/v2/pokemon/493/", okResult.Value.Url);
@@ -275,7 +294,7 @@ public class PokemonEndpointsTests
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             _pokemonEndpoints.FetchPokemonByIdAsync(1)
         );
-        Assert.Contains("Invalid ID", exception.Message);
+        Assert.Contains("Invalid ID", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion

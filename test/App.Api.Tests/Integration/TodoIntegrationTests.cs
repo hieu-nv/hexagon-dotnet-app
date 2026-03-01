@@ -146,4 +146,18 @@ public class TodoIntegrationTests : IClassFixture<IntegrationTestWebAppFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task SecurityHeaders_ShouldBePresent()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/todos");
+
+        // Assert
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").First());
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").First());
+        Assert.Equal("1; mode=block", response.Headers.GetValues("X-XSS-Protection").First());
+        Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").First());
+        Assert.Equal("default-src 'self'", response.Headers.GetValues("Content-Security-Policy").First());
+    }
 }
