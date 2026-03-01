@@ -49,7 +49,8 @@ internal static class PokemonEndpointsExtensions
             .WithSummary("Get a list of Pokemon from PokeAPI")
             .WithDescription("Fetches Pokemon from the external PokeAPI with pagination support")
             .Produces<PokemonListResponse>(200)
-            .Produces(502);
+            .Produces(502)
+            .CacheOutput("PokemonCache");
 
         group
             .MapGet(
@@ -60,7 +61,8 @@ internal static class PokemonEndpointsExtensions
             .WithSummary("Get a specific Pokemon by ID")
             .WithDescription("Fetches details of a specific Pokemon from the external PokeAPI")
             .Produces<PokemonResponse>(200)
-            .Produces(404);
+            .Produces(404)
+            .CacheOutput("PokemonCache");
 
         return endpointRouteBuilder;
     }

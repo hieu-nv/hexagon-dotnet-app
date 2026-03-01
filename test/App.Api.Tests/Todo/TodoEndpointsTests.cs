@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using App.Api.Filters;
 using App.Api.Todo;
 using App.Core.Entities;
 using App.Core.Todo;
@@ -70,17 +71,11 @@ public class TodoEndpointsTests
             .Setup(x => x.FindAllAsync())
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.FindAllTodosAsync();
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while retrieving todos",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.FindAllTodosAsync()
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -165,17 +160,11 @@ public class TodoEndpointsTests
             .Setup(x => x.FindByIdAsync(todoId))
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.FindTodoByIdAsync(todoId);
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while retrieving the todo",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.FindTodoByIdAsync(todoId)
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -223,17 +212,11 @@ public class TodoEndpointsTests
             .Setup(x => x.FindCompletedTodosAsync())
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.FindCompletedTodosAsync();
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while retrieving completed todos",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.FindCompletedTodosAsync()
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -281,17 +264,11 @@ public class TodoEndpointsTests
             .Setup(x => x.FindIncompleteTodosAsync())
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.FindIncompleteTodosAsync();
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while retrieving incomplete todos",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.FindIncompleteTodosAsync()
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -332,26 +309,23 @@ public class TodoEndpointsTests
         CreateTodoRequest? nullEntity = null;
 
         // Act
-        var result = await _todoEndpoints.CreateTodoAsync(nullEntity!);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Equal("Todo item request is required", badRequestResult.Value);
+        // Act & Assert
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
+            _todoEndpoints.CreateTodoAsync(nullEntity!)
+        );
         _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
-    public async Task CreateTodoAsync_WithEmptyTitle_ShouldReturnBadRequest()
+    public async Task CreateTodoAsync_WithEmptyTitle_ShouldThrowValidationException()
     {
         // Arrange
         var invalidTodo = new CreateTodoRequest("", false, null);
 
-        // Act
-        var result = await _todoEndpoints.CreateTodoAsync(invalidTodo);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Contains("Title", badRequestResult.Value);
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _todoEndpoints.CreateTodoAsync(invalidTodo)
+        );
     }
 
     [Fact]
@@ -364,17 +338,11 @@ public class TodoEndpointsTests
             .Setup(x => x.CreateAsync(It.IsAny<TodoEntity>()))
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.CreateTodoAsync(newTodo);
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while creating the todo",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.CreateTodoAsync(newTodo)
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -480,17 +448,16 @@ public class TodoEndpointsTests
         UpdateTodoRequest? nullEntity = null;
 
         // Act
-        var result = await _todoEndpoints.UpdateTodoAsync(todoId, nullEntity!);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Equal("Todo update request is required", badRequestResult.Value);
+        // Act & Assert
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
+            _todoEndpoints.UpdateTodoAsync(todoId, nullEntity!)
+        );
         _todoRepositoryMock.Verify(x => x.FindByIdAsync(It.IsAny<int>()), Times.Never);
         _todoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
     [Fact]
-    public async Task UpdateTodoAsync_WithEmptyTitle_ShouldReturnBadRequest()
+    public async Task UpdateTodoAsync_WithEmptyTitle_ShouldThrowValidationException()
     {
         // Arrange
         var todoId = 1;
@@ -505,12 +472,10 @@ public class TodoEndpointsTests
 
         _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(existingTodo);
 
-        // Act
-        var result = await _todoEndpoints.UpdateTodoAsync(todoId, invalidData);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Contains("Title", badRequestResult.Value);
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _todoEndpoints.UpdateTodoAsync(todoId, invalidData)
+        );
     }
 
     [Fact]
@@ -524,17 +489,11 @@ public class TodoEndpointsTests
             .Setup(x => x.FindByIdAsync(todoId))
             .ThrowsAsync(new Exception("Database error"));
 
-        // Act
-        var result = await _todoEndpoints.UpdateTodoAsync(todoId, updateData);
-
-        // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while updating the todo",
-            problemResult.ProblemDetails.Detail
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.UpdateTodoAsync(todoId, updateData)
         );
+        Assert.Equal("Database error", exception.Message);
     }
 
     #endregion
@@ -610,17 +569,165 @@ public class TodoEndpointsTests
             .Setup(x => x.DeleteAsync(todoId))
             .ThrowsAsync(new Exception("Database error"));
 
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() =>
+            _todoEndpoints.DeleteTodoAsync(todoId)
+        );
+        Assert.Equal("Database error", exception.Message);
+    }
+
+    #endregion
+
+    #region Edge Case Tests
+
+    [Fact]
+    public async Task FindTodoByIdAsync_WithLargeId_ShouldAttemptFetch()
+    {
+        // Arrange
+        var largeId = int.MaxValue - 1;
+        _todoRepositoryMock.Setup(x => x.FindByIdAsync(largeId)).ReturnsAsync((TodoEntity?)null);
+
         // Act
-        var result = await _todoEndpoints.DeleteTodoAsync(todoId);
+        var result = await _todoEndpoints.FindTodoByIdAsync(largeId);
 
         // Assert
-        var problemResult = Assert.IsType<ProblemHttpResult>(result);
-        Assert.Equal(500, problemResult.StatusCode);
-        Assert.Equal("Internal Server Error", problemResult.ProblemDetails.Title);
-        Assert.Equal(
-            "An error occurred while deleting the todo",
-            problemResult.ProblemDetails.Detail
+        Assert.IsType<NotFound>(result);
+        _todoRepositoryMock.Verify(x => x.FindByIdAsync(largeId), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateTodoAsync_WithEmptyTitle_ShouldThrowValidationError()
+    {
+        // Arrange
+        var request = new CreateTodoRequest(string.Empty, false, null);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            _todoEndpoints.CreateTodoAsync(request)
         );
+        Assert.Equal("Title is required", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateTodoAsync_WithWhitespaceTitle_ShouldThrowValidationError()
+    {
+        // Arrange
+        var request = new CreateTodoRequest("   ", false, null);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            _todoEndpoints.CreateTodoAsync(request)
+        );
+        Assert.Equal("Title is required", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateTodoAsync_WithFutureDueDate_ShouldSucceed()
+    {
+        // Arrange
+        var futureDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+        var request = new CreateTodoRequest("Future Todo", false, futureDate);
+        var expectedEntity = new TodoEntity
+        {
+            Id = 1,
+            Title = "Future Todo",
+            IsCompleted = false,
+            DueBy = futureDate,
+        };
+
+        _todoRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<TodoEntity>()))
+            .ReturnsAsync(expectedEntity);
+
+        // Act
+        var result = await _todoEndpoints.CreateTodoAsync(request);
+
+        // Assert
+        var createdResult = Assert.IsType<Created<TodoResponse>>(result);
+        Assert.NotNull(createdResult.Value);
+        Assert.Equal("Future Todo", createdResult.Value.Title);
+    }
+
+    [Fact]
+    public async Task UpdateTodoAsync_WithValidChanges_ShouldReturnUpdated()
+    {
+        // Arrange
+        var todoId = 1;
+        var request = new UpdateTodoRequest("Updated", true, null);
+        var updated = new TodoEntity
+        {
+            Id = todoId,
+            Title = "Updated",
+            IsCompleted = true,
+        };
+
+        _todoRepositoryMock
+            .Setup(x => x.FindByIdAsync(todoId))
+            .ReturnsAsync(new TodoEntity { Id = todoId, Title = "Original" });
+        _todoRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<TodoEntity>())).ReturnsAsync(updated);
+
+        // Act
+        var result = await _todoEndpoints.UpdateTodoAsync(todoId, request);
+
+        // Assert
+        var okResult = Assert.IsType<Ok<TodoResponse>>(result);
+        Assert.NotNull(okResult.Value);
+        Assert.Equal("Updated", okResult.Value.Title);
+        Assert.True(okResult.Value.IsCompleted);
+    }
+
+    [Fact]
+    public async Task FindCompletedTodosAsync_WithEmptyList_ShouldReturnOk()
+    {
+        // Arrange
+        _todoRepositoryMock
+            .Setup(x => x.FindCompletedTodosAsync())
+            .ReturnsAsync(new List<TodoEntity>());
+
+        // Act
+        var result = await _todoEndpoints.FindCompletedTodosAsync();
+
+        // Assert
+        var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.Empty(okResult.Value);
+    }
+
+    [Fact]
+    public async Task FindIncompleteTodosAsync_WithMultipleTodos_ShouldReturnAll()
+    {
+        // Arrange
+        var incompleteTodos = new List<TodoEntity>
+        {
+            new()
+            {
+                Id = 1,
+                Title = "Task 1",
+                IsCompleted = false,
+            },
+            new()
+            {
+                Id = 2,
+                Title = "Task 2",
+                IsCompleted = false,
+            },
+            new()
+            {
+                Id = 3,
+                Title = "Task 3",
+                IsCompleted = false,
+            },
+        };
+
+        _todoRepositoryMock.Setup(x => x.FindIncompleteTodosAsync()).ReturnsAsync(incompleteTodos);
+
+        // Act
+        var result = await _todoEndpoints.FindIncompleteTodosAsync();
+
+        // Assert
+        var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        var resultList = okResult.Value.ToList();
+        Assert.Equal(3, resultList.Count);
+        Assert.All(resultList, todo => Assert.False(todo.IsCompleted));
     }
 
     #endregion

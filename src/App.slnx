@@ -10,7 +10,7 @@
   <Folder Name="/test/">
     <Project Path="..\test\App.Api.Tests\App.Api.Tests.csproj" Type="C#" />
     <Project Path="..\test\App.Core.Tests\App.Core.Tests.csproj" Type="C#" />
-    <Project Path="../test/App.Gateway.Tests/App.Gateway.Tests.csproj" Type="C#" />
+    <Project Path="..\test\App.Gateway.Tests\App.Gateway.Tests.csproj" Type="C#" />
   </Folder>
   <Properties Name="Configuration">
     <Property Name="Debug|Any CPU" />
