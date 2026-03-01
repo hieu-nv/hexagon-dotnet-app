@@ -10,3 +10,4 @@ logs/
 .github/skills
 .playwright-mcp/
 .agent/
+coverage/
