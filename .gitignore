@@ -10,4 +10,11 @@ logs/
 .github/skills
 .playwright-mcp/
 .agent/
+.github/agents
+.github/instructions
+.github/workflows
+.github/prompts
+!.github/agents/speckit.*.md
+!.github/instructions/speckit.*.md
+!.github/workflows/speckit.*.md
 coverage/
