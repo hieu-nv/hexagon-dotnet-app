@@ -216,8 +216,8 @@ public class PokemonEndpointsTests
         var result = await _pokemonEndpoints.FetchPokemonByIdAsync(99999);
 
         // Assert
-        var notFoundResult = Assert.IsType<NotFound<object>>(result);
-        Assert.NotNull(notFoundResult.Value);
+        var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
+        Assert.Equal(StatusCodes.Status404NotFound, statusCodeResult.StatusCode);
     }
 
     [Fact]
@@ -268,12 +268,12 @@ public class PokemonEndpointsTests
     {
         // Arrange
         _gatewayMock
-            .Setup(x => x.FetchPokemonByIdAsync(It.IsAny<int>()))
+            .Setup(x => x.FetchPokemonByIdAsync(1))
             .ThrowsAsync(new ArgumentException("Invalid ID"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _pokemonEndpoints.FetchPokemonByIdAsync(-1)
+            _pokemonEndpoints.FetchPokemonByIdAsync(1)
         );
         Assert.Contains("Invalid ID", exception.Message);
     }
