@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Copy necessary skills from awesome-copilot and antigravity-awesome-skills to .github/skills
-# Only copies skills relevant to .NET hexagonal architecture projects
+# Sync skills, agents, instructions, and workflows from upstream source directories
+# to the local .agent folder (and .github mirror) for .NET hexagonal architecture projects.
 #
-# Usage: ./agent-skills-cleanup.sh [-f]
-#   -f    Force copy, overwrite existing skills
+# Usage: ./agent-skills-sync.sh [-f]
+#   -f    Force copy, overwrite existing files
 
 # Source directories (searched in order, first match wins)
-SOURCE_SKILLS_DIRS=(
+SOURCE_DIRS=(
     "../../skills"
-    "../../awesome-copilot/skills"
-    "../../antigravity-awesome-skills/skills"
+    "../../awesome-copilot"
+    "../../antigravity-awesome-skills"
 )
-DEST_SKILLS_DIR="../.github/skills"
+
+DEST_DIR="../.agent"
+GITHUB_MIRROR="../.github"
 FORCE=false
 
 # Parse arguments
@@ -24,7 +26,9 @@ while getopts "f" opt; do
     esac
 done
 
-# Skills to copy for .NET hexagonal architecture project
+# ─────────────────────────────────────────────
+# Skills to copy
+# ─────────────────────────────────────────────
 COPY_SKILLS=(
     "appinsights-instrumentation"
     "api-design-principles"
@@ -39,6 +43,7 @@ COPY_SKILLS=(
     "code-exemplars-blueprint-generator"
     "code-review-checklist"
     "code-review-excellence"
+    "containerize-aspnetcore"
     "conventional-commit"
     "cosmosdb-datamodeling"
     "create-architectural-decision-record"
@@ -106,79 +111,172 @@ COPY_SKILLS=(
     "test-driven-development"
 )
 
-# Check if at least one source directory exists
+# ─────────────────────────────────────────────
+# Agents to copy (from awesome-copilot/agents/)
+# ─────────────────────────────────────────────
+COPY_AGENTS=(
+    "4.1-Beast.agent.md"
+    "CSharpExpert.agent.md"
+    "Thinking-Beast-Mode.agent.md"
+    "Ultimate-Transparent-Thinking-Beast-Mode.agent.md"
+    "api-architect.agent.md"
+    "arch.agent.md"
+    "azure-principal-architect.agent.md"
+    "azure-saas-architect.agent.md"
+    "context-architect.agent.md"
+    "csharp-dotnet-janitor.agent.md"
+    "csharp-mcp-expert.agent.md"
+    "debug.agent.md"
+    "dotnet-upgrade.agent.md"
+    "expert-dotnet-software-engineer.agent.md"
+    "github-actions-expert.agent.md"
+    "microsoft-agent-framework-dotnet.agent.md"
+    "openapi-to-application.agent.md"
+    "playwright-tester.agent.md"
+    "polyglot-test-builder.agent.md"
+    "polyglot-test-fixer.agent.md"
+    "polyglot-test-generator.agent.md"
+    "polyglot-test-implementer.agent.md"
+    "polyglot-test-linter.agent.md"
+    "polyglot-test-planner.agent.md"
+    "polyglot-test-researcher.agent.md"
+    "polyglot-test-tester.agent.md"
+    "repo-architect.agent.md"
+    "research-technical-spike.agent.md"
+    "se-gitops-ci-specialist.agent.md"
+    "se-security-reviewer.agent.md"
+    "se-system-architecture-reviewer.agent.md"
+    "semantic-kernel-dotnet.agent.md"
+    "task-researcher.agent.md"
+)
+
+# ─────────────────────────────────────────────
+# Instructions to copy (from awesome-copilot/instructions/)
+# ─────────────────────────────────────────────
+COPY_INSTRUCTIONS=(
+    "agent-safety.instructions.md"
+    "agent-skills.instructions.md"
+    "agents.instructions.md"
+    "aspnet-rest-apis.instructions.md"
+    "code-review-generic.instructions.md"
+    "containerization-docker-best-practices.instructions.md"
+    "context-engineering.instructions.md"
+    "copilot-sdk-csharp.instructions.md"
+    "csharp-mcp-server.instructions.md"
+    "csharp.instructions.md"
+    "dotnet-architecture-good-practices.instructions.md"
+    "dotnet-framework.instructions.md"
+    "dotnet-upgrade.instructions.md"
+    "github-actions-ci-cd-best-practices.instructions.md"
+    "kubernetes-deployment-best-practices.instructions.md"
+    "playwright-dotnet.instructions.md"
+    "security-and-owasp.instructions.md"
+)
+
+# ─────────────────────────────────────────────
+# Workflows to copy (from awesome-copilot/workflows/)
+# ─────────────────────────────────────────────
+COPY_WORKFLOWS=(
+    "daily-issues-report.md"
+)
+
+# ─────────────────────────────────────────────
+# Helper: copy_items <src_subdir> <dest_subdir> <items_array>
+# ─────────────────────────────────────────────
+copy_items() {
+    local src_subdir="$1"
+    local dest_subdir="$2"
+    shift 2
+    local items=("$@")
+
+    local dest_path="$DEST_DIR/$dest_subdir"
+    local mirror_path="$GITHUB_MIRROR/$dest_subdir"
+    mkdir -p "$dest_path" "$mirror_path"
+
+    local copied=0 skipped=0 notfound=0
+
+    for item in "${items[@]}"; do
+        local dest_item="$dest_path/$item"
+        local mirror_item="$mirror_path/$item"
+        local source_item=""
+
+        # Search source dirs
+        for src_dir in "${SOURCE_DIRS[@]}"; do
+            local candidate="$src_dir/$src_subdir/$item"
+            if [[ -e "$candidate" ]]; then
+                source_item="$candidate"
+                break
+            fi
+            # Also try without subdir (e.g. skills/ at root level)
+            local candidate2="$src_dir/$item"
+            if [[ -e "$candidate2" ]]; then
+                source_item="$candidate2"
+                break
+            fi
+        done
+
+        if [[ -z "$source_item" ]]; then
+            echo "  ✗ Not found: $item"
+            ((notfound++))
+            continue
+        fi
+
+        if [[ -e "$dest_item" && "$FORCE" == false ]]; then
+            echo "  ⊘ Skip:     $item"
+            ((skipped++))
+            continue
+        fi
+
+        # Remove if forcing
+        [[ -e "$dest_item" && "$FORCE" == true ]] && rm -rf "$dest_item"
+        [[ -e "$mirror_item" && "$FORCE" == true ]] && rm -rf "$mirror_item"
+
+        cp -r "$source_item" "$dest_item"
+        cp -r "$source_item" "$mirror_item"
+        echo "  ✓ Copied:   $item"
+        ((copied++))
+    done
+
+    echo "  → Copied: $copied | Skipped: $skipped | Not found: $notfound"
+    echo ""
+}
+
+# ─────────────────────────────────────────────
+# Check at least one source dir exists
+# ─────────────────────────────────────────────
 found_source=false
-for source_dir in "${SOURCE_SKILLS_DIRS[@]}"; do
-    if [[ -d "$source_dir" ]]; then
+for src_dir in "${SOURCE_DIRS[@]}"; do
+    if [[ -d "$src_dir" ]]; then
         found_source=true
         break
     fi
 done
 
 if [[ "$found_source" == false ]]; then
-    echo "Error: No source skills directories found:"
-    for source_dir in "${SOURCE_SKILLS_DIRS[@]}"; do
-        echo "  - $source_dir"
-    done
+    echo "Error: No source directories found:"
+    for src_dir in "${SOURCE_DIRS[@]}"; do echo "  - $src_dir"; done
     exit 1
 fi
 
-# Create destination directory if it doesn't exist
-mkdir -p "$DEST_SKILLS_DIR"
-
-echo "Copying skills to $DEST_SKILLS_DIR"
-echo "Source directories:"
-for source_dir in "${SOURCE_SKILLS_DIRS[@]}"; do
-    echo "  - $source_dir"
-done
+echo "=================================================="
+echo "  Agent Sync — source → $DEST_DIR"
+echo "  Mirror → $GITHUB_MIRROR"
+echo "  Force: $FORCE"
 echo "=================================================="
 echo ""
 
-copied_count=0
-skipped_count=0
-notfound_count=0
+echo "📦 SKILLS → skills/"
+copy_items "skills" "skills" "${COPY_SKILLS[@]}"
 
-# Copy each skill
-for skill in "${COPY_SKILLS[@]}"; do
-    dest_skill="$DEST_SKILLS_DIR/$skill"
-    source_skill=""
-    
-    # Find skill in source directories
-    for source_dir in "${SOURCE_SKILLS_DIRS[@]}"; do
-        if [[ -e "$source_dir/$skill" ]]; then
-            source_skill="$source_dir/$skill"
-            break
-        fi
-    done
-    
-    if [[ -z "$source_skill" ]]; then
-        echo "✗ Not found: $skill"
-        ((notfound_count++))
-        continue
-    fi
-    
-    # If destination already exists and not forcing, skip
-    if [[ -e "$dest_skill" && "$FORCE" == false ]]; then
-        echo "⊘ Skip:     $skill (already exists)"
-        ((skipped_count++))
-        continue
-    fi
-    
-    # If forcing and destination exists, remove it first
-    if [[ -e "$dest_skill" && "$FORCE" == true ]]; then
-        rm -rf "$dest_skill"
-    fi
-    
-    # Copy the skill (file or directory)
-    cp -r "$source_skill" "$dest_skill"
-    echo "✓ Copy:     $skill"
-    ((copied_count++))
-done
+echo "🤖 AGENTS → agents/"
+copy_items "agents" "agents" "${COPY_AGENTS[@]}"
 
-echo ""
+echo "📋 INSTRUCTIONS → instructions/"
+copy_items "instructions" "instructions" "${COPY_INSTRUCTIONS[@]}"
+
+echo "⚙️  WORKFLOWS → workflows/"
+copy_items "workflows" "workflows" "${COPY_WORKFLOWS[@]}"
+
 echo "=================================================="
-echo "Copy Complete!"
-echo "  Copied:   $copied_count skills"
-echo "  Skipped:  $skipped_count skills"
-echo "  Not found: $notfound_count skills"
+echo "Sync complete!"
 echo "=================================================="
