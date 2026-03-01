@@ -43,4 +43,26 @@ public class AppDbContextTests
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new AppDbContext(null!));
     }
+
+    [Fact]
+    public async Task SaveChangesAsync_ShouldNotUpdateUpdatedAt_WhenEntityIsUnchanged()
+    {
+        // Arrange
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: "UnchangedEntityTest")
+            .Options;
+
+        using var context = new AppDbContext(options);
+        var todo = new TodoEntity { Title = "Stable Todo" };
+        context.Todos.Add(todo);
+        await context.SaveChangesAsync();
+
+        var updatedAtAfterCreate = todo.UpdatedAt;
+
+        // Act — save without modifying the entity
+        await context.SaveChangesAsync();
+
+        // Assert — UpdatedAt should remain unchanged (only modified entities get UpdatedAt bumped)
+        Assert.Equal(updatedAtAfterCreate, todo.UpdatedAt);
+    }
 }

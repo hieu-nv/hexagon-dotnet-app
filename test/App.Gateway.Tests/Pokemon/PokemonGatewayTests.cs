@@ -148,5 +148,39 @@ public class PokemonGatewayTests
         Assert.Single(response.Results);
     }
 
+    [Fact]
+    public void PokemonDetail_Properties_CanBeSet()
+    {
+        // Arrange - PokemonGateway internal class
+        var detail = new PokemonGateway.PokemonDetail
+        {
+            Id = 25,
+            Name = "pikachu",
+            Height = 4,
+            Weight = 60
+        };
+
+        // Assert
+        Assert.Equal(25, detail.Id);
+        Assert.Equal("pikachu", detail.Name);
+        Assert.Equal(4, detail.Height);
+        Assert.Equal(60, detail.Weight);
+    }
+
+    [Fact]
+    public void PokemonItem_Properties_CanBeSet()
+    {
+        // Arrange
+        var item = new PokemonGateway.PokemonItem
+        {
+            Name = "bulbasaur",
+            Url = "https://pokeapi.co/api/v2/pokemon/1/"
+        };
+
+        // Assert
+        Assert.Equal("bulbasaur", item.Name);
+        Assert.Equal("https://pokeapi.co/api/v2/pokemon/1/", item.Url);
+    }
+
     #endregion
 }
