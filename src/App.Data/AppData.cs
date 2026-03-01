@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using App.Core.Entities;
 using App.Core.Todo;
@@ -64,6 +65,7 @@ public static class AppData
 /// Provides a JSON serializer context for the application data layer.
 /// This context is used for serializing and deserializing entities.
 /// </summary>
+[ExcludeFromCodeCoverage]
 [JsonSerializable(typeof(TodoEntity[]))]
 [JsonSerializable(typeof(TodoEntity))]
 internal sealed partial class AppDataJsonSerializerContext : JsonSerializerContext { }
