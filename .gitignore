@@ -9,3 +9,4 @@ logs/
 .env
 .github/skills
 .playwright-mcp/
+.agent/

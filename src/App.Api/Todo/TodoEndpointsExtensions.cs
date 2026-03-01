@@ -1,3 +1,4 @@
+using App.Api.Filters;
 using App.Api.Todo;
 using App.Core.Entities;
 
@@ -66,7 +67,8 @@ internal static class TodoEndpointsExtensions
             .WithName("CreateTodo")
             .WithSummary("Create a new to-do item")
             .Produces<TodoResponse>(201)
-            .Produces(400);
+            .Produces(400)
+            .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>();
 
         // PUT endpoint
         group
@@ -79,7 +81,8 @@ internal static class TodoEndpointsExtensions
             .WithSummary("Update an existing to-do item")
             .Produces<TodoResponse>(200)
             .Produces(404)
-            .Produces(400);
+            .Produces(400)
+            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>();
 
         // DELETE endpoint
         group

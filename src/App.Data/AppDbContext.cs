@@ -50,6 +50,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
         modelBuilder
             .Entity<TodoEntity>()
+            .HasIndex(t => t.IsCompleted);
+
+        modelBuilder
+            .Entity<TodoEntity>()
+            .HasIndex(t => t.DueBy);
+
+        modelBuilder
+            .Entity<TodoEntity>()
             .HasData(
                 new TodoEntity
                 {

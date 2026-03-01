@@ -29,22 +29,10 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     public async Task<IResult> FindAllTodosAsync()
     {
         _logger.LogInformation("Retrieving all todos");
-        try
-        {
-            var todos = (await _todoService.FindAllAsync().ConfigureAwait(false)).ToList();
-            var response = todos.Select(t => t.ToResponse());
-            _logger.LogInformation("Successfully retrieved {TodoCount} todos", todos.Count);
-            return Results.Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving all todos");
-            return Results.Problem(
-                detail: "An error occurred while retrieving todos",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
-        }
+        var todos = (await _todoService.FindAllAsync().ConfigureAwait(false)).ToList();
+        var response = todos.Select(t => t.ToResponse());
+        _logger.LogInformation("Successfully retrieved {TodoCount} todos", todos.Count);
+        return Results.Ok(response);
     }
 
     /// <summary>
@@ -54,39 +42,23 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     public async Task<IResult> FindTodoByIdAsync(int id)
     {
         _logger.LogInformation("Retrieving todo with ID: {TodoId}", id);
-        try
-        {
-            if (id <= 0)
-            {
-                _logger.LogWarning("Invalid todo ID provided: {TodoId}", id);
-                return Results.BadRequest("Invalid ID. ID must be greater than zero.");
-            }
 
-            var todo = await _todoService.FindByIdAsync(id).ConfigureAwait(false);
-            if (todo is not null)
-            {
-                _logger.LogInformation("Successfully retrieved todo with ID: {TodoId}", id);
-                return Results.Ok(todo.ToResponse());
-            }
-            else
-            {
-                _logger.LogInformation("Todo with ID {TodoId} not found", id);
-                return Results.NotFound();
-            }
-        }
-        catch (ArgumentOutOfRangeException ex)
+        if (id <= 0)
         {
-            _logger.LogWarning(ex, "ArgumentOutOfRangeException for todo ID: {TodoId}", id);
+            _logger.LogWarning("Invalid todo ID provided: {TodoId}", id);
             return Results.BadRequest("Invalid ID. ID must be greater than zero.");
         }
-        catch (Exception ex)
+
+        var todo = await _todoService.FindByIdAsync(id).ConfigureAwait(false);
+        if (todo is not null)
         {
-            _logger.LogError(ex, "Error occurred while retrieving todo with ID: {TodoId}", id);
-            return Results.Problem(
-                detail: "An error occurred while retrieving the todo",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
+            _logger.LogInformation("Successfully retrieved todo with ID: {TodoId}", id);
+            return Results.Ok(todo.ToResponse());
+        }
+        else
+        {
+            _logger.LogInformation("Todo with ID {TodoId} not found", id);
+            return Results.NotFound();
         }
     }
 
@@ -96,25 +68,13 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     public async Task<IResult> FindCompletedTodosAsync()
     {
         _logger.LogInformation("Retrieving completed todos");
-        try
-        {
-            var todos = (await _todoService.FindCompletedAsync().ConfigureAwait(false)).ToList();
-            var response = todos.Select(t => t.ToResponse());
-            _logger.LogInformation(
-                "Successfully retrieved {CompletedCount} completed todos",
-                todos.Count
-            );
-            return Results.Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving completed todos");
-            return Results.Problem(
-                detail: "An error occurred while retrieving completed todos",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
-        }
+        var todos = (await _todoService.FindCompletedAsync().ConfigureAwait(false)).ToList();
+        var response = todos.Select(t => t.ToResponse());
+        _logger.LogInformation(
+            "Successfully retrieved {CompletedCount} completed todos",
+            todos.Count
+        );
+        return Results.Ok(response);
     }
 
     /// <summary>
@@ -123,25 +83,13 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     public async Task<IResult> FindIncompleteTodosAsync()
     {
         _logger.LogInformation("Retrieving incomplete todos");
-        try
-        {
-            var todos = (await _todoService.FindIncompleteAsync().ConfigureAwait(false)).ToList();
-            var response = todos.Select(t => t.ToResponse());
-            _logger.LogInformation(
-                "Successfully retrieved {IncompleteCount} incomplete todos",
-                todos.Count
-            );
-            return Results.Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while retrieving incomplete todos");
-            return Results.Problem(
-                detail: "An error occurred while retrieving incomplete todos",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
-        }
+        var todos = (await _todoService.FindIncompleteAsync().ConfigureAwait(false)).ToList();
+        var response = todos.Select(t => t.ToResponse());
+        _logger.LogInformation(
+            "Successfully retrieved {IncompleteCount} incomplete todos",
+            todos.Count
+        );
+        return Results.Ok(response);
     }
 
     /// <summary>
@@ -150,44 +98,22 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     /// <param name="request">The to-do item creation request.</param>
     public async Task<IResult> CreateTodoAsync(CreateTodoRequest request)
     {
-        _logger.LogInformation("Creating new todo with title: {Title}", request?.Title);
-        try
-        {
-            if (request == null)
-            {
-                _logger.LogWarning("Create todo failed: request is null");
-                return Results.BadRequest("Todo item request is required");
-            }
+        _logger.LogInformation("Creating new todo with title: {Title}", request.Title);
 
-            var entity = new TodoEntity
-            {
-                Title = request.Title,
-                IsCompleted = request.IsCompleted,
-                DueBy = request.DueBy,
-            };
+        var entity = new TodoEntity
+        {
+            Title = request.Title,
+            IsCompleted = request.IsCompleted,
+            DueBy = request.DueBy,
+        };
 
-            var created = await _todoService.CreateAsync(entity).ConfigureAwait(false);
-            _logger.LogInformation(
-                "Successfully created todo with ID: {TodoId}, Title: {Title}",
-                created.Id,
-                created.Title
-            );
-            return Results.Created($"/api/v1/todos/{created.Id}", created.ToResponse());
-        }
-        catch (ValidationException ex)
-        {
-            _logger.LogWarning(ex, "Validation failed while creating todo: {Message}", ex.Message);
-            return Results.BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while creating todo");
-            return Results.Problem(
-                detail: "An error occurred while creating the todo",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
-        }
+        var created = await _todoService.CreateAsync(entity).ConfigureAwait(false);
+        _logger.LogInformation(
+            "Successfully created todo with ID: {TodoId}, Title: {Title}",
+            created.Id,
+            created.Title
+        );
+        return Results.Created($"/api/v1/todos/{created.Id}", created.ToResponse());
     }
 
     /// <summary>
@@ -204,12 +130,6 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
             {
                 _logger.LogWarning("Invalid todo ID provided for update: {TodoId}", id);
                 return Results.BadRequest("Invalid ID. ID must be greater than zero.");
-            }
-
-            if (request == null)
-            {
-                _logger.LogWarning("Update todo failed: request is null for ID: {TodoId}", id);
-                return Results.BadRequest("Todo update request is required");
             }
 
             var entity = new TodoEntity
@@ -236,29 +156,10 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
                 return Results.NotFound();
             }
         }
-        catch (ValidationException ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Validation failed while updating todo ID {TodoId}: {Message}",
-                id,
-                ex.Message
-            );
-            return Results.BadRequest(ex.Message);
-        }
         catch (ArgumentOutOfRangeException ex)
         {
-            _logger.LogWarning(ex, "ArgumentOutOfRangeException for todo ID: {TodoId}", id);
-            return Results.BadRequest("Invalid ID. ID must be greater than zero.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while updating todo with ID: {TodoId}", id);
-            return Results.Problem(
-                detail: "An error occurred while updating the todo",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
+            _logger.LogWarning(ex, "Validation failed: invalid argument provided");
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -269,39 +170,23 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     public async Task<IResult> DeleteTodoAsync(int id)
     {
         _logger.LogInformation("Deleting todo with ID: {TodoId}", id);
-        try
-        {
-            if (id <= 0)
-            {
-                _logger.LogWarning("Invalid todo ID provided for delete: {TodoId}", id);
-                return Results.BadRequest("Invalid ID. ID must be greater than zero.");
-            }
 
-            var deleted = await _todoService.DeleteAsync(id).ConfigureAwait(false);
-            if (deleted)
-            {
-                _logger.LogInformation("Successfully deleted todo with ID: {TodoId}", id);
-                return Results.NoContent();
-            }
-            else
-            {
-                _logger.LogInformation("Todo with ID {TodoId} not found for deletion", id);
-                return Results.NotFound();
-            }
-        }
-        catch (ArgumentOutOfRangeException ex)
+        if (id <= 0)
         {
-            _logger.LogWarning(ex, "ArgumentOutOfRangeException for todo ID: {TodoId}", id);
+            _logger.LogWarning("Invalid todo ID provided for delete: {TodoId}", id);
             return Results.BadRequest("Invalid ID. ID must be greater than zero.");
         }
-        catch (Exception ex)
+
+        var deleted = await _todoService.DeleteAsync(id).ConfigureAwait(false);
+        if (deleted)
         {
-            _logger.LogError(ex, "Error occurred while deleting todo with ID: {TodoId}", id);
-            return Results.Problem(
-                detail: "An error occurred while deleting the todo",
-                statusCode: 500,
-                title: "Internal Server Error"
-            );
+            _logger.LogInformation("Successfully deleted todo with ID: {TodoId}", id);
+            return Results.NoContent();
+        }
+        else
+        {
+            _logger.LogInformation("Todo with ID {TodoId} not found for deletion", id);
+            return Results.NotFound();
         }
     }
 
