@@ -42,4 +42,35 @@ public class AppDataTests
         // Assert
         Assert.NotNull(app);
     }
+
+    [Fact]
+    public void UseAppData_Builder_WithNullBuilder_ShouldThrow()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            ((WebApplicationBuilder)null!).UseAppData()
+        );
+    }
+
+    [Fact]
+    public void UseAppData_App_WithNullApp_ShouldThrow()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            ((WebApplication)null!).UseAppData()
+        );
+    }
+
+    [Fact]
+    public void UseAppData_Builder_ReturnsBuilder()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder();
+
+        // Act
+        var result = builder.UseAppData();
+
+        // Assert
+        Assert.Same(builder, result);
+    }
 }

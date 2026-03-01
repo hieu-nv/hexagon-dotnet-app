@@ -50,4 +50,34 @@ public class EntityTests
         Assert.False(todo.IsCompleted);
         Assert.NotEqual(default, todo.CreatedAt);
     }
+
+    [Fact]
+    public void Entity_UpdatedAt_DefaultsToNull()
+    {
+        // Act
+        var entity = new TestEntity();
+
+        // Assert
+        Assert.Null(entity.UpdatedAt);
+    }
+
+    [Fact]
+    public void TodoEntity_DueBy_DefaultsToNull()
+    {
+        // Act
+        var todo = new TodoEntity { Title = "Test" };
+
+        // Assert
+        Assert.Null(todo.DueBy);
+    }
+
+    [Fact]
+    public void TodoEntity_IsCompleted_DefaultsToFalse()
+    {
+        // Act
+        var todo = new TodoEntity { Title = "Test" };
+
+        // Assert
+        Assert.False(todo.IsCompleted);
+    }
 }

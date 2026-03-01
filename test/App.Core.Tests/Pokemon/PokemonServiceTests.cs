@@ -178,4 +178,26 @@ public class PokemonServiceTests
     }
 
     #endregion
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithNullGateway_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokemonService(null!, _loggerMock.Object)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokemonService(_gatewayMock.Object, null!)
+        );
+    }
+
+    #endregion
 }

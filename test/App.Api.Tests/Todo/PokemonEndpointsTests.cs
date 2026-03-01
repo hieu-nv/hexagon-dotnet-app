@@ -298,4 +298,81 @@ public class PokemonEndpointsTests
     }
 
     #endregion
+
+    #region PokemonService Validation Branch Tests (via endpoint)
+
+    [Fact]
+    public async Task FetchPokemonByIdAsync_WithZeroId_ShouldThrowArgumentException()
+    {
+        // Calling with 0 triggers PokemonService.GetPokemonByIdAsync id<=0 branch
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _pokemonEndpoints.FetchPokemonByIdAsync(0)
+        );
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message, StringComparison.OrdinalIgnoreCase);
+        _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FetchPokemonByIdAsync_WithNegativeId_ShouldThrowArgumentException()
+    {
+        // Triggers PokemonService id<=0 branch via endpoint
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _pokemonEndpoints.FetchPokemonByIdAsync(-5)
+        );
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task FetchPokemonListAsync_WithNegativeLimit_ShouldClampTo20()
+    {
+        // Triggers PokemonService limit <= 0 warning branch
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(new List<PokemonEntity>());
+
+        var result = await _pokemonEndpoints.FetchPokemonListAsync(-1, 0);
+
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.NotNull(okResult.Value);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task FetchPokemonListAsync_WithZeroLimit_ShouldClampTo20()
+    {
+        // Triggers PokemonService limit <= 0 warning branch
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(new List<PokemonEntity>());
+
+        var result = await _pokemonEndpoints.FetchPokemonListAsync(0, 0);
+
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.NotNull(okResult.Value);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task FetchPokemonListAsync_WithLimitOver100_ShouldClampTo100()
+    {
+        // Triggers PokemonService limit > 100 warning branch
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(100, 0)).ReturnsAsync(new List<PokemonEntity>());
+
+        var result = await _pokemonEndpoints.FetchPokemonListAsync(999, 0);
+
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.NotNull(okResult.Value);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(100, 0), Times.Once);
+    }
+
+    [Fact]
+    public async Task FetchPokemonListAsync_WithNegativeOffset_ShouldClampTo0()
+    {
+        // Triggers PokemonService offset < 0 warning branch
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(new List<PokemonEntity>());
+
+        var result = await _pokemonEndpoints.FetchPokemonListAsync(20, -5);
+
+        var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.NotNull(okResult.Value);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
+    #endregion
 }

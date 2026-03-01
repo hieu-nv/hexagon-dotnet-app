@@ -170,4 +170,21 @@ public class TodoRepositoryTests
         var dbTodo = await _context.Todos.FindAsync(todo.Id);
         Assert.Equal("Updated Title", dbTodo!.Title);
     }
+
+    [Fact]
+    public async Task UpdateAsync_WhenEntityIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _repository.UpdateAsync(null!));
+    }
+
+    [Fact]
+    public async Task FindAllAsync_WhenEmpty_ShouldReturnEmpty()
+    {
+        // Act
+        var result = await _repository.FindAllAsync();
+
+        // Assert
+        Assert.Empty(result);
+    }
 }
