@@ -1,5 +1,8 @@
 # Hexagon .NET App
 
+[![CI](https://github.com/hieu-nv/hexagon-dotnet-app/actions/workflows/ci.yml/badge.svg)](https://github.com/hieu-nv/hexagon-dotnet-app/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/Coverage-93.3%25-brightgreen)](README.md#test-coverage)
+
 A modern ASP.NET Core application using minimal APIs to demonstrate hexagonal architecture with both internal data persistence and external service integration.
 
 ## Overview
@@ -63,7 +66,7 @@ It provides a structured approach to building maintainable and testable applicat
   - [x] Create `.github/workflows/ci.yml`
   - [x] Add coverage collection and reporting
   - [x] Enforce 80% minimum threshold
-  - [ ] Add coverage badge to README
+  - [x] Add coverage badge to README
 
 ### Phase 3: Production Hardening (🟡 High)
 
@@ -108,7 +111,7 @@ It provides a structured approach to building maintainable and testable applicat
   - [x] Create `.github/workflows/ci.yml` (build, test, coverage)
   - [ ] Create `.github/workflows/cd.yml` (deployment)
   - [ ] Add SonarCloud integration
-  - [ ] Add build status badge to README
+  - [x] Add build status badge to README
   - [ ] Configure automated deployments
 
 - [ ] **4.3 Docker Production Optimization**
@@ -120,7 +123,7 @@ It provides a structured approach to building maintainable and testable applicat
   - [ ] Create `.dockerignore`
 
 - [ ] **4.4 Enhanced Documentation**
-  - [ ] Add badges (build, coverage, version) to README
+  - [x] Add badges (build, coverage, version) to README
   - [ ] Create `CONTRIBUTING.md` with contribution guidelines
   - [ ] Create `CHANGELOG.md` with version history
   - [ ] Create `docs/API.md` with detailed API documentation
