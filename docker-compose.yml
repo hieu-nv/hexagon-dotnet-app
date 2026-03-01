@@ -1,0 +1,14 @@
+services:
+  hexagon-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hexagon-api
+    ports:
+      - "5112:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DD_TRACE_ENABLED=false
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
