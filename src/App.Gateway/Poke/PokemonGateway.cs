@@ -23,7 +23,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
         int offset = 0
     )
     {
-        var url = $"pokemon?limit={limit}&offset={offset}";
+        var url = new Uri($"pokemon?limit={limit}&offset={offset}", UriKind.RelativeOrAbsolute);
         var response = await _pokeClient
             .GetAsync<PokeResponse<PokemonItem>>(url)
             .ConfigureAwait(false);
@@ -45,7 +45,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
     /// <returns>The Pokemon details, or null if not found.</returns>
     public async Task<Core.Poke.Pokemon?> FetchPokemonByIdAsync(int id)
     {
-        var url = $"pokemon/{id}";
+        var url = new Uri($"pokemon/{id}", UriKind.RelativeOrAbsolute);
         var response = await _pokeClient.GetAsync<PokemonDetail>(url).ConfigureAwait(false);
 
         if (response == null)

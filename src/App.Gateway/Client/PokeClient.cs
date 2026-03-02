@@ -9,7 +9,7 @@ namespace App.Gateway.Client;
 /// </summary>
 /// <param name="httpClient">The HTTP client instance.</param>
 /// <param name="logger">The logger instance.</param>
-public class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPokeClient
+public partial class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPokeClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true, };
 
@@ -25,7 +25,7 @@ public class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPo
     /// <typeparam name="T">The type of the response.</typeparam>
     /// <param name="url">The URL to request.</param>
     /// <returns>The response deserialized to the specified type, or null if the request fails.</returns>
-    public async Task<T?> GetAsync<T>(string url)
+    public async Task<T?> GetAsync<T>(Uri url)
         where T : class
     {
         try
@@ -38,8 +38,11 @@ public class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPo
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "HTTP error fetching data from {Url}", url);
+            LogHttpError(ex, url);
             return null;
         }
     }
+
+    [LoggerMessage(LogLevel.Error, "HTTP error fetching data from {Url}")]
+    private partial void LogHttpError(Exception ex, Uri url);
 }

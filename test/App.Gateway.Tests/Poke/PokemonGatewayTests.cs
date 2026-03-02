@@ -34,7 +34,7 @@ public class PokemonGatewayTests
             }
         };
 
-        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<string>()))
+        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<Uri>()))
             .ReturnsAsync(pokeResponse);
 
         // Act
@@ -52,7 +52,7 @@ public class PokemonGatewayTests
     public async Task FetchPokemonListAsync_WithNullResponse_ShouldReturnNull()
     {
         // Arrange
-        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<string>()))
+        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<Uri>()))
             .ReturnsAsync((PokeResponse<PokemonGateway.PokemonItem>?)null);
 
         // Act
@@ -66,7 +66,7 @@ public class PokemonGatewayTests
     public async Task FetchPokemonListAsync_WithEmptyResults_ShouldReturnNull()
     {
         // Arrange
-        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<string>()))
+        _pokeClientMock.Setup(x => x.GetAsync<PokeResponse<PokemonGateway.PokemonItem>>(It.IsAny<Uri>()))
             .ReturnsAsync(new PokeResponse<PokemonGateway.PokemonItem> { Results = null! });
 
         // Act
@@ -86,7 +86,7 @@ public class PokemonGatewayTests
         // Arrange
         var pokemonDetail = new PokemonGateway.PokemonDetail { Id = 25, Name = "pikachu" };
 
-        _pokeClientMock.Setup(x => x.GetAsync<PokemonGateway.PokemonDetail>(It.IsAny<string>()))
+        _pokeClientMock.Setup(x => x.GetAsync<PokemonGateway.PokemonDetail>(It.IsAny<Uri>()))
             .ReturnsAsync(pokemonDetail);
 
         // Act
@@ -102,7 +102,7 @@ public class PokemonGatewayTests
     public async Task FetchPokemonByIdAsync_WithNonExistentId_ShouldReturnNull()
     {
         // Arrange
-        _pokeClientMock.Setup(x => x.GetAsync<PokemonGateway.PokemonDetail>(It.IsAny<string>()))
+        _pokeClientMock.Setup(x => x.GetAsync<PokemonGateway.PokemonDetail>(It.IsAny<Uri>()))
             .ReturnsAsync((PokemonGateway.PokemonDetail?)null);
 
         // Act
