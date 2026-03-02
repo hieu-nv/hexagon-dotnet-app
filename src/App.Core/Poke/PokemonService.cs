@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace App.Core.Pokemon;
+namespace App.Core.Poke;
 
 /// <summary>
 /// Service layer for Pokemon operations, encapsulating business logic.

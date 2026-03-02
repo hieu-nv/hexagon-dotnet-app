@@ -1,6 +1,6 @@
-using App.Core.Pokemon;
+using App.Core.Poke;
 using App.Gateway.Client;
-using App.Gateway.Pokemon;
+using App.Gateway.Poke;
 
 using Moq;
 

@@ -1,4 +1,4 @@
-namespace App.Api.Pokemon;
+namespace App.Api.Poke;
 
 /// <summary>
 /// Represents a Pokemon returned by the API.

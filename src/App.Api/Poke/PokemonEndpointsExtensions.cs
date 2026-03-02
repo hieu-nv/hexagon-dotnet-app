@@ -1,5 +1,5 @@
-using App.Api.Pokemon;
-using App.Core.Pokemon;
+using App.Api.Poke;
+using App.Core.Poke;
 
 namespace Microsoft.AspNetCore.Builder;
 

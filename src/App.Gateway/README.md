@@ -54,7 +54,7 @@ App.Gateway/
 │   ├── IPokeClient.cs          # HTTP client interface
 │   ├── PokeClient.cs           # HTTP client implementation
 │   └── PokeResponse.cs         # Generic response wrapper
-└── Pokemon/                    # Pokemon gateway implementation
+└── Poke/                       # Pokemon gateway implementation
     └── PokemonGateway.cs       # Implements IPokemonGateway
 ```
 
@@ -89,7 +89,7 @@ Generic HTTP client for making requests to external APIs:
 ### 1. Define Gateway Interface in Core
 
 ```csharp
-// App.Core/Pokemon/IPokemonGateway.cs
+// App.Core/Poke/IPokemonGateway.cs
 public interface IPokemonGateway
 {
     Task<IEnumerable<Pokemon>?> FetchPokemonListAsync(int limit = 20, int offset = 0);
@@ -100,7 +100,7 @@ public interface IPokemonGateway
 ### 2. Implement Gateway in Gateway Module
 
 ```csharp
-// App.Gateway/Pokemon/PokemonGateway.cs
+// App.Gateway/Poke/PokemonGateway.cs
 public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
 {
     public async Task<IEnumerable<Pokemon>?> FetchPokemonListAsync(int limit = 20, int offset = 0)
@@ -121,7 +121,7 @@ builder.UseAppGateway();  // Register gateway services
 ### 4. Use in API Endpoints
 
 ```csharp
-// App.Api/Pokemon/PokemonEndpoints.cs
+// App.Api/Poke/PokemonEndpoints.cs
 internal sealed class PokemonEndpoints(IPokemonGateway pokemonGateway)
 {
     public async Task<IResult> FetchPokemonListAsync(int limit = 20, int offset = 0)

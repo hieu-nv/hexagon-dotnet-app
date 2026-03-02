@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using App.Api.Pokemon;
+using App.Api.Poke;
 using Moq;
 using Xunit;
 
@@ -21,7 +21,7 @@ public class PokemonIntegrationTests : IClassFixture<IntegrationTestWebAppFactor
     public async Task GetPokemonList_WithMockedGateway_ShouldReturnOk()
     {
         // Arrange
-        var pokemonList = new List<App.Core.Pokemon.Pokemon>
+        var pokemonList = new List<App.Core.Poke.Pokemon>
         {
             new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
             new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
@@ -44,7 +44,7 @@ public class PokemonIntegrationTests : IClassFixture<IntegrationTestWebAppFactor
     public async Task GetPokemonById_WithMockedGateway_ShouldReturnOk()
     {
         // Arrange
-        var pokemon = new App.Core.Pokemon.Pokemon
+        var pokemon = new App.Core.Poke.Pokemon
         {
             Name = "pikachu",
             Url = "https://pokeapi.co/api/v2/pokemon/25/",
@@ -65,7 +65,7 @@ public class PokemonIntegrationTests : IClassFixture<IntegrationTestWebAppFactor
         // Arrange
         _factory
             .PokemonGatewayMock.Setup(x => x.FetchPokemonByIdAsync(99999))
-            .ReturnsAsync((App.Core.Pokemon.Pokemon?)null);
+            .ReturnsAsync((App.Core.Poke.Pokemon?)null);
 
         // Act
         var response = await _client.GetAsync("/api/v1/pokemon/99999");

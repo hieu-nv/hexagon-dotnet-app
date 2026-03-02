@@ -1,6 +1,6 @@
-using App.Core.Pokemon;
+using App.Core.Poke;
 
-namespace App.Api.Pokemon;
+namespace App.Api.Poke;
 
 /// <summary>
 /// Endpoints for Pokemon operations via external gateway.

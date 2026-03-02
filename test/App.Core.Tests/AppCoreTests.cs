@@ -20,7 +20,7 @@ public class AppCoreTests
         // Assert — verify the service types are registered as descriptors
         Assert.Same(builder, result);
         var todoDescriptor = builder.Services.FirstOrDefault(d => d.ServiceType == typeof(TodoService));
-        var pokemonDescriptor = builder.Services.FirstOrDefault(d => d.ServiceType == typeof(App.Core.Pokemon.PokemonService));
+        var pokemonDescriptor = builder.Services.FirstOrDefault(d => d.ServiceType == typeof(App.Core.Poke.PokemonService));
         Assert.NotNull(todoDescriptor);
         Assert.NotNull(pokemonDescriptor);
     }
