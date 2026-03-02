@@ -76,9 +76,6 @@ if (jwtEnabled)
             options.Authority = builder.Configuration["JwtBearer:Authority"];
             options.Audience = builder.Configuration["JwtBearer:Audience"];
             options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>("JwtBearer:RequireHttpsMetadata");
-            // Optional: Map inbound claims to custom types if needed
-            // options.TokenValidationParameters.NameClaimType = "preferred_username";
-            // options.TokenValidationParameters.RoleClaimType = "realm_access.roles"; // This often requires custom mapping logic
         });
 
     builder.Services.AddAuthorization(options =>
@@ -88,9 +85,8 @@ if (jwtEnabled)
             if (context.Resource is HttpContext httpContext)
             {
                 var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
-                var authService = httpContext.RequestServices.GetRequiredService<AuthService>();
                 var user = claimsExtractor.ExtractFromPrincipal(context.User);
-                return user != null && authService.AuthorizeByRoles(user, new[] { "admin" });
+                return user != null && AuthService.AuthorizeByRoles(user, App.Api.ProgramConstants.AdminRoles);
             }
             return false;
         }));
@@ -100,9 +96,8 @@ if (jwtEnabled)
             if (context.Resource is HttpContext httpContext)
             {
                 var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
-                var authService = httpContext.RequestServices.GetRequiredService<AuthService>();
                 var user = claimsExtractor.ExtractFromPrincipal(context.User);
-                return user != null && authService.AuthorizeByRoles(user, new[] { "user", "admin" });
+                return user != null && AuthService.AuthorizeByRoles(user, App.Api.ProgramConstants.UserAdminRoles);
             }
             return false;
         }));
@@ -230,4 +225,13 @@ static bool LogFatalException(Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
     return false; // Ensures the exception continues to propagate
+}
+
+namespace App.Api
+{
+    internal static class ProgramConstants
+    {
+        public static readonly string[] AdminRoles = ["admin"];
+        public static readonly string[] UserAdminRoles = ["user", "admin"];
+    }
 }

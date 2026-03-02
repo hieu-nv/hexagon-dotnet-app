@@ -77,7 +77,7 @@ public class ValidationFilterTests
         var request = new TestRequest { Name = "Valid" };
         var serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(s => s.GetService(typeof(IValidator<TestRequest>)))
-            .Returns(null);
+            .Returns((IValidator<TestRequest>?)null);
 
         var context = new DefaultHttpContext { RequestServices = serviceProviderMock.Object };
         var filterContext = new DefaultEndpointFilterInvocationContext(context, request);

@@ -5,7 +5,7 @@ namespace App.Api.Auth;
 /// <summary>
 /// Domain service for evaluating authentication and authorization state in the application.
 /// </summary>
-public class AuthService
+internal class AuthService
 {
     private readonly IClaimsExtractor _claimsExtractor;
 
@@ -36,7 +36,7 @@ public class AuthService
     /// Note: Endpoint authorization is handled by ASP.NET Core middleware, so this
     /// is purely for domain-level authorization checks.
     /// </summary>
-    public bool AuthorizeUser(AuthenticatedUser user, AuthenticationPolicy policy)
+    public static bool AuthorizeUser(AuthenticatedUser user, AuthenticationPolicy policy)
     {
         ArgumentNullException.ThrowIfNull(user);
         ArgumentNullException.ThrowIfNull(policy);
@@ -51,7 +51,7 @@ public class AuthService
     /// <summary>
     /// Checks if the user has a specific role.
     /// </summary>
-    public bool AuthorizeByRoles(AuthenticatedUser user, IEnumerable<string> requiredRoles)
+    public static bool AuthorizeByRoles(AuthenticatedUser user, IEnumerable<string> requiredRoles)
     {
         ArgumentNullException.ThrowIfNull(user);
         ArgumentNullException.ThrowIfNull(requiredRoles);

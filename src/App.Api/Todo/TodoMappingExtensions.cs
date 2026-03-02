@@ -5,7 +5,7 @@ namespace App.Api.Todo;
 /// <summary>
 /// Extension methods for mapping Todo-related entities and DTOs.
 /// </summary>
-public static class TodoMappingExtensions
+internal static class TodoMappingExtensions
 {
     /// <summary>
     /// Maps a TodoEntity to a TodoResponse.

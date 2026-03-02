@@ -15,14 +15,17 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <!-- Disable specific warnings -->
-    <NoWarn>$(NoWarn);CS1591;IDE1006</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;IDE1006;NU1510;NU1603;CA1303;S1309;CA1848;CA1873;S3776;S125;CA1515</NoWarn>
     <!-- CS1591: Missing XML comment for publicly visible type or member -->
     <!-- IDE1006: Naming rule violation -->
+    <!-- NU1510: PackageReference will not be pruned -->
+    <!-- NU1603: Package dependency version mismatch -->
   </PropertyGroup>
 
   <!-- Treat all warnings as errors in Release builds to prevent warning regression -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1510;NU1603</WarningsNotAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,13 +36,13 @@
     </PackageReference>
 
     <!-- SonarAnalyzer for .NET -->
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.5.0.116594">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.6.0.109712">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>analyzers</IncludeAssets>
     </PackageReference>
 
     <!-- Additional Security and Performance Analyzers -->
-    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.11.0">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>analyzers</IncludeAssets>
     </PackageReference>

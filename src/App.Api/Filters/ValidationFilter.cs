@@ -6,7 +6,7 @@ namespace App.Api.Filters;
 /// Endpoint filter that validates request bodies using FluentValidation.
 /// Returns 400 ProblemDetails with validation errors if validation fails.
 /// </summary>
-public class ValidationFilter<T> : IEndpointFilter
+internal sealed class ValidationFilter<T> : IEndpointFilter
     where T : class
 {
     public async ValueTask<object?> InvokeAsync(

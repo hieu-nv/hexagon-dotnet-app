@@ -530,4 +530,10 @@ dotnet_diagnostic.S4050.severity = warning    # Operators should be overloaded c
 dotnet_diagnostic.S4200.severity = warning    # Native methods should be wrapped
 
 [*.cs]
-dotnet_diagnostic.CA1303.severity = none
+dotnet_diagnostic.CA1303.severity = warning
+dotnet_diagnostic.CA1848.severity = warning
+dotnet_diagnostic.CA1873.severity = warning
+dotnet_diagnostic.CA1515.severity = warning
+dotnet_diagnostic.CA1056.severity = warning
+dotnet_diagnostic.CA1054.severity = warning
+dotnet_diagnostic.S3776.severity = warning

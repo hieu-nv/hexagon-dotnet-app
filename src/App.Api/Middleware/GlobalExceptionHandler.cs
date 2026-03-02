@@ -8,7 +8,7 @@ namespace App.Api.Middleware;
 /// Global exception handler implementing RFC 7807 ProblemDetails.
 /// Adds correlation IDs and strips stack traces in non-Development environments.
 /// </summary>
-public class GlobalExceptionHandler(
+internal class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IHostEnvironment environment
 ) : IExceptionHandler

@@ -5,7 +5,7 @@ namespace App.Api.Poke;
 /// <summary>
 /// Extension methods for mapping Pokemon-related entities and DTOs.
 /// </summary>
-public static class PokemonMappingExtensions
+internal static class PokemonMappingExtensions
 {
     /// <summary>
     /// Maps a Pokemon to a PokemonResponse.
@@ -14,6 +14,6 @@ public static class PokemonMappingExtensions
     /// <returns>The mapped response.</returns>
     public static PokemonResponse ToResponse(this App.Core.Poke.Pokemon pokemon)
     {
-        return new PokemonResponse(pokemon.Name, pokemon.Url?.ToString() ?? string.Empty);
+        return new PokemonResponse(pokemon.Name, pokemon.Url ?? new Uri("about:blank"));
     }
 }

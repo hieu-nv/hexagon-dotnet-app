@@ -5,7 +5,7 @@ namespace App.Api.Auth;
 /// <summary>
 /// Defines the contract for extracting claims from OAuth2 access tokens and constructing an AuthenticatedUser.
 /// </summary>
-public interface IClaimsExtractor
+internal interface IClaimsExtractor
 {
     /// <summary>
     /// Extracts an <see cref="AuthenticatedUser"/> from the given <see cref="ClaimsPrincipal"/>.

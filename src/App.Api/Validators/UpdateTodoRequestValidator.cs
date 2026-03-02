@@ -6,7 +6,7 @@ namespace App.Api.Validators;
 /// <summary>
 /// Validator for UpdateTodoRequest.
 /// </summary>
-public class UpdateTodoRequestValidator : AbstractValidator<UpdateTodoRequest>
+internal class UpdateTodoRequestValidator : AbstractValidator<UpdateTodoRequest>
 {
     public UpdateTodoRequestValidator()
     {

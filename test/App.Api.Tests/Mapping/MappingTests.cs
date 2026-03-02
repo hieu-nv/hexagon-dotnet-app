@@ -47,6 +47,6 @@ public class MappingTests
 
         // Assert
         Assert.Equal(pokemon.Name, response.Name);
-        Assert.Equal(pokemon.Url?.ToString(), response.Url);
+        Assert.Equal(pokemon.Url, response.Url);
     }
 }

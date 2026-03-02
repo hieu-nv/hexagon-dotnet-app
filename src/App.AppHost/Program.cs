@@ -6,4 +6,4 @@ var builder = DistributedApplication.CreateBuilder(args);
 // Path is relative to the AppHost project directory
 builder.AddProject("api", "../App.Api/App.Api.csproj").WithExternalHttpEndpoints();
 
-builder.Build().Run();
+await builder.Build().RunAsync();

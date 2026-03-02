@@ -48,6 +48,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.NotNull(okResult.Value);
         var responseList = okResult.Value.ToList();
         Assert.Equal(2, responseList.Count);
         Assert.Equal(expectedTodos[0].Id, responseList[0].Id);
@@ -88,6 +89,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<TodoResponse>>(result);
+        Assert.NotNull(okResult.Value);
         Assert.Equal(expectedTodo.Id, okResult.Value.Id);
         Assert.Equal(expectedTodo.Title, okResult.Value.Title);
         _todoRepositoryMock.Verify(x => x.FindByIdAsync(todoId), Times.Once);
@@ -175,6 +177,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.NotNull(okResult.Value);
         var responseList = okResult.Value.ToList();
         Assert.Equal(2, responseList.Count);
         Assert.All(responseList, todo => Assert.True(todo.IsCompleted));
@@ -217,6 +220,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.NotNull(okResult.Value);
         var responseList = okResult.Value.ToList();
         Assert.Equal(2, responseList.Count);
         Assert.All(responseList, todo => Assert.False(todo.IsCompleted));
@@ -259,6 +263,7 @@ public class TodoEndpointsTests
 
         // Assert
         var createdResult = Assert.IsType<Created<TodoResponse>>(result);
+        Assert.NotNull(createdResult.Value);
         Assert.Equal($"/api/v1/todos/{createdTodo.Id}", createdResult.Location);
         Assert.Equal(createdTodo.Id, createdResult.Value.Id);
         _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Once);
@@ -324,6 +329,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<TodoResponse>>(result);
+        Assert.NotNull(okResult.Value);
         Assert.Equal(updatedTodo.Id, okResult.Value.Id);
         Assert.Equal("Updated Title", okResult.Value.Title);
         Assert.True(okResult.Value.IsCompleted);
@@ -419,7 +425,7 @@ public class TodoEndpointsTests
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest<string>>(result);
-        Assert.Contains("Invalid ID", badRequestResult.Value);
+        Assert.Contains("Invalid ID", badRequestResult.Value, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -600,6 +606,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.NotNull(okResult.Value);
         Assert.Empty(okResult.Value);
     }
 
@@ -621,6 +628,7 @@ public class TodoEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<IEnumerable<TodoResponse>>>(result);
+        Assert.NotNull(okResult.Value);
         var resultList = okResult.Value.ToList();
         Assert.Equal(3, resultList.Count);
         Assert.All(resultList, todo => Assert.False(todo.IsCompleted));

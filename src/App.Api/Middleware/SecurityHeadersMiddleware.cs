@@ -3,7 +3,7 @@ namespace App.Api.Middleware;
 /// <summary>
 /// Middleware that adds security-related HTTP response headers.
 /// </summary>
-public class SecurityHeadersMiddleware : IMiddleware
+internal class SecurityHeadersMiddleware : IMiddleware
 {
     /// <summary>
     /// Adds security headers to the response and invokes the next middleware.

@@ -5,7 +5,7 @@ namespace App.Api.Poke;
 /// <summary>
 /// Endpoints for Pokemon operations via external gateway.
 /// </summary>
-/// <param name="pokemonGateway">The Pokemon gateway for accessing external API.</param>
+/// <param name="pokemonService">The Pokemon service for accessing external API.</param>
 /// <param name="logger">The logger for tracking endpoint activity.</param>
 internal sealed class PokemonEndpoints(
     PokemonService pokemonService,
@@ -57,11 +57,11 @@ internal sealed class PokemonEndpoints(
         );
 
         var results = pokemon.Select(p => p.ToResponse());
-        string? next =
-            count == limit ? $"/api/v1/pokemon?limit={limit}&offset={offset + limit}" : null;
-        string? previous =
+        Uri? next =
+            count == limit ? new Uri($"/api/v1/pokemon?limit={limit}&offset={offset + limit}", UriKind.Relative) : null;
+        Uri? previous =
             offset > 0
-                ? $"/api/v1/pokemon?limit={limit}&offset={Math.Max(0, offset - limit)}"
+                ? new Uri($"/api/v1/pokemon?limit={limit}&offset={Math.Max(0, offset - limit)}", UriKind.Relative)
                 : null;
 
         var response = new PokemonListResponse(count, next, previous, results);

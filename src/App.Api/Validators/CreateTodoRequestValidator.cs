@@ -6,7 +6,7 @@ namespace App.Api.Validators;
 /// <summary>
 /// Validator for CreateTodoRequest.
 /// </summary>
-public class CreateTodoRequestValidator : AbstractValidator<CreateTodoRequest>
+internal class CreateTodoRequestValidator : AbstractValidator<CreateTodoRequest>
 {
     public CreateTodoRequestValidator()
     {

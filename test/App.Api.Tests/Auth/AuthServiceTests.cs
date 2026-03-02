@@ -46,7 +46,7 @@ public class AuthServiceTests
         var policy = new AuthenticationPolicy("AdminOnly", null, new[] { "admin" });
 
         // Act
-        var result = _authService.AuthorizeUser(user, policy);
+        var result = AuthService.AuthorizeUser(user, policy);
 
         // Assert
         Assert.True(result);
@@ -66,7 +66,7 @@ public class AuthServiceTests
         var policy = new AuthenticationPolicy("AdminOnly", null, new[] { "admin" });
 
         // Act
-        var result = _authService.AuthorizeUser(user, policy);
+        var result = AuthService.AuthorizeUser(user, policy);
 
         // Assert
         Assert.False(result);
@@ -86,7 +86,7 @@ public class AuthServiceTests
         var policy = new AuthenticationPolicy("AnyAuthenticated", null, Array.Empty<string>());
 
         // Act
-        var result = _authService.AuthorizeUser(user, policy);
+        var result = AuthService.AuthorizeUser(user, policy);
 
         // Assert
         Assert.True(result); // Any authenticated user passes an empty roles policy
@@ -106,7 +106,7 @@ public class AuthServiceTests
         var policy = new AuthenticationPolicy("AdminOrMod", null, new[] { "admin", "moderator" });
 
         // Act
-        var result = _authService.AuthorizeUser(user, policy);
+        var result = AuthService.AuthorizeUser(user, policy);
 
         // Assert
         Assert.True(result);

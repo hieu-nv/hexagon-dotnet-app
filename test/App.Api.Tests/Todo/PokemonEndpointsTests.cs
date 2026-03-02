@@ -104,6 +104,7 @@ public class PokemonEndpointsTests
 
         // Assert
         var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
+        Assert.NotNull(okResult.Value);
         Assert.Equal(0, okResult.Value.Count);
         Assert.Empty(okResult.Value.Results);
     }
@@ -164,7 +165,7 @@ public class PokemonEndpointsTests
         var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.NotNull(okResult.Value.Next);
-        Assert.Contains("offset=20", okResult.Value.Next, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("offset=20", okResult.Value.Next?.ToString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
         Assert.Null(okResult.Value.Previous); // offset is 0
     }
 
@@ -186,9 +187,9 @@ public class PokemonEndpointsTests
         var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.NotNull(okResult.Value.Previous);
-        Assert.Contains("offset=0", okResult.Value.Previous, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("offset=0", okResult.Value.Previous?.ToString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(okResult.Value.Next);
-        Assert.Contains("offset=40", okResult.Value.Next, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("offset=40", okResult.Value.Next?.ToString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -210,7 +211,7 @@ public class PokemonEndpointsTests
         var okResult = Assert.IsType<Ok<PokemonResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal("pikachu", okResult.Value.Name);
-        Assert.Equal("https://pokeapi.co/api/v2/pokemon/25/", okResult.Value.Url);
+        Assert.Equal(new Uri("https://pokeapi.co/api/v2/pokemon/25/", UriKind.RelativeOrAbsolute), okResult.Value.Url);
 
         _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(25), Times.Once);
     }
@@ -263,7 +264,7 @@ public class PokemonEndpointsTests
         var okResult = Assert.IsType<Ok<PokemonResponse>>(result);
         Assert.NotNull(okResult.Value);
         Assert.Equal("arceus", okResult.Value.Name);
-        Assert.Equal("https://pokeapi.co/api/v2/pokemon/493/", okResult.Value.Url);
+        Assert.Equal(new Uri("https://pokeapi.co/api/v2/pokemon/493/", UriKind.RelativeOrAbsolute), okResult.Value.Url);
     }
 
     [Fact]

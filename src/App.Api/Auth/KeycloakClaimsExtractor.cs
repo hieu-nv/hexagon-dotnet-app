@@ -6,10 +6,11 @@ namespace App.Api.Auth;
 /// <summary>
 /// Extracts claims from a ClaimsPrincipal where roles are nested in a custom Keycloak structure (realm_access.roles).
 /// </summary>
-public class KeycloakClaimsExtractor : IClaimsExtractor
+internal class KeycloakClaimsExtractor : IClaimsExtractor
 {
     private const string NameClaimType = "name";
     private const string PreferredUsernameClaimType = "preferred_username";
+    private static readonly JsonSerializerOptions s_jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public AuthenticatedUser? ExtractFromPrincipal(ClaimsPrincipal principal)
     {
@@ -40,7 +41,7 @@ public class KeycloakClaimsExtractor : IClaimsExtractor
                principal.HasClaim(c => c.Type == ClaimTypes.Email);
     }
 
-    private static IReadOnlyList<string> ExtractRoles(ClaimsPrincipal principal)
+    private static List<string> ExtractRoles(ClaimsPrincipal principal)
     {
         var roles = new List<string>();
 
@@ -53,8 +54,7 @@ public class KeycloakClaimsExtractor : IClaimsExtractor
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var realmAccess = JsonSerializer.Deserialize<RealmAccess>(realmAccessClaim.Value, options);
+                var realmAccess = JsonSerializer.Deserialize<RealmAccess>(realmAccessClaim.Value, s_jsonOptions);
                 if (realmAccess?.Roles != null)
                 {
                     roles.AddRange(realmAccess.Roles);
@@ -69,7 +69,7 @@ public class KeycloakClaimsExtractor : IClaimsExtractor
         return roles.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private static IReadOnlyDictionary<string, string> ExtractCustomClaims(ClaimsPrincipal principal)
+    private static Dictionary<string, string> ExtractCustomClaims(ClaimsPrincipal principal)
     {
         // Add any non-standard claims to the dictionary
         var standardClaims = new HashSet<string>
@@ -97,8 +97,5 @@ public class KeycloakClaimsExtractor : IClaimsExtractor
             .ToDictionary(c => c.Type, c => c.Value);
     }
 
-    private class RealmAccess
-    {
-        public string[]? Roles { get; set; }
-    }
+    private sealed record RealmAccess(string[]? Roles);
 }

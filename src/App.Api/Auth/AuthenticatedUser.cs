@@ -3,7 +3,7 @@ namespace App.Api.Auth;
 /// <summary>
 /// Represents an authenticated user extracted from OAuth2 access tokens.
 /// </summary>
-public record AuthenticatedUser(
+internal record AuthenticatedUser(
     string Id,
     string Email,
     string? Name,
