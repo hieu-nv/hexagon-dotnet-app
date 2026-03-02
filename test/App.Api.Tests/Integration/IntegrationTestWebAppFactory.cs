@@ -1,7 +1,9 @@
 using App.Core.Poke;
 using App.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +61,32 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
             }
 
             services.AddScoped(_ => PokemonGatewayMock.Object);
+
+            // Configure Mock Authentication
+            services.AddAuthentication(TestAuthHandler.AuthenticationScheme)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, options => { });
+            
+            // Override the default authorization policy to require our Test scheme
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(TestAuthHandler.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+        });
+
+        // Add the authorization header to the default client
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddMvc(options =>
+            {
+                options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(
+                    new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                        .AddAuthenticationSchemes(TestAuthHandler.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build()));
+            });
         });
     }
 

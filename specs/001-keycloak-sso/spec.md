@@ -3,7 +3,7 @@
 **Feature Branch**: `001-keycloak-sso`  
 **Created**: February 27, 2026  
 **Status**: Completed  
-**Input**: User description: "Keycloak Single Sign-On (SSO) support with OAuth2/OpenID Connect authentication and authorization"
+**Input**: User description: "Keycloak Single Sign-On (SSO) support with OAuth2/JwtBearer authentication and authorization"
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -25,23 +25,23 @@ As a DevOps engineer, I want to set up Keycloak as the centralized identity prov
 
 ### User Story 2 - Developer Configures OAuth2 Authentication in Application (Priority: P1)
 
-As a developer, I want the application to authenticate users via OAuth2/OpenID Connect from Keycloak so that I can leverage centralized authentication without managing passwords in the application.
+As a developer, I want the application to authenticate users via OAuth2/JwtBearer from Keycloak so that I can leverage centralized authentication without managing passwords in the application.
 
 **Why this priority**: This is the critical integration layer. Without OAuth2 configuration, authentication doesn't work.
 
-**Independent Test**: A developer can configure OAuth2 settings in appsettings.json, enable the feature, and the application starts with OpenID Connect middleware active. The application can be tested with the setup Keycloak instance.
+**Independent Test**: A developer can configure OAuth2 settings in appsettings.json, enable the feature, and the application starts with JwtBearer middleware active. The application can be tested with the setup Keycloak instance.
 
 **Acceptance Scenarios**:
 
 1. **Given** OAuth2 is disabled in configuration, **When** a request comes to a protected endpoint, **Then** the endpoint is accessible without authentication
-2. **Given** OAuth2 is enabled and Keycloak is running, **When** an unauthenticated user accesses the application, **Then** they are redirected to Keycloak login
-3. **Given** a user logs in with valid credentials in Keycloak, **When** Keycloak redirects back to the app with an authorization code and ID token, **Then** the user is authenticated in the application
+2. **Given** OAuth2 is enabled and Keycloak is running, **When** an unauthenticated user accesses the application, **Then** they receive a 401 Unauthorized response
+3. **Given** a user obtains a valid access token from Keycloak, **When** they present this token in the Authorization header to a protected endpoint, **Then** the user is authenticated and the request is processed
 
 ---
 
-### User Story 3 - Application Extracts and Uses User Claims from OAuth2 ID Tokens (Priority: P1)
+### User Story 3 - Application Extracts and Uses User Claims from OAuth2 Access Tokens (Priority: P1)
 
-As a developer, I want the application to extract user identity information (email, name, roles) from OAuth2 ID tokens so that I can authorize users based on their roles and personalize their experience.
+As a developer, I want the application to extract user identity information (email, name, roles) from OAuth2 Access Tokens so that I can authorize users based on their roles and personalize their experience.
 
 **Why this priority**: Without claims extraction, authenticated users lack identity information needed for authorization and functionality.
 
@@ -50,8 +50,8 @@ As a developer, I want the application to extract user identity information (ema
 **Acceptance Scenarios**:
 
 1. **Given** a user is authenticated via OAuth2, **When** the application calls AuthService.GetAuthenticatedUser(), **Then** an AuthenticatedUser object is returned with email, name, and roles
-2. **Given** an ID token has role claims, **When** claims are extracted, **Then** the AuthenticatedUser.Roles collection contains all role values
-3. **Given** an ID token lacks required claims, **When** validation occurs, **Then** the principal is marked invalid and extraction returns null
+2. **Given** an access token has role claims, **When** claims are extracted, **Then** the AuthenticatedUser.Roles collection contains all role values
+3. **Given** an access token lacks required claims, **When** validation occurs, **Then** the principal is marked invalid and extraction returns null
 
 ---
 
@@ -77,7 +77,7 @@ As an API developer, I want to easily protect endpoints with OAuth2 authenticati
 
 **Why this priority**: Endpoint protection is important but can be implemented incrementally as endpoints are built.
 
-**Independent Test**: A developer can add [Authorize] attributes to minimal API endpoints and verify that unauthenticated requests return 401 and unauthorized requests return 403.
+**Independent Test**: A developer can add RequireAuthorization() to minimal API endpoints and verify that unauthenticated requests return 401 and unauthorized requests return 403.
 
 **Acceptance Scenarios**:
 
@@ -98,15 +98,15 @@ As a user, I want to be able to log out from the application so that my session 
 **Acceptance Scenarios**:
 
 1. **Given** a user is authenticated, **When** they access the logout endpoint, **Then** their session is cleared
-2. **Given** a user has logged out, **When** they try to access a protected endpoint, **Then** they are redirected to Keycloak login
+2. **Given** a user has logged out, **When** they try to access a protected endpoint, **Then** they receive a 401 Unauthorized response
 
 ---
 
 ### Edge Cases
 
 - What happens when Keycloak is unavailable during authentication? The OAuth2 middleware should handle timeouts gracefully.
-- What happens if an ID token is missing required claims? The application should reject the token and redirect to login.
-- What happens if a user's roles change in Keycloak? The user must log out and log back in to get updated roles (session-based).
+- What happens if an access token is missing required claims? The application should reject the token and return 401 Unauthorized.
+- What happens if a user's roles change in Keycloak? The user will get updated roles only after requesting a new access token.
 - What happens when OAuth2 is disabled in configuration? All endpoints should be accessible without authentication.
 
 ---
@@ -115,26 +115,26 @@ As a user, I want to be able to log out from the application so that my session 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST support OAuth2/OpenID Connect authentication from Keycloak as the identity provider
-- **FR-002**: System MUST extract user identity claims (email, name, ID) from OAuth2 ID tokens
-- **FR-003**: System MUST extract and track user roles from OAuth2 ID tokens for authorization
-- **FR-004**: System MUST allow enabling/disabling OAuth2 authentication via configuration setting (`OpenIdConnect:Enabled`)
+- **FR-001**: System MUST support OAuth2/JwtBearer authentication from Keycloak as the identity provider
+- **FR-002**: System MUST extract user identity claims (email, name, ID) from OAuth2 access tokens
+- **FR-003**: System MUST extract and track user roles from OAuth2 access tokens for authorization
+- **FR-004**: System MUST allow enabling/disabling OAuth2 authentication via configuration setting (`JwtBearer:Enabled`)
 - **FR-005**: System MUST support role-based authorization policies (AdminOnly, TodoAccess, etc.)
-- **FR-006**: System MUST extract custom claims from OAuth2 ID tokens for extensibility
+- **FR-006**: System MUST extract custom claims from OAuth2 access tokens for extensibility
 - **FR-007**: System MUST provide a port interface (IClaimsExtractor) for pluggable claims extraction
 - **FR-008**: System MUST persist Keycloak realm configuration in code/scripts for reproducibility
 - **FR-009**: System MUST provide automated Keycloak setup via script (creates realm, client, test users)
-- **FR-010**: System MUST validate ID tokens before processing (email, subject claim required)
+- **FR-010**: System MUST validate access tokens before processing (email, subject claim required)
 
 ### Functional Constraints
 
-- OAuth2 authentication must follow the Authorization Code flow with OpenID Connect profile (as per OAuth 2.0 specification)
-- Claims extraction must handle ID tokens from Keycloak OAuth2/OpenID Connect protocol
+- OAuth2 authentication must validate JWT Bearer tokens issued by Keycloak
+- Claims extraction must handle access tokens from Keycloak OAuth2 protocol
 - Authorization policies must integrate with ASP.NET Core's standard authorization pipeline
 
 ### Non-Functional Requirements
 
-- **NFR-001**: ID token validation must complete in <100ms
+- **NFR-001**: Access token validation must complete in <100ms
 - **NFR-002**: Keycloak setup script must complete realm creation in <30 seconds
 - **NFR-003**: Claims extraction must support up to 50 roles per user
 - **NFR-004**: System must remain backward compatible (OAuth2 can be disabled)
@@ -145,10 +145,10 @@ As a user, I want to be able to log out from the application so that my session 
 
 ### AuthenticatedUser (Value Object)
 
-Represents an authenticated user extracted from OAuth2 ID tokens
+Represents an authenticated user extracted from OAuth2 access tokens
 
-- **Id** (string): Unique identifier from ID token subject claim
-- **Email** (string): User's email from ID token
+- **Id** (string): Unique identifier from access token subject claim
+- **Email** (string): User's email from access token
 - **Name** (string?): User's display name (optional)
 - **Roles** (IReadOnlyList<string>): List of roles assigned to user
 - **CustomClaims** (IReadOnlyDictionary<string, string>): Additional claims from Keycloak
@@ -163,7 +163,7 @@ Represents an authorization policy based on required roles
 
 ### IClaimsExtractor (Port Interface)
 
-Defines the contract for extracting claims from OAuth2 ID tokens
+Defines the contract for extracting claims from OAuth2 access tokens
 
 - **ExtractFromPrincipal(ClaimsPrincipal)**: Returns AuthenticatedUser or null
 - **IsValidPrincipal(ClaimsPrincipal)**: Validates required claims exist
@@ -187,19 +187,19 @@ Orchestrates authentication and authorization logic
 - **SC-002**: All 84 application tests pass with OAuth2 integration
 - **SC-003**: Zero compilation errors with nullable reference types enabled
 - **SC-004**: Keycloak setup script completes successfully in <30 seconds
-- **SC-005**: OAuth2 authentication flow completes in <2 seconds (latency)
+- **SC-005**: OAuth2 authentication validation completes in <2 seconds (latency)
 
 ### Qualitative Metrics
 
 - **SC-006**: Developers can enable/disable OAuth2 with single configuration property
 - **SC-007**: Keycloak can be set up with a single script command (`./scripts/keycloak-setup.sh`)
 - **SC-008**: Authorization policies are easy to define and apply to endpoints
-- **SC-009**: Claims extraction handles both standard and custom OAuth2 ID token claims
+- **SC-009**: Claims extraction handles both standard and custom OAuth2 access token claims
 - **SC-010**: Documentation covers setup, configuration, and usage patterns
 
 ### Feature Completeness
 
-- **SC-011**: OpenID Connect middleware configured and integrated into ASP.NET Core pipeline
+- **SC-011**: JwtBearer middleware configured and integrated into ASP.NET Core pipeline
 - **SC-012**: Keycloak containerization with podman-compose for local development
 - **SC-013**: Automated realm, client, and user setup script
 - **SC-014**: Authorization policy system for role-based access control
@@ -210,12 +210,12 @@ Orchestrates authentication and authorization logic
 ## Assumptions
 
 1. **Keycloak Availability**: Keycloak is deployed and accessible at the configured URL
-2. **OpenID Connect Configuration**: Keycloak OpenID Connect metadata is publicly accessible (for discovery)
+2. **JwtBearer Configuration**: Keycloak OpenID Connect metadata is publicly accessible (for discovery)
 3. **User Provisioning**: Users and roles are managed in Keycloak (not in the application database)
-4. **Session Management**: HTTP-only cookies are used for session persistence
+4. **Session Management**: JWT Bearer tokens are used for authentication
 5. **Development Environment**: Development uses self-signed certificates (SSL validation can be disabled)
-6. **Token Refresh**: Refresh tokens are used to maintain long-lived sessions
-7. **Attribute Mapping**: ID token claims from Keycloak follow standard OpenID Connect conventions
+6. **Token Refresh**: The client application (not this API) is responsible for managing token refresh
+7. **Attribute Mapping**: Access token claims from Keycloak follow its default JWT structure (e.g., realm_access for roles)
 8. **Network Access**: Application can reach Keycloak over HTTP(S)
 
 ---
@@ -229,8 +229,8 @@ Orchestrates authentication and authorization logic
 
 ### NuGet Dependencies
 
-- **Microsoft.AspNetCore.Authentication.OpenIdConnect** (latest): OpenID Connect middleware for ASP.NET Core
-- **System.IdentityModel.Tokens.Jwt**: JWT/ID token validation
+- **Microsoft.AspNetCore.Authentication.JwtBearer** (latest): JwtBearer authentication middleware for ASP.NET Core
+- **System.IdentityModel.Tokens.Jwt**: JWT access token validation
 
 ### Infrastructure
 
@@ -256,8 +256,8 @@ Orchestrates authentication and authorization logic
 
 ### Phase 1: Foundation (Current)
 
-- ⏳ OAuth2/OpenID Connect basic configuration
-- ⏳ Claims extraction from ID tokens
+- ⏳ OAuth2/JwtBearer basic configuration
+- ⏳ Claims extraction from access tokens
 - ✅ Keycloak containerization
 - ⏳ Unit tests
 - ⏳ Documentation
@@ -266,21 +266,20 @@ Orchestrates authentication and authorization logic
 
 - Protect existing endpoints with OAuth2 authentication
 - Define authorization policies for endpoint access
-- Add OAuth2 logout functionality
+- Add OAuth2 logout functionality (for APIs this might just mean token revocation support, client handles clearing local storage)
 - Integrate user identity into application features (e.g., audit logs)
 
 ### Phase 3: Enhancement (Future)
 
 - Support for additional identity providers
 - Advanced claim mappings and custom attributes
-- Token refresh flow implementation
 - Access token scope management for API authorization
 
 ---
 
 ## Notes
 
-This specification documents the OAuth2/OpenID Connect authentication framework for the Hexagon .NET application. The feature follows hexagonal (ports & adapters) architecture patterns, making it testable and maintainable. OAuth2 authentication can be toggled via configuration, allowing gradual rollout and backward compatibility.
+This specification documents the OAuth2/JwtBearer authentication framework for the Hexagon .NET application APIs. The feature follows hexagonal (ports & adapters) architecture patterns, making it testable and maintainable. OAuth2 authentication can be toggled via configuration, allowing gradual rollout and backward compatibility.
 
 **Created**: February 27, 2026  
 **Implementation Status**: ⏳ Ready for OAuth2 Implementation

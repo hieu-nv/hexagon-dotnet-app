@@ -1,7 +1,9 @@
 using System.Threading.RateLimiting;
 
+using App.Api.Auth;
 using App.Api.Logging;
 using App.Api.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 using FluentValidation;
 
@@ -63,6 +65,53 @@ builder
 
 builder.UseTodo();
 builder.UsePokemon();
+
+// Configure Authentication
+var jwtEnabled = builder.Configuration.GetValue<bool>("JwtBearer:Enabled");
+if (jwtEnabled)
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = builder.Configuration["JwtBearer:Authority"];
+            options.Audience = builder.Configuration["JwtBearer:Audience"];
+            options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>("JwtBearer:RequireHttpsMetadata");
+            // Optional: Map inbound claims to custom types if needed
+            // options.TokenValidationParameters.NameClaimType = "preferred_username";
+            // options.TokenValidationParameters.RoleClaimType = "realm_access.roles"; // This often requires custom mapping logic
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy(AuthorizationPolicies.AdminOnly, policy => policy.RequireAssertion(context =>
+        {
+            if (context.Resource is HttpContext httpContext)
+            {
+                var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
+                var authService = httpContext.RequestServices.GetRequiredService<AuthService>();
+                var user = claimsExtractor.ExtractFromPrincipal(context.User);
+                return user != null && authService.AuthorizeByRoles(user, new[] { "admin" });
+            }
+            return false;
+        }));
+
+        options.AddPolicy(AuthorizationPolicies.UserAccess, policy => policy.RequireAssertion(context =>
+        {
+            if (context.Resource is HttpContext httpContext)
+            {
+                var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
+                var authService = httpContext.RequestServices.GetRequiredService<AuthService>();
+                var user = claimsExtractor.ExtractFromPrincipal(context.User);
+                return user != null && authService.AuthorizeByRoles(user, new[] { "user", "admin" });
+            }
+            return false;
+        }));
+    });
+
+    // Register domain services
+    builder.Services.AddScoped<IClaimsExtractor, KeycloakClaimsExtractor>();
+    builder.Services.AddScoped<AuthService>();
+}
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -137,6 +186,12 @@ app.UseExceptionHandler();
 app.UseCors("DefaultPolicy");
 app.UseRateLimiter();
 app.UseOutputCache();
+
+if (jwtEnabled)
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 // Security headers middleware
 app.UseMiddleware<SecurityHeadersMiddleware>();

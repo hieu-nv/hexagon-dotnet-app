@@ -37,7 +37,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 **Purpose**: Initialize OAuth2/OpenID Connect infrastructure, project structures, and NuGet dependencies
 
-- [ ] T001 Add NuGet dependencies: `Microsoft.AspNetCore.Authentication.OpenIdConnect` and `System.IdentityModel.Tokens.Jwt` to `src/App.Api/App.Api.csproj`
+- [x] T001 Add NuGet dependencies: `Microsoft.AspNetCore.Authentication.OpenIdConnect` and `System.IdentityModel.Tokens.Jwt` to `src/App.Api/App.Api.csproj`
 - [ ] T002 Create authentication configuration structure in `src/App.Core/Authentication/` directory with empty placeholder files
 - [ ] T003 Create authorization configuration structure in `src/App.Core/Authorization/` directory with empty placeholder files
 - [ ] T004 Update .github/copilot-instructions.md with OAuth2/OpenID Connect patterns and conventions for this feature
@@ -53,7 +53,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 ### Port Interfaces (defines contracts)
 
-- [ ] T006 [P] Create `IClaimsExtractor` port interface in `src/App.Core/Authentication/Ports/IClaimsExtractor.cs` with methods:
+- [x] T006 [P] Create `IClaimsExtractor` port interface in `src/App.Core/Authentication/Ports/IClaimsExtractor.cs` with methods:
   - `ExtractFromPrincipal(ClaimsPrincipal principal): AuthenticatedUser?`
   - `IsValidPrincipal(ClaimsPrincipal principal): bool`
 
@@ -64,13 +64,13 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 ### Value Objects (domain models)
 
-- [ ] T008 [P] Create `AuthenticatedUser` value object in `src/App.Core/Authentication/AuthenticatedUser.cs` with properties: Id, Email, Name, Roles, CustomClaims
-- [ ] T009 [P] Create `AuthenticationPolicy` value object in `src/App.Core/Authorization/AuthenticationPolicy.cs` with properties: Name, Description, RequiredRoles
+- [x] T008 [P] Create `AuthenticatedUser` value object in `src/App.Core/Authentication/AuthenticatedUser.cs` with properties: Id, Email, Name, Roles, CustomClaims
+- [x] T009 [P] Create `AuthenticationPolicy` value object in `src/App.Core/Authorization/AuthenticationPolicy.cs` with properties: Name, Description, RequiredRoles
 - [ ] T010 [P] Create `OpenIdConnectConfiguration` value object in `src/App.Core/Authentication/OpenIdConnectConfiguration.cs` with properties: Enabled, Authority, ClientId, ClientSecret, Scopes, RequiredClaims
 
 ### Domain Services (orchestrates business logic)
 
-- [ ] T011 Create `AuthService` domain service in `src/App.Core/Authentication/AuthService.cs` that:
+- [x] T011 Create `AuthService` domain service in `src/App.Core/Authentication/AuthService.cs` that:
   - Depends on `IClaimsExtractor` (injected)
   - Provides `GetAuthenticatedUser(ClaimsPrincipal): AuthenticatedUser?`
   - Provides `IsAuthenticated(ClaimsPrincipal): bool`
@@ -129,7 +129,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
   - User "user@example.com" with roles: ["user"]
   - Both with temporary password set to expire on first login
 
-- [ ] T019 [US1] Create bash setup script `scripts/keycloak-setup.sh` that:
+- [x] T019 [US1] Create bash setup script `scripts/keycloak-setup.sh` that:
   - Verifies Keycloak container is running (health check)
   - Uses Keycloak REST Admin API to create realm, client, users, and roles
   - Imports configurations from JSON files (realm-export.json, client-config.json, users-roles.json)
@@ -137,7 +137,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
   - Target completion: <30 seconds (per NFR-002)
   - Includes error handling and rollback mechanism
 
-- [ ] T020 [US1] Create `docker-compose.yml` or `podman-compose.yml` in `scripts/keycloak/` for local Keycloak development with:
+- [x] T020 [US1] Create `docker-compose.yml` or `podman-compose.yml` in `scripts/keycloak/` for local Keycloak development with:
   - Keycloak 22+ service
   - PostgreSQL 15+ backend (or SQLite for simpler local dev)
   - Environment variables for realm admin password (injected from .env)
@@ -175,7 +175,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 ### Implementation for US2
 
-- [ ] T024 [P] [US2] Add OpenID Connect configuration section to `src/App.Api/appsettings.json` and `appsettings.Development.json`:
+- [x] T024 [P] [US2] Add OpenID Connect configuration section to `src/App.Api/appsettings.json` and `appsettings.Development.json`:
 
   ```json
   {
@@ -203,7 +203,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
   - Handles token validation failures gracefully
   - Supports configurable ID token validation rules
 
-- [ ] T027 [US2] Update `src/App.Api/Program.cs` to wire OpenID Connect into ASP.NET Core pipeline:
+- [x] T027 [US2] Update `src/App.Api/Program.cs` to wire OpenID Connect into ASP.NET Core pipeline:
   - Add `builder.Services.AddAuthentication()` with OIDC configuration
   - Add `app.UseAuthentication()` and `app.UseAuthorization()` middleware
   - Conditionally enable based on `OpenIdConnect:Enabled` setting
@@ -233,7 +233,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 ### Test Tasks for US3
 
-- [ ] T030 [P] [US3] Create comprehensive unit test in `test/App.Core.Tests/Authentication/ClaimsExtractorTests.cs` covering:
+- [x] T030 [P] [US3] Create comprehensive unit test in `test/App.Core.Tests/Authentication/ClaimsExtractorTests.cs` covering:
   - Extract valid user with all claims (email, name, roles)
   - Extract user with only required claims (email, subject)
   - Extract user with multiple roles
@@ -242,7 +242,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
   - Validation fails when claims are malformed (empty, null)
   - Role extraction: single role, multiple roles, no roles
 
-- [ ] T031 [P] [US3] Create unit test in `test/App.Core.Tests/Authentication/AuthServiceTests.cs` verifying:
+- [x] T031 [P] [US3] Create unit test in `test/App.Core.Tests/Authentication/AuthServiceTests.cs` verifying:
   - AuthService.GetAuthenticatedUser() returns AuthenticatedUser for valid principal
   - AuthService.GetAuthenticatedUser() returns null for invalid principal
   - AuthService.IsAuthenticated() returns true/false correctly
@@ -250,7 +250,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
 
 ### Implementation for US3
 
-- [ ] T032 [P] [US3] Implement `KeycloakClaimsExtractor` adapter in `src/App.Data/Authentication/KeycloakClaimsExtractor.cs`:
+- [x] T032 [P] [US3] Implement `KeycloakClaimsExtractor` adapter in `src/App.Data/Authentication/KeycloakClaimsExtractor.cs`:
   - Implements `IClaimsExtractor` port interface
   - Extracts standard OpenID Connect claims: subject, email, name, roles
   - Maps Keycloak role claim path (configurable, default: "realm_access.roles")
@@ -397,7 +397,7 @@ description: "Task list for Keycloak SSO authentication feature implementation"
   - Include 401/403 responses in generated OpenAPI spec
   - Provide "Authorize" button in Swagger UI for manual testing
 
-- [ ] T051 [US5] Create authorization extension helper in `src/App.Api/Authentication/EndpointAuthorizationExtensions.cs`:
+- [x] T051 [US5] Create authorization extension helper in `src/App.Api/Authentication/EndpointAuthorizationExtensions.cs`:
   - Extension method `RequireAuthorization(this RouteHandlerBuilder, string? policy)` (fluent API)
   - Alternative to [Authorize] attribute for minimal APIs
   - Enables authorization without changing handler signature
