@@ -110,6 +110,7 @@ dotnet add package DotNetEnv
 This is the secret sauce that enables log-trace correlation. Create a new file `Logging/OpenTelemetryTraceEnricher.cs`:
 
 ```csharp
+using System;
 using System.Diagnostics;
 using Serilog.Core;
 using Serilog.Events;
@@ -200,6 +201,7 @@ builder.Services.AddOpenTelemetry()
         .AddOtlpExporter(options =>
         {
             // Send to local Datadog agent (or directly to Datadog if configured)
+            // Tip: If running your .NET app in a Docker container, you may need to use "http://host.docker.internal:4318" instead of "localhost"
             options.Endpoint = new Uri(
                 Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") 
                 ?? "http://localhost:4318"
@@ -271,7 +273,7 @@ if (!builder.Environment.IsDevelopment())
         },
         configuration: new DatadogConfiguration { 
             Url = Environment.GetEnvironmentVariable("DD_LOG_INTAKE_URL") 
-                ?? "https://http-intake.logs.us5.datadoghq.com" 
+                ?? "https://http-intake.logs.datadoghq.com" 
         }
     );
 }
@@ -284,6 +286,7 @@ builder.Host.UseSerilog();
 WebApplication app = builder.Build();
 
 // Enable automatic HTTP request/response logging
+// Note: This should be placed before other middleware (like routing or endpoints) to accurately track the entire request pipeline.
 app.UseSerilogRequestLogging(options =>
 {
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
@@ -324,11 +327,11 @@ Create a `.env` file in your project root:
 ```bash
 # Datadog Configuration
 DD_API_KEY=your_datadog_api_key_here
-DD_SITE=us5.datadoghq.com
+DD_SITE=datadoghq.com # Change to your specific Datadog site (e.g., us3.datadoghq.com, us5.datadoghq.com, datadoghq.eu)
 DD_ENV=development
 DD_SERVICE=hexagon-dotnet-app
 DD_VERSION=1.0.0
-DD_LOG_INTAKE_URL=https://http-intake.logs.us5.datadoghq.com
+DD_LOG_INTAKE_URL=https://http-intake.logs.datadoghq.com
 
 # OpenTelemetry Configuration (for traces)
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
@@ -404,7 +407,7 @@ echo "Starting Datadog agent using $CONTAINER_CMD..."
 $CONTAINER_CMD run -d \
   --name dd-agent \
   -e DD_API_KEY="${DD_API_KEY}" \
-  -e DD_SITE="${DD_SITE:-us5.datadoghq.com}" \
+  -e DD_SITE="${DD_SITE:-datadoghq.com}" \
   -e DD_APM_ENABLED=true \
   -e DD_LOGS_ENABLED=true \
   -e DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=0.0.0.0:4318 \
@@ -642,7 +645,7 @@ echo $DD_API_KEY
 
 **Check 2:** Test Datadog endpoint directly:
 ```bash
-curl -X POST "https://http-intake.logs.us5.datadoghq.com/api/v2/logs" \
+curl -X POST "https://http-intake.logs.datadoghq.com/api/v2/logs" \
   -H "Content-Type: application/json" \
   -H "DD-API-KEY: $DD_API_KEY" \
   -d '[{"message":"test","service":"hexagon-dotnet-app"}]'
@@ -728,11 +731,11 @@ The investment in proper logging infrastructure pays dividends when production i
 
 The complete working example from this guide is available on GitHub:
 ```
-https://github.com/yourusername/hexagon-dotnet-app
+https://github.com/hieu-nv/hexagon-dotnet-app
 ```
 
 ---
 
-*Have questions or feedback? Leave a comment below or connect with me on [Twitter](https://twitter.com/yourhandle).*
+*Have questions or feedback? Leave a comment below or connect with me on [Bluesky](https://bsky.app/profile/hieunv.bsky.social).*
 
 *Found this helpful? Give it a clap 👏 and share with your team!*
