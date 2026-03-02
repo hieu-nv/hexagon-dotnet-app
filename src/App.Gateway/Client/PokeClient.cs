@@ -1,15 +1,23 @@
 using System.Text.Json;
 
+using Microsoft.Extensions.Logging;
+
 namespace App.Gateway.Client;
 
 /// <summary>
 /// HTTP client for interacting with the PokeAPI.
 /// </summary>
 /// <param name="httpClient">The HTTP client instance.</param>
-public class PokeClient(HttpClient httpClient) : IPokeClient
+/// <param name="logger">The logger instance.</param>
+public class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPokeClient
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true, };
+
     private readonly HttpClient _httpClient =
         httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+
+    private readonly ILogger<PokeClient> _logger =
+        logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Performs an HTTP GET request to the specified URL.
@@ -26,15 +34,11 @@ public class PokeClient(HttpClient httpClient) : IPokeClient
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return JsonSerializer.Deserialize<T>(
-                content,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
+            return JsonSerializer.Deserialize<T>(content, JsonOptions);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            // Log the exception in production
-            Console.Error.WriteLine($"Error fetching data from {url}: {ex.Message}");
+            _logger.LogError(ex, "HTTP error fetching data from {Url}", url);
             return null;
         }
     }

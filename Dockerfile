@@ -7,6 +7,7 @@ WORKDIR /src
 # Copy solution and project files first to leverage layer caching
 COPY src/App.slnx ./
 COPY src/App.Api/*.csproj ./App.Api/
+COPY src/App.AppHost/*.csproj ./App.AppHost/
 COPY src/App.Core/*.csproj ./App.Core/
 COPY src/App.Data/*.csproj ./App.Data/
 COPY src/App.Gateway/*.csproj ./App.Gateway/

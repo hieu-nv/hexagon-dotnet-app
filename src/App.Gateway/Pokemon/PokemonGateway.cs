@@ -53,11 +53,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
             return null;
         }
 
-        return new Core.Pokemon.Pokemon
-        {
-            Name = response.Name,
-            Url = $"https://pokeapi.co/api/v2/pokemon/{id}/",
-        };
+        return new Core.Pokemon.Pokemon { Name = response.Name, Url = $"pokemon/{id}/", };
     }
 
     /// <summary>

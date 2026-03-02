@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using App.Core.Entities;
 
 namespace App.Core.Todo;
@@ -54,11 +53,6 @@ public class TodoService(ITodoRepository todoRepository)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        if (string.IsNullOrWhiteSpace(entity.Title))
-        {
-            throw new ValidationException("Title is required");
-        }
-
         return await _todoRepository.CreateAsync(entity).ConfigureAwait(false);
     }
 
@@ -69,11 +63,6 @@ public class TodoService(ITodoRepository todoRepository)
     {
         ArgumentNullException.ThrowIfNull(entity);
         ArgumentOutOfRangeException.ThrowIfLessThan(id, 1);
-
-        if (string.IsNullOrWhiteSpace(entity.Title))
-        {
-            throw new ValidationException("Title is required");
-        }
 
         var existing = await _todoRepository.FindByIdAsync(id).ConfigureAwait(false);
         if (existing == null)

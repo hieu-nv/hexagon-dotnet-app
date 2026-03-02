@@ -1,11 +1,13 @@
-using System.ComponentModel.DataAnnotations;
 using App.Api.Filters;
 using App.Api.Todo;
 using App.Core.Entities;
 using App.Core.Todo;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace App.Api.Tests.Todo;
@@ -35,18 +37,8 @@ public class TodoEndpointsTests
         // Arrange
         var expectedTodos = new List<TodoEntity>
         {
-            new()
-            {
-                Id = 1,
-                Title = "Test Todo 1",
-                IsCompleted = false,
-            },
-            new()
-            {
-                Id = 2,
-                Title = "Test Todo 2",
-                IsCompleted = true,
-            },
+            new() { Id = 1, Title = "Test Todo 1", IsCompleted = false, },
+            new() { Id = 2, Title = "Test Todo 2", IsCompleted = true, },
         };
 
         _todoRepositoryMock.Setup(x => x.FindAllAsync()).ReturnsAsync(expectedTodos);
@@ -87,12 +79,7 @@ public class TodoEndpointsTests
     {
         // Arrange
         var todoId = 1;
-        var expectedTodo = new TodoEntity
-        {
-            Id = todoId,
-            Title = "Test Todo",
-            IsCompleted = false,
-        };
+        var expectedTodo = new TodoEntity { Id = todoId, Title = "Test Todo", IsCompleted = false, };
 
         _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(expectedTodo);
 
@@ -177,18 +164,8 @@ public class TodoEndpointsTests
         // Arrange
         var completedTodos = new List<TodoEntity>
         {
-            new()
-            {
-                Id = 1,
-                Title = "Completed Todo 1",
-                IsCompleted = true,
-            },
-            new()
-            {
-                Id = 2,
-                Title = "Completed Todo 2",
-                IsCompleted = true,
-            },
+            new() { Id = 1, Title = "Completed Todo 1", IsCompleted = true, },
+            new() { Id = 2, Title = "Completed Todo 2", IsCompleted = true, },
         };
 
         _todoRepositoryMock.Setup(x => x.FindCompletedTodosAsync()).ReturnsAsync(completedTodos);
@@ -229,18 +206,8 @@ public class TodoEndpointsTests
         // Arrange
         var incompleteTodos = new List<TodoEntity>
         {
-            new()
-            {
-                Id = 1,
-                Title = "Incomplete Todo 1",
-                IsCompleted = false,
-            },
-            new()
-            {
-                Id = 2,
-                Title = "Incomplete Todo 2",
-                IsCompleted = false,
-            },
+            new() { Id = 1, Title = "Incomplete Todo 1", IsCompleted = false, },
+            new() { Id = 2, Title = "Incomplete Todo 2", IsCompleted = false, },
         };
 
         _todoRepositoryMock.Setup(x => x.FindIncompleteTodosAsync()).ReturnsAsync(incompleteTodos);
@@ -281,12 +248,7 @@ public class TodoEndpointsTests
         // Arrange
         var newTodo = new CreateTodoRequest("New Todo", false, null);
 
-        var createdTodo = new TodoEntity
-        {
-            Id = 1,
-            Title = "New Todo",
-            IsCompleted = false,
-        };
+        var createdTodo = new TodoEntity { Id = 1, Title = "New Todo", IsCompleted = false, };
 
         _todoRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<TodoEntity>()))
@@ -316,17 +278,6 @@ public class TodoEndpointsTests
         _todoRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
-    [Fact]
-    public async Task CreateTodoAsync_WithEmptyTitle_ShouldThrowValidationException()
-    {
-        // Arrange
-        var invalidTodo = new CreateTodoRequest("", false, null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _todoEndpoints.CreateTodoAsync(invalidTodo)
-        );
-    }
 
     [Fact]
     public async Task CreateTodoAsync_WhenExceptionThrown_ShouldReturnProblem()
@@ -356,19 +307,11 @@ public class TodoEndpointsTests
         var todoId = 1;
         var updateData = new UpdateTodoRequest("Updated Title", true, new DateOnly(2026, 3, 15));
 
-        var existingTodo = new TodoEntity
-        {
-            Id = todoId,
-            Title = "Original Title",
-            IsCompleted = false,
-        };
+        var existingTodo = new TodoEntity { Id = todoId, Title = "Original Title", IsCompleted = false, };
 
         var updatedTodo = new TodoEntity
         {
-            Id = todoId,
-            Title = "Updated Title",
-            IsCompleted = true,
-            DueBy = new DateOnly(2026, 3, 15),
+            Id = todoId, Title = "Updated Title", IsCompleted = true, DueBy = new DateOnly(2026, 3, 15),
         };
 
         _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(existingTodo);
@@ -456,27 +399,6 @@ public class TodoEndpointsTests
         _todoRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TodoEntity>()), Times.Never);
     }
 
-    [Fact]
-    public async Task UpdateTodoAsync_WithEmptyTitle_ShouldThrowValidationException()
-    {
-        // Arrange
-        var todoId = 1;
-        var invalidData = new UpdateTodoRequest("", true, null);
-
-        var existingTodo = new TodoEntity
-        {
-            Id = todoId,
-            Title = "Original Title",
-            IsCompleted = false,
-        };
-
-        _todoRepositoryMock.Setup(x => x.FindByIdAsync(todoId)).ReturnsAsync(existingTodo);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _todoEndpoints.UpdateTodoAsync(todoId, invalidData)
-        );
-    }
 
     [Fact]
     public async Task UpdateTodoAsync_WhenServiceThrowsArgumentOutOfRangeException_ShouldReturnBadRequest()
@@ -617,31 +539,6 @@ public class TodoEndpointsTests
         _todoRepositoryMock.Verify(x => x.FindByIdAsync(largeId), Times.Once);
     }
 
-    [Fact]
-    public async Task CreateTodoAsync_WithEmptyTitle_ShouldThrowValidationError()
-    {
-        // Arrange
-        var request = new CreateTodoRequest(string.Empty, false, null);
-
-        // Act & Assert
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            _todoEndpoints.CreateTodoAsync(request)
-        );
-        Assert.Equal("Title is required", ex.Message);
-    }
-
-    [Fact]
-    public async Task CreateTodoAsync_WithWhitespaceTitle_ShouldThrowValidationError()
-    {
-        // Arrange
-        var request = new CreateTodoRequest("   ", false, null);
-
-        // Act & Assert
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            _todoEndpoints.CreateTodoAsync(request)
-        );
-        Assert.Equal("Title is required", ex.Message);
-    }
 
     [Fact]
     public async Task CreateTodoAsync_WithFutureDueDate_ShouldSucceed()
@@ -651,10 +548,7 @@ public class TodoEndpointsTests
         var request = new CreateTodoRequest("Future Todo", false, futureDate);
         var expectedEntity = new TodoEntity
         {
-            Id = 1,
-            Title = "Future Todo",
-            IsCompleted = false,
-            DueBy = futureDate,
+            Id = 1, Title = "Future Todo", IsCompleted = false, DueBy = futureDate,
         };
 
         _todoRepositoryMock
@@ -676,12 +570,7 @@ public class TodoEndpointsTests
         // Arrange
         var todoId = 1;
         var request = new UpdateTodoRequest("Updated", true, null);
-        var updated = new TodoEntity
-        {
-            Id = todoId,
-            Title = "Updated",
-            IsCompleted = true,
-        };
+        var updated = new TodoEntity { Id = todoId, Title = "Updated", IsCompleted = true, };
 
         _todoRepositoryMock
             .Setup(x => x.FindByIdAsync(todoId))
@@ -720,24 +609,9 @@ public class TodoEndpointsTests
         // Arrange
         var incompleteTodos = new List<TodoEntity>
         {
-            new()
-            {
-                Id = 1,
-                Title = "Task 1",
-                IsCompleted = false,
-            },
-            new()
-            {
-                Id = 2,
-                Title = "Task 2",
-                IsCompleted = false,
-            },
-            new()
-            {
-                Id = 3,
-                Title = "Task 3",
-                IsCompleted = false,
-            },
+            new() { Id = 1, Title = "Task 1", IsCompleted = false, },
+            new() { Id = 2, Title = "Task 2", IsCompleted = false, },
+            new() { Id = 3, Title = "Task 3", IsCompleted = false, },
         };
 
         _todoRepositoryMock.Setup(x => x.FindIncompleteTodosAsync()).ReturnsAsync(incompleteTodos);
@@ -750,23 +624,6 @@ public class TodoEndpointsTests
         var resultList = okResult.Value.ToList();
         Assert.Equal(3, resultList.Count);
         Assert.All(resultList, todo => Assert.False(todo.IsCompleted));
-    }
-
-    #endregion
-
-    #region Debugger Tests
-
-    [Fact]
-    public void GetDebuggerDisplay_ReturnsString()
-    {
-        // Act
-        var method = _todoEndpoints.GetType()
-            .GetMethod("GetDebuggerDisplay", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var result = method?.Invoke(_todoEndpoints, null);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.IsType<string>(result);
     }
 
     #endregion

@@ -1,7 +1,9 @@
 using App.Gateway.Client;
 using App.Gateway.Pokemon;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace App.Gateway.Tests;
@@ -39,6 +41,15 @@ public class PokeClientConstructorTests
     public void PokeClient_WithNullHttpClient_ShouldThrow()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new PokeClient(null!));
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokeClient(null!, Microsoft.Extensions.Logging.Abstractions.NullLogger<PokeClient>.Instance));
+    }
+
+    [Fact]
+    public void PokeClient_WithNullLogger_ShouldThrow()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokeClient(new HttpClient(), null!));
     }
 }
