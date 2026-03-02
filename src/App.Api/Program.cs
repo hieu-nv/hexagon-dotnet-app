@@ -1,12 +1,15 @@
 using System.Threading.RateLimiting;
+
 using App.Api.Logging;
 using App.Api.Middleware;
+
 using FluentValidation;
+
 using Microsoft.AspNetCore.RateLimiting;
+
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
-using Serilog.Sinks.Datadog.Logs;
 
 // Load environment variables from .env file
 DotNetEnv.Env.Load();
@@ -67,6 +70,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // Global exception handler with RFC 7807 ProblemDetails
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddTransient<SecurityHeadersMiddleware>();
 
 // Rate limiting: fixed window - 100 requests per minute
 builder.Services.AddRateLimiter(options =>
@@ -84,17 +88,29 @@ builder.Services.AddRateLimiter(options =>
     );
 });
 
-// CORS
+// CORS — config-driven origins
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         "DefaultPolicy",
         policy =>
         {
-            policy
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
+            if (allowedOrigins is { Length: > 0 })
+            {
+                policy
+                    .WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }
+            else
+            {
+                // Fallback for development when no origins are configured
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }
         }
     );
 });
@@ -123,15 +139,7 @@ app.UseRateLimiter();
 app.UseOutputCache();
 
 // Security headers middleware
-app.Use(async (context, next) =>
-{
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    context.Response.Headers["X-Frame-Options"] = "DENY";
-    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'";
-    await next().ConfigureAwait(false);
-});
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new Asp.Versioning.ApiVersion(1, 0))

@@ -1,6 +1,9 @@
 using App.Core.Pokemon;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace App.Core.Tests.Pokemon;
@@ -42,33 +45,33 @@ public class PokemonServiceTests
     }
 
     [Fact]
-    public async Task GetPokemonListAsync_WithNegativeLimit_ShouldDefaultTo20()
+    public async Task GetPokemonListAsync_WithNegativeLimit_ShouldClampTo1()
     {
         // Arrange
         _gatewayMock
-            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .Setup(x => x.FetchPokemonListAsync(1, 0))
             .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(-5, 0);
 
-        // Assert - the service should have corrected the limit to 20
-        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+        // Assert - the service should have corrected the limit to 1
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(1, 0), Times.Once);
     }
 
     [Fact]
-    public async Task GetPokemonListAsync_WithZeroLimit_ShouldDefaultTo20()
+    public async Task GetPokemonListAsync_WithZeroLimit_ShouldClampTo1()
     {
         // Arrange
         _gatewayMock
-            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .Setup(x => x.FetchPokemonListAsync(1, 0))
             .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(0, 0);
 
         // Assert
-        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(1, 0), Times.Once);
     }
 
     [Fact]
@@ -126,8 +129,7 @@ public class PokemonServiceTests
         // Arrange
         var expected = new App.Core.Pokemon.Pokemon
         {
-            Name = "pikachu",
-            Url = "https://pokeapi.co/api/v2/pokemon/25/",
+            Name = "pikachu", Url = "https://pokeapi.co/api/v2/pokemon/25/",
         };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(expected);

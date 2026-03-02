@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+
 using App.Core.Entities;
 using App.Core.Todo;
 using App.Data;
 using App.Data.Todo;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +28,7 @@ public static class AppData
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(
                 builder.Configuration.GetConnectionString("DefaultConnection")
-                    ?? "Data Source=app.db"
+                ?? "Data Source=app.db"
             )
         );
 
@@ -52,12 +54,15 @@ public static class AppData
     /// <returns>The web application.</returns>
     public static WebApplication UseAppData(this WebApplication app)
     {
-        using (var scope = app?.Services.CreateScope())
+        ArgumentNullException.ThrowIfNull(app);
+
+        using (var scope = app.Services.CreateScope())
         {
-            var context = scope?.ServiceProvider.GetRequiredService<AppDbContext>();
-            context?.Database.EnsureCreated();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Database.EnsureCreated();
         }
-        return app ?? throw new ArgumentNullException(nameof(app));
+
+        return app;
     }
 }
 
@@ -68,4 +73,6 @@ public static class AppData
 [ExcludeFromCodeCoverage]
 [JsonSerializable(typeof(TodoEntity[]))]
 [JsonSerializable(typeof(TodoEntity))]
-internal sealed partial class AppDataJsonSerializerContext : JsonSerializerContext { }
+internal sealed partial class AppDataJsonSerializerContext : JsonSerializerContext
+{
+}

@@ -9,6 +9,7 @@ public sealed class PokemonService(IPokemonGateway pokemonGateway, ILogger<Pokem
 {
     private readonly IPokemonGateway _pokemonGateway =
         pokemonGateway ?? throw new ArgumentNullException(nameof(pokemonGateway));
+
     private readonly ILogger<PokemonService> _logger =
         logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -26,25 +27,30 @@ public sealed class PokemonService(IPokemonGateway pokemonGateway, ILogger<Pokem
             offset
         );
 
-        if (limit <= 0)
+        var clampedLimit = Math.Clamp(limit, 1, 100);
+        var clampedOffset = Math.Max(0, offset);
+
+        if (clampedLimit != limit)
         {
-            _logger.LogWarning("Invalid limit requested: {Limit}. Setting to default 20.", limit);
-            limit = 20;
+            _logger.LogWarning(
+                "Limit adjusted from {OriginalLimit} to {ClampedLimit}.",
+                limit,
+                clampedLimit
+            );
         }
 
-        if (limit > 100)
+        if (clampedOffset != offset)
         {
-            _logger.LogWarning("Limit too high requested: {Limit}. Setting to max 100.", limit);
-            limit = 100;
+            _logger.LogWarning(
+                "Offset adjusted from {OriginalOffset} to {ClampedOffset}.",
+                offset,
+                clampedOffset
+            );
         }
 
-        if (offset < 0)
-        {
-            _logger.LogWarning("Invalid offset requested: {Offset}. Setting to 0.", offset);
-            offset = 0;
-        }
-
-        return await _pokemonGateway.FetchPokemonListAsync(limit, offset).ConfigureAwait(false);
+        return await _pokemonGateway
+            .FetchPokemonListAsync(clampedLimit, clampedOffset)
+            .ConfigureAwait(false);
     }
 
     /// <summary>

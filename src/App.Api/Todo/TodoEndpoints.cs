@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
+
 using App.Core.Entities;
 using App.Core.Todo;
+
 using Microsoft.Extensions.Logging;
 
 namespace App.Api.Todo;
@@ -16,12 +17,14 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
     /// <summary>
     /// Service for managing to-do items.
     /// </summary>
-    private readonly TodoService _todoService = todoService;
+    private readonly TodoService _todoService =
+        todoService ?? throw new ArgumentNullException(nameof(todoService));
 
     /// <summary>
     /// Logger for tracking operations.
     /// </summary>
-    private readonly ILogger<TodoEndpoints> _logger = logger;
+    private readonly ILogger<TodoEndpoints> _logger =
+        logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Finds all to-do items.
@@ -102,9 +105,7 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
 
         var entity = new TodoEntity
         {
-            Title = request.Title,
-            IsCompleted = request.IsCompleted,
-            DueBy = request.DueBy,
+            Title = request.Title, IsCompleted = request.IsCompleted, DueBy = request.DueBy,
         };
 
         var created = await _todoService.CreateAsync(entity).ConfigureAwait(false);
@@ -134,10 +135,7 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
 
             var entity = new TodoEntity
             {
-                Id = id,
-                Title = request.Title,
-                IsCompleted = request.IsCompleted,
-                DueBy = request.DueBy,
+                Id = id, Title = request.Title, IsCompleted = request.IsCompleted, DueBy = request.DueBy,
             };
 
             var updated = await _todoService.UpdateAsync(id, entity).ConfigureAwait(false);
@@ -188,10 +186,5 @@ internal sealed class TodoEndpoints(TodoService todoService, ILogger<TodoEndpoin
             _logger.LogInformation("Todo with ID {TodoId} not found for deletion", id);
             return Results.NotFound();
         }
-    }
-
-    private string GetDebuggerDisplay()
-    {
-        return ToString() ?? string.Empty;
     }
 }

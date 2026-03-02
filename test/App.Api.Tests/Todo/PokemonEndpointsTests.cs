@@ -1,10 +1,14 @@
 using App.Core.Pokemon;
 using App.Api.Pokemon;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
+
 using PokemonEntity = App.Core.Pokemon.Pokemon;
 
 namespace App.Api.Tests.Todo;
@@ -148,11 +152,7 @@ public class PokemonEndpointsTests
         // Arrange
         var pokemonList = Enumerable
             .Range(1, 20)
-            .Select(i => new PokemonEntity
-            {
-                Name = $"pokemon{i}",
-                Url = $"https://pokeapi.co/api/v2/pokemon/{i}/",
-            })
+            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = $"https://pokeapi.co/api/v2/pokemon/{i}/", })
             .ToList();
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(pokemonList);
@@ -174,11 +174,7 @@ public class PokemonEndpointsTests
         // Arrange
         var pokemonList = Enumerable
             .Range(21, 20)
-            .Select(i => new PokemonEntity
-            {
-                Name = $"pokemon{i}",
-                Url = $"https://pokeapi.co/api/v2/pokemon/{i}/",
-            })
+            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = $"https://pokeapi.co/api/v2/pokemon/{i}/", })
             .ToList();
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 20)).ReturnsAsync(pokemonList);
@@ -203,11 +199,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithValidId_ShouldReturnOkWithPokemon()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity
-        {
-            Name = "pikachu",
-            Url = "https://pokeapi.co/api/v2/pokemon/25/",
-        };
+        var expectedPokemon = new PokemonEntity { Name = "pikachu", Url = "https://pokeapi.co/api/v2/pokemon/25/", };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(expectedPokemon);
 
@@ -243,11 +235,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithSmallId_ShouldReturnOk()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity
-        {
-            Name = "bulbasaur",
-            Url = "https://pokeapi.co/api/v2/pokemon/1/",
-        };
+        var expectedPokemon = new PokemonEntity { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/", };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(1)).ReturnsAsync(expectedPokemon);
 
@@ -264,11 +252,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithLargeValidId_ShouldReturnOk()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity
-        {
-            Name = "arceus",
-            Url = "https://pokeapi.co/api/v2/pokemon/493/",
-        };
+        var expectedPokemon = new PokemonEntity { Name = "arceus", Url = "https://pokeapi.co/api/v2/pokemon/493/", };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(493)).ReturnsAsync(expectedPokemon);
 
@@ -323,29 +307,31 @@ public class PokemonEndpointsTests
     }
 
     [Fact]
-    public async Task FetchPokemonListAsync_WithNegativeLimit_ShouldClampTo20()
+    public async Task FetchPokemonListAsync_WithNegativeLimit_ShouldClampTo1()
     {
         // Triggers PokemonService limit <= 0 warning branch
-        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(new List<PokemonEntity>());
+        // Math.Clamp(-1, 1, 100) = 1
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(1, 0)).ReturnsAsync(new List<PokemonEntity>());
 
         var result = await _pokemonEndpoints.FetchPokemonListAsync(-1, 0);
 
         var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
-        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(1, 0), Times.Once);
     }
 
     [Fact]
-    public async Task FetchPokemonListAsync_WithZeroLimit_ShouldClampTo20()
+    public async Task FetchPokemonListAsync_WithZeroLimit_ShouldClampTo1()
     {
         // Triggers PokemonService limit <= 0 warning branch
-        _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(new List<PokemonEntity>());
+        // Math.Clamp(0, 1, 100) = 1
+        _gatewayMock.Setup(x => x.FetchPokemonListAsync(1, 0)).ReturnsAsync(new List<PokemonEntity>());
 
         var result = await _pokemonEndpoints.FetchPokemonListAsync(0, 0);
 
         var okResult = Assert.IsType<Ok<PokemonListResponse>>(result);
         Assert.NotNull(okResult.Value);
-        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(1, 0), Times.Once);
     }
 
     [Fact]

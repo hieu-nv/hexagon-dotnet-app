@@ -1,7 +1,9 @@
 using System.Net;
 using System.Text.Json;
+
 using App.Gateway.Client;
-using Xunit;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace App.Gateway.Tests.Client;
 
@@ -12,11 +14,8 @@ public class PokeClientTests
     /// </summary>
     private static PokeClient CreateClient(HttpMessageHandler handler)
     {
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://pokeapi.co/api/v2/"),
-        };
-        return new PokeClient(httpClient);
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://pokeapi.co/api/v2/"), };
+        return new PokeClient(httpClient, NullLogger<PokeClient>.Instance);
     }
 
     #region GetAsync Success
@@ -79,17 +78,15 @@ public class PokeClientTests
     }
 
     [Fact]
-    public async Task GetAsync_WithTimeout_ShouldReturnNull()
+    public async Task GetAsync_WithTimeout_ShouldPropagateException()
     {
         // Arrange
         var handler = new FakeHttpMessageHandler(new TaskCanceledException("Request timed out"));
         var client = CreateClient(handler);
 
-        // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/1");
-
-        // Assert
-        Assert.Null(result);
+        // Act & Assert — cancellation exceptions now propagate instead of being swallowed
+        await Assert.ThrowsAsync<TaskCanceledException>(() => client.GetAsync<TestPayload>("pokemon/1")
+        );
     }
 
     [Fact]
@@ -108,11 +105,9 @@ public class PokeClientTests
         );
         var client = CreateClient(handler);
 
-        // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/1");
-
-        // Assert
-        Assert.Null(result);
+        // Act — JsonException is not HttpRequestException, so it propagates
+        await Assert.ThrowsAsync<JsonException>(() => client.GetAsync<TestPayload>("pokemon/1")
+        );
     }
 
     [Fact]
@@ -174,3 +169,4 @@ public class PokeClientTests
 
     #endregion
 }
+

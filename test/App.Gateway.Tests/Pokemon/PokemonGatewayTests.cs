@@ -1,7 +1,9 @@
 using App.Core.Pokemon;
 using App.Gateway.Client;
 using App.Gateway.Pokemon;
+
 using Moq;
+
 using Xunit;
 
 namespace App.Gateway.Tests.Pokemon;
@@ -82,11 +84,7 @@ public class PokemonGatewayTests
     public async Task FetchPokemonByIdAsync_WithValidId_ShouldReturnPokemon()
     {
         // Arrange
-        var pokemonDetail = new PokemonGateway.PokemonDetail
-        {
-            Id = 25,
-            Name = "pikachu"
-        };
+        var pokemonDetail = new PokemonGateway.PokemonDetail { Id = 25, Name = "pikachu" };
 
         _pokeClientMock.Setup(x => x.GetAsync<PokemonGateway.PokemonDetail>(It.IsAny<string>()))
             .ReturnsAsync(pokemonDetail);
@@ -97,7 +95,7 @@ public class PokemonGatewayTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("pikachu", result.Name);
-        Assert.Equal("https://pokeapi.co/api/v2/pokemon/25/", result.Url);
+        Assert.Equal("pokemon/25/", result.Url);
     }
 
     [Fact]
@@ -135,10 +133,7 @@ public class PokemonGatewayTests
         // Arrange
         var response = new PokeResponse<string>
         {
-            Count = 100,
-            Next = "next-url",
-            Previous = "prev-url",
-            Results = ["test"]
+            Count = 100, Next = "next-url", Previous = "prev-url", Results = ["test"]
         };
 
         // Assert
@@ -152,13 +147,7 @@ public class PokemonGatewayTests
     public void PokemonDetail_Properties_CanBeSet()
     {
         // Arrange - PokemonGateway internal class
-        var detail = new PokemonGateway.PokemonDetail
-        {
-            Id = 25,
-            Name = "pikachu",
-            Height = 4,
-            Weight = 60
-        };
+        var detail = new PokemonGateway.PokemonDetail { Id = 25, Name = "pikachu", Height = 4, Weight = 60 };
 
         // Assert
         Assert.Equal(25, detail.Id);
@@ -171,11 +160,7 @@ public class PokemonGatewayTests
     public void PokemonItem_Properties_CanBeSet()
     {
         // Arrange
-        var item = new PokemonGateway.PokemonItem
-        {
-            Name = "bulbasaur",
-            Url = "https://pokeapi.co/api/v2/pokemon/1/"
-        };
+        var item = new PokemonGateway.PokemonItem { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" };
 
         // Assert
         Assert.Equal("bulbasaur", item.Name);

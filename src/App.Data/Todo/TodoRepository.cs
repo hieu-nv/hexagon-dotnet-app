@@ -1,5 +1,6 @@
 using App.Core.Entities;
 using App.Core.Todo;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Data.Todo;
@@ -8,9 +9,9 @@ namespace App.Data.Todo;
 /// Repository for managing to-do items.
 /// </summary>
 /// <param name="dbContext"></param>
-public class TodoRepository(AppDbContext dbContext) : ITodoRepository
+public sealed class TodoRepository(AppDbContext dbContext) : ITodoRepository
 {
-    protected AppDbContext DbContext { get; private set; } = dbContext;
+    private AppDbContext DbContext { get; set; } = dbContext;
 
     /// <summary>
     /// Creates a new to-do item in the repository.
@@ -103,7 +104,7 @@ public class TodoRepository(AppDbContext dbContext) : ITodoRepository
     /// </summary>
     /// <param name="entity">The to-do entity to update.</param>
     /// <returns>The updated to-do entity.</returns>
-    public virtual async Task<TodoEntity> UpdateAsync(TodoEntity entity)
+    public async Task<TodoEntity> UpdateAsync(TodoEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 

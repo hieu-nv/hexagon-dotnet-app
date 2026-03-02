@@ -1,4 +1,5 @@
 using App.Core.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Data;
@@ -59,39 +60,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         modelBuilder
             .Entity<TodoEntity>()
             .HasData(
-                new TodoEntity
-                {
-                    Id = 1,
-                    Title = "Walk the dog",
-                    IsCompleted = false,
-                },
-                new TodoEntity
-                {
-                    Id = 2,
-                    Title = "Do the dishes",
-                    DueBy = new DateOnly(2026, 2, 15),
-                    IsCompleted = false,
-                },
-                new TodoEntity
-                {
-                    Id = 3,
-                    Title = "Do the laundry",
-                    DueBy = new DateOnly(2026, 2, 16),
-                    IsCompleted = false,
-                },
-                new TodoEntity
-                {
-                    Id = 4,
-                    Title = "Clean the bathroom",
-                    IsCompleted = false,
-                },
-                new TodoEntity
-                {
-                    Id = 5,
-                    Title = "Clean the car",
-                    DueBy = new DateOnly(2026, 2, 17),
-                    IsCompleted = false,
-                }
+                new TodoEntity { Id = 1, Title = "Walk the dog", IsCompleted = false, },
+                new TodoEntity { Id = 2, Title = "Do the dishes", IsCompleted = false, },
+                new TodoEntity { Id = 3, Title = "Do the laundry", IsCompleted = false, },
+                new TodoEntity { Id = 4, Title = "Clean the bathroom", IsCompleted = false, },
+                new TodoEntity { Id = 5, Title = "Clean the car", IsCompleted = false, }
             );
     }
 }
