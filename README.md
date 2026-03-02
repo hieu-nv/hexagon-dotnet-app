@@ -126,6 +126,25 @@ It provides a structured approach to building maintainable and testable applicat
   - [x] Create [API.md](docs/API.md) with detailed API documentation
   - [x] Document architecture and deployment
 
+### Phase 5: Code Review & Refinements (✅ Complete)
+
+- [x] **5.1 Critical Fixes**
+  - [x] Fix `PokeClient` exception handling to propagate TaskCanceledException
+  - [x] Extract `JsonSerializerOptions` in `PokeClient` to avoid per-request allocations
+  - [x] Secure CORS policy by reading allowed origins from `appsettings.json`
+
+- [x] **5.2 Code Consistency & Correctness**
+  - [x] Add consistent null guards in `AppData` and `TodoEndpoints`
+  - [x] Remove duplicate title validation from `TodoService` (relies on FluentValidation)
+  - [x] Refactor `PokemonService` range limiting to use `Math.Clamp`
+  - [x] Correct past due dates in `AppDbContext` seed data
+
+- [x] **5.3 Maintenance & Refinements**
+  - [x] Extract security HTTP headers logic into `SecurityHeadersMiddleware`
+  - [x] Seal `TodoRepository` and remove `virtual` modifiers
+  - [x] Update `PokemonGateway` base URL construction to be relative
+  - [x] Add missing project references (`.csproj` COPY) in Dockerfile
+
 ### Success Criteria for 10/10
 
 - ✅ **Test Coverage:** >80% across all projects
