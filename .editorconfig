@@ -528,3 +528,6 @@ dotnet_diagnostic.S4041.severity = warning    # Type names should not match name
 dotnet_diagnostic.S4049.severity = warning    # Properties should be preferred
 dotnet_diagnostic.S4050.severity = warning    # Operators should be overloaded consistently
 dotnet_diagnostic.S4200.severity = warning    # Native methods should be wrapped
+
+[*.cs]
+dotnet_diagnostic.CA1303.severity = none
