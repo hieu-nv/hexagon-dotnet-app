@@ -51,7 +51,7 @@ Quick wins that address security and observability gaps.
 
 ### 2.3 Explicit Parameter Clamping (Finding #6)
 
-**File:** `src/App.Core/Pokemon/PokemonService.cs`
+**File:** `src/App.Core/Poke/PokemonService.cs`
 
 - Replace 3 if-blocks → `limit = Math.Clamp(limit, 1, 100)` + `offset = Math.Max(0, offset)`
 - Keep existing warning logs
@@ -97,7 +97,7 @@ Quick wins that address security and observability gaps.
 
 ### 3.4 Fix Hardcoded URL (Finding #13)
 
-**File:** `src/App.Gateway/Pokemon/PokemonGateway.cs`
+**File:** `src/App.Gateway/Poke/PokemonGateway.cs`
 
 - Use relative URL `$"pokemon/{id}/"` instead of hardcoding PokeAPI base URL
 
@@ -144,7 +144,7 @@ docker build -t hexagon-dotnet-app:test .
 | 1.2 | `Program.cs` | `App.Api.Tests/Integration/*` |
 | 2.1 | `AppData.cs` | `App.Data.Tests/*` |
 | 2.2 | `TodoService.cs` | `App.Core.Tests/Todo/TodoServiceTests` |
-| 2.3 | `PokemonService.cs` | `App.Core.Tests/Pokemon/PokemonServiceTests` |
+| 2.3 | `PokemonService.cs` | `App.Core.Tests/Poke/PokemonServiceTests` |
 | 2.4 | `TodoEndpoints.cs` | `App.Api.Tests/Todo/TodoEndpointsTests` |
 | 2.5 | `AppDbContext.cs` | `App.Data.Tests/*` |
 | 3.1 | `TodoEndpoints.cs` | `App.Api.Tests/Todo/TodoEndpointsTests` |

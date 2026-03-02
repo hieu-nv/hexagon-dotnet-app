@@ -1,4 +1,4 @@
-using App.Api.Pokemon;
+using App.Api.Poke;
 using App.Api.Todo;
 using App.Core.Entities;
 using Xunit;
@@ -36,7 +36,7 @@ public class MappingTests
     public void ToResponse_Pokemon_ShouldMapCorrectly()
     {
         // Arrange
-        var pokemon = new App.Core.Pokemon.Pokemon
+        var pokemon = new App.Core.Poke.Pokemon
         {
             Name = "pikachu",
             Url = "https://pokeapi.co/api/v2/pokemon/25/"

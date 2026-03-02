@@ -1,4 +1,4 @@
-using App.Core.Pokemon;
+using App.Core.Poke;
 
 using Microsoft.Extensions.Logging;
 
@@ -27,7 +27,7 @@ public class PokemonServiceTests
     public async Task GetPokemonListAsync_WithValidParams_ShouldReturnList()
     {
         // Arrange
-        var expected = new List<App.Core.Pokemon.Pokemon>
+        var expected = new List<App.Core.Poke.Pokemon>
         {
             new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
             new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
@@ -50,7 +50,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonListAsync(1, 0))
-            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+            .ReturnsAsync(new List<App.Core.Poke.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(-5, 0);
@@ -65,7 +65,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonListAsync(1, 0))
-            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+            .ReturnsAsync(new List<App.Core.Poke.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(0, 0);
@@ -80,7 +80,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonListAsync(100, 0))
-            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+            .ReturnsAsync(new List<App.Core.Poke.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(200, 0);
@@ -95,7 +95,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonListAsync(20, 0))
-            .ReturnsAsync(new List<App.Core.Pokemon.Pokemon>());
+            .ReturnsAsync(new List<App.Core.Poke.Pokemon>());
 
         // Act
         await _service.GetPokemonListAsync(20, -10);
@@ -110,7 +110,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonListAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync((IEnumerable<App.Core.Pokemon.Pokemon>?)null);
+            .ReturnsAsync((IEnumerable<App.Core.Poke.Pokemon>?)null);
 
         // Act
         var result = await _service.GetPokemonListAsync();
@@ -127,7 +127,7 @@ public class PokemonServiceTests
     public async Task GetPokemonByIdAsync_WithValidId_ShouldReturnPokemon()
     {
         // Arrange
-        var expected = new App.Core.Pokemon.Pokemon
+        var expected = new App.Core.Poke.Pokemon
         {
             Name = "pikachu", Url = "https://pokeapi.co/api/v2/pokemon/25/",
         };
@@ -170,7 +170,7 @@ public class PokemonServiceTests
         // Arrange
         _gatewayMock
             .Setup(x => x.FetchPokemonByIdAsync(999))
-            .ReturnsAsync((App.Core.Pokemon.Pokemon?)null);
+            .ReturnsAsync((App.Core.Poke.Pokemon?)null);
 
         // Act
         var result = await _service.GetPokemonByIdAsync(999);

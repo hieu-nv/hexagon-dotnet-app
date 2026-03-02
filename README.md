@@ -21,7 +21,7 @@ It provides a structured approach to building maintainable and testable applicat
 ### Phase 1: Architectural Consistency (✅ Complete)
 
 - [x] **1.1 Create Pokemon Service Layer**
-  - [x] Create `src/App.Core/Pokemon/PokemonService.cs`
+  - [x] Create `src/App.Core/Poke/PokemonService.cs`
   - [x] Add business logic, validation, error handling
   - [x] Register PokemonService in `AppCore.cs`
   - [x] Update PokemonEndpoints to inject service instead of gateway
@@ -29,7 +29,7 @@ It provides a structured approach to building maintainable and testable applicat
 
 - [x] **1.2 Add Response DTOs**
   - [x] Create `src/App.Api/Todo/TodoDto.cs` (TodoResponse, CreateTodoRequest, UpdateTodoRequest)
-  - [x] Create `src/App.Api/Pokemon/PokemonDto.cs` (PokemonResponse, PokemonListResponse)
+  - [x] Create `src/App.Api/Poke/PokemonDto.cs` (PokemonResponse, PokemonListResponse)
   - [x] Update all endpoints to use DTOs instead of entities
   - [x] Add mapping logic (consider AutoMapper or Mapperly)
   - [x] Document breaking changes
@@ -44,13 +44,13 @@ It provides a structured approach to building maintainable and testable applicat
 
 - [x] **2.1 Pokemon Gateway Tests**
   - [x] Create `test/App.Gateway.Tests/` project
-  - [x] Write `Pokemon/PokemonGatewayTests.cs`
+  - [x] Write `Poke/PokemonGatewayTests.cs`
   - [x] Write `Client/PokeClientTests.cs`
   - [x] Test scenarios: success, 404, timeout, malformed responses
   - [x] Mock HTTP responses with FakeHttpMessageHandler
 
 - [x] **2.2 Pokemon Service Tests**
-  - [x] Create `test/App.Core.Tests/Pokemon/PokemonServiceTests.cs`
+  - [x] Create `test/App.Core.Tests/Poke/PokemonServiceTests.cs`
   - [x] Test service logic with mocked gateway
   - [x] Test validation and error handling
   - [x] Test edge cases
@@ -190,7 +190,7 @@ The application follows a hexagonal architecture pattern enhanced with .NET Aspi
   - Reusable across all services in the distributed application
 
 - **App.Core**: Contains the domain model, entities, repository interfaces (ports), and services
-  - Organized with domain-focused directories (e.g., Todo/, Pokemon/)
+  - Organized with domain-focused directories (e.g., Todo/, Poke/)
   - Includes the AppCore class for core service registration
   - Defines port interfaces for both data access and external gateways
 
@@ -608,7 +608,7 @@ csharpier format .
 │   │   ├── Extensions.cs              # OpenTelemetry & health checks
 │   │   └── App.ServiceDefaults.csproj
 │   ├── App.Api/                      # HTTP Adapters (Primary - Minimal APIs)
-│   │   ├── Pokemon/
+│   │   ├── Poke/
 │   │   │   ├── PokemonEndpoints.cs    # Pokemon endpoint handlers
 │   │   │   └── PokemonEndpointsExtensions.cs
 │   │   ├── Todo/
@@ -626,7 +626,7 @@ csharpier format .
 │   │   │   ├── Entity.cs              # Base entity with Id, timestamps
 │   │   │   ├── IEntity.cs
 │   │   │   └── TodoEntity.cs          # Todo domain model
-│   │   ├── Pokemon/
+│   │   ├── Poke/
 │   │   │   ├── Pokemon.cs             # Pokemon domain model
 │   │   │   └── IPokemonGateway.cs     # Pokemon gateway port
 │   │   ├── Repositories/
@@ -648,7 +648,7 @@ csharpier format .
 │       │   ├── IPokeClient.cs         # HTTP client interface
 │       │   ├── PokeClient.cs          # HTTP client implementation
 │       │   └── PokeResponse.cs        # Generic response wrapper
-│       ├── Pokemon/
+│       ├── Poke/
 │       │   └── PokemonGateway.cs      # Pokemon gateway implementation
 │       └── App.Gateway.csproj
 └── test/
@@ -663,13 +663,13 @@ csharpier format .
     ├── App.Core.Tests/               # Core Unit Tests
     │   ├── Todo/
     │   │   └── TodoServiceTests.cs
-    │   ├── Pokemon/
+    │   ├── Poke/
     │   │   └── PokemonServiceTests.cs
     │   └── App.Core.Tests.csproj
     └── App.Gateway.Tests/            # Gateway Unit Tests
         ├── Client/
         │   └── PokeClientTests.cs
-        ├── Pokemon/
+        ├── Poke/
         │   └── PokemonGatewayTests.cs
         └── App.Gateway.Tests.csproj
 ```

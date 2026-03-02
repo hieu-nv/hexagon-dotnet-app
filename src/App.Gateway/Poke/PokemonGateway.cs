@@ -1,7 +1,7 @@
-using App.Core.Pokemon;
+using App.Core.Poke;
 using App.Gateway.Client;
 
-namespace App.Gateway.Pokemon;
+namespace App.Gateway.Poke;
 
 /// <summary>
 /// Gateway implementation for interacting with the PokeAPI.
@@ -18,7 +18,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
     /// <param name="limit">The maximum number of Pokemon to return.</param>
     /// <param name="offset">The offset for pagination.</param>
     /// <returns>A list of Pokemon, or null if the request fails.</returns>
-    public async Task<IEnumerable<Core.Pokemon.Pokemon>?> FetchPokemonListAsync(
+    public async Task<IEnumerable<Core.Poke.Pokemon>?> FetchPokemonListAsync(
         int limit = 20,
         int offset = 0
     )
@@ -34,7 +34,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
         }
 
         return response
-            .Results.Select(item => new Core.Pokemon.Pokemon { Name = item.Name, Url = item.Url })
+            .Results.Select(item => new Core.Poke.Pokemon { Name = item.Name, Url = item.Url })
             .ToList();
     }
 
@@ -43,7 +43,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
     /// </summary>
     /// <param name="id">The ID of the Pokemon.</param>
     /// <returns>The Pokemon details, or null if not found.</returns>
-    public async Task<Core.Pokemon.Pokemon?> FetchPokemonByIdAsync(int id)
+    public async Task<Core.Poke.Pokemon?> FetchPokemonByIdAsync(int id)
     {
         var url = $"pokemon/{id}";
         var response = await _pokeClient.GetAsync<PokemonDetail>(url).ConfigureAwait(false);
@@ -53,7 +53,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
             return null;
         }
 
-        return new Core.Pokemon.Pokemon { Name = response.Name, Url = $"pokemon/{id}/", };
+        return new Core.Poke.Pokemon { Name = response.Name, Url = $"pokemon/{id}/", };
     }
 
     /// <summary>

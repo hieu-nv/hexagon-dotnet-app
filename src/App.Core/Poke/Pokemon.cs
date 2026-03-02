@@ -1,4 +1,4 @@
-namespace App.Core.Pokemon;
+namespace App.Core.Poke;
 
 /// <summary>
 /// Represents a Pokemon entity.

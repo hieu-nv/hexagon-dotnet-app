@@ -18,7 +18,7 @@ public static class AppCore
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.AddScoped<TodoService>();
-        builder.Services.AddScoped<App.Core.Pokemon.PokemonService>();
+        builder.Services.AddScoped<App.Core.Poke.PokemonService>();
         return builder;
     }
 }

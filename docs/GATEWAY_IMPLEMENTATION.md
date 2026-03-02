@@ -17,14 +17,14 @@ src/App.Gateway/
 │   ├── IPokeClient.cs             # HTTP client interface
 │   ├── PokeClient.cs              # HTTP client implementation
 │   └── PokeResponse.cs            # Generic response wrapper
-└── Pokemon/                        # Pokemon gateway implementation
+└── Poke/                           # Pokemon gateway implementation
     └── PokemonGateway.cs           # Implements IPokemonGateway from Core
 ```
 
 ### 2. Core Module Additions
 
 ```
-src/App.Core/Pokemon/
+src/App.Core/Poke/
 ├── Pokemon.cs                      # Domain model
 └── IPokemonGateway.cs              # Gateway interface (port)
 ```
@@ -32,7 +32,7 @@ src/App.Core/Pokemon/
 ### 3. API Module Additions
 
 ```
-src/App.Api/Pokemon/
+src/App.Api/Poke/
 ├── PokemonEndpoints.cs             # HTTP endpoint handlers
 └── PokemonEndpointsExtensions.cs   # Extension methods for registration
 ```

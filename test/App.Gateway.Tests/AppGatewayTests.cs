@@ -1,5 +1,5 @@
 using App.Gateway.Client;
-using App.Gateway.Pokemon;
+using App.Gateway.Poke;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +22,7 @@ public class AppGatewayTests
         // Assert
         Assert.Same(builder, result);
         var provider = builder.Services.BuildServiceProvider();
-        Assert.NotNull(provider.GetService<App.Core.Pokemon.IPokemonGateway>());
+        Assert.NotNull(provider.GetService<App.Core.Poke.IPokemonGateway>());
     }
 
     [Fact]

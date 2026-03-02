@@ -1,4 +1,4 @@
-using App.Core.Pokemon;
+using App.Core.Poke;
 using App.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

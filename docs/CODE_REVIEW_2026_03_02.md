@@ -91,7 +91,7 @@ If `app` is null, the `using` block does nothing, then throws — but the intent
 
 ### 6. `PokemonService` — silently clamping parameters
 
-**File:** `src/App.Core/Pokemon/PokemonService.cs` (L29-45)
+**File:** `src/App.Core/Poke/PokemonService.cs` (L29-45)
 
 ```csharp
 if (limit <= 0) { limit = 20; }
@@ -148,7 +148,7 @@ The security headers in `src/App.Api/Program.cs` (L126-134) would be cleaner and
 
 ### 13. `PokemonGateway` — hardcoded URL in `FetchPokemonByIdAsync`
 
-**File:** `src/App.Gateway/Pokemon/PokemonGateway.cs` (L59)
+**File:** `src/App.Gateway/Poke/PokemonGateway.cs` (L59)
 
 ```csharp
 Url = $"https://pokeapi.co/api/v2/pokemon/{id}/",  // hardcoded base URL

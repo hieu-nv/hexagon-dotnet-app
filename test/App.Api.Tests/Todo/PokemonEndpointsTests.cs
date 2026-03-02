@@ -1,5 +1,5 @@
-using App.Core.Pokemon;
-using App.Api.Pokemon;
+using App.Core.Poke;
+using App.Api.Poke;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -9,7 +9,7 @@ using Moq;
 
 using Xunit;
 
-using PokemonEntity = App.Core.Pokemon.Pokemon;
+using PokemonEntity = App.Core.Poke.Pokemon;
 
 namespace App.Api.Tests.Todo;
 
