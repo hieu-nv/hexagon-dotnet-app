@@ -9,6 +9,9 @@
     "chat.tools.terminal.autoApprove": {
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true
-    }
+    },
+    "editor.fontFamily": "'Relaxed Typing Mono JP', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontSize": 16,
+    "editor.renderWhitespace": "all",
+    "editor.cursorStyle": "block"
 }
-
