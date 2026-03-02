@@ -24,11 +24,14 @@ graph TB
     subgraph "External Systems"
         SQLite["SQLite Database"]
         PokeAPI["PokeAPI (External REST)"]
+        Keycloak["Keycloak SSO (IAM)"]
+        Datadog["Datadog (Observability)"]
     end
 
     %% Inbound Flow
     API --> Services
     Swagger --> API
+    Swagger --> Keycloak
 
     %% Service to Port Flow
     Services --> Domain
@@ -42,6 +45,8 @@ graph TB
     %% Adapter to Infrastructure
     EF --> SQLite
     PokeGate --> PokeAPI
+    API --> Datadog
+    API --> Keycloak
 
     style Domain fill:#f9f,stroke:#333,stroke-width:2px
     style Services fill:#bbf,stroke:#333,stroke-width:2px
@@ -56,3 +61,4 @@ graph TB
 - **Ports (Interfaces)**: Define how the core interacts with the outside world (Repository Port, Gateway Port).
 - **Primary Adapters**: Entry points to the application (API endpoints).
 - **Secondary Adapters**: Implementations of ports that talk to external infrastructure.
+- **External Systems**: Third-party services like Datadog for observability and Keycloak for identity management.

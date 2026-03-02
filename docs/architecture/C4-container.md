@@ -13,13 +13,16 @@ C4Container
         ContainerDb(database, "SQLite Database", "Local File", "Stores todo items and application state.")
     }
 
+    System_Ext(keycloak, "Keycloak SSO", "Identity and Access Management provider.")
     System_Ext(pokeapi, "PokeAPI", "External REST API providing Pokemon data.")
     System_Ext(datadog, "Datadog", "Observability platform for logs, metrics, and traces.")
 
     Rel(user, api, "Uses", "HTTPS")
+    Rel(user, keycloak, "Authenticates with", "HTTPS")
     Rel(api, database, "Reads/Writes", "EF Core")
     Rel(api, pokeapi, "Consumes", "HTTPS/JSON")
     Rel(api, datadog, "Sends Telemetry", "OTLP/HTTPS")
+    Rel(api, keycloak, "Validates Tokens", "JWKS/HTTPS")
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
@@ -30,4 +33,4 @@ C4Container
 - **SQLite Database**: A persistent storage system for managing Todo items.
 - **PokeAPI**: A third-party external service used to fetch Pokemon details.
 - **Datadog**: External observability platform used for monitoring system health and performance.
- village
+- **Keycloak SSO**: Identity provider used to authenticate users and manage access tokens.
