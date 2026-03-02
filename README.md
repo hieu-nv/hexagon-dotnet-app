@@ -158,19 +158,20 @@ It provides a structured approach to building maintainable and testable applicat
 
 **Estimated Timeline:** 2-3 weeks (1 developer)
 
-**Total Tests:** 140 (31 Core + 11 Gateway + 98 API/Data/ServiceDefaults)
+**Total Tests:** 148 (39 Core + 19 Gateway + 90 API/Data/ServiceDefaults)
 
 **Key Technologies:**
 
 - .NET Aspire 13.1.1 (Orchestration and Observability)
 - ASP.NET Core 10 with Minimal APIs
 - Entity Framework Core with SQLite
+- FluentValidation (API Request Validation)
 - Serilog with Datadog Integration (Structured Logging)
 - Datadog APM, Metrics, and Logs
 - OpenTelemetry (Tracing, Metrics, Logging)
 - Service Discovery and Resilience
 - Dependency Injection
-- Health Checks
+- Security Headers & Health Checks
 - OpenAPI/Swagger Documentation
 
 ## Architecture
@@ -209,6 +210,7 @@ The application follows a hexagonal architecture pattern enhanced with .NET Aspi
   - Organized by domain rather than technical concerns
   - Leverages dependency injection for clean service resolution
   - Integrated with Aspire ServiceDefaults for observability
+  - Enforces API boundaries via FluentValidation, CORS, and dedicated Security Headers middleware
 
 ## Features
 
