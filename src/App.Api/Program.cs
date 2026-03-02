@@ -152,9 +152,17 @@ builder.Services.AddCors(options =>
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             }
+            else if (builder.Environment.IsProduction())
+            {
+                // Fail fast in Production to prevent accidentally open CORS
+                throw new InvalidOperationException(
+                    "Cors:AllowedOrigins must be configured in Production environments. " +
+                    "Set at least one allowed origin in appsettings or environment variables."
+                );
+            }
             else
             {
-                // Fallback for development when no origins are configured
+                // Fallback for Development and Testing environments when no origins are configured
                 policy
                     .AllowAnyOrigin()
                     .AllowAnyMethod()

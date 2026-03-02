@@ -11,6 +11,7 @@ public class AuthService
 
     public AuthService(IClaimsExtractor claimsExtractor)
     {
+        ArgumentNullException.ThrowIfNull(claimsExtractor);
         _claimsExtractor = claimsExtractor;
     }
 
@@ -37,7 +38,8 @@ public class AuthService
     /// </summary>
     public bool AuthorizeUser(AuthenticatedUser user, AuthenticationPolicy policy)
     {
-        if (user == null || policy == null) return false;
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(policy);
 
         // An empty requirements list means no specific roles are needed, just authenticated.
         if (!policy.RequiredRoles.Any()) return true;
@@ -51,7 +53,9 @@ public class AuthService
     /// </summary>
     public bool AuthorizeByRoles(AuthenticatedUser user, IEnumerable<string> requiredRoles)
     {
-        if (user == null || requiredRoles == null || !requiredRoles.Any()) return false;
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(requiredRoles);
+
         return requiredRoles.Any(role => user.HasRole(role));
     }
 }

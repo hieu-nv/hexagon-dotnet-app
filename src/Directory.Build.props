@@ -20,6 +20,11 @@
     <!-- IDE1006: Naming rule violation -->
   </PropertyGroup>
 
+  <!-- Treat all warnings as errors in Release builds to prevent warning regression -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Microsoft .NET Analyzers -->
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.100">
