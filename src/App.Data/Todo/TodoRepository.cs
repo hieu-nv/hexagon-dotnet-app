@@ -11,7 +11,7 @@ namespace App.Data.Todo;
 /// <param name="dbContext"></param>
 public sealed class TodoRepository(AppDbContext dbContext) : ITodoRepository
 {
-    private AppDbContext DbContext { get; set; } = dbContext;
+    private AppDbContext DbContext { get; } = dbContext;
 
     /// <summary>
     /// Creates a new to-do item in the repository.
