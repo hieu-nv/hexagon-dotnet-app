@@ -23,8 +23,8 @@ public class PokemonIntegrationTests : IClassFixture<IntegrationTestWebAppFactor
         // Arrange
         var pokemonList = new List<App.Core.Poke.Pokemon>
         {
-            new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
-            new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
+            new() { Name = "bulbasaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/1/", UriKind.RelativeOrAbsolute) },
+            new() { Name = "charmander", Url = new Uri("https://pokeapi.co/api/v2/pokemon/4/", UriKind.RelativeOrAbsolute) },
         };
 
         _factory
@@ -47,7 +47,7 @@ public class PokemonIntegrationTests : IClassFixture<IntegrationTestWebAppFactor
         var pokemon = new App.Core.Poke.Pokemon
         {
             Name = "pikachu",
-            Url = "https://pokeapi.co/api/v2/pokemon/25/",
+            Url = new Uri("https://pokeapi.co/api/v2/pokemon/25/", UriKind.RelativeOrAbsolute),
         };
 
         _factory.PokemonGatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(pokemon);

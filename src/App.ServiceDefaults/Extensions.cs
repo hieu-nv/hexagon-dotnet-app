@@ -1,3 +1,4 @@
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -140,7 +141,7 @@ public static class AspireServiceDefaultsExtensions
                         // Include EF Core command text in traces
                         options.SetDbStatementForStoredProcedure = true;
                         // Record EF Core exceptions
-                        options.EnrichWithIDbCommand = (activity, command) =>
+                        options.EnrichWithIDbCommand = (activity, _) =>
                         {
                             activity.SetTag(
                                 "db.execution_time_ms",

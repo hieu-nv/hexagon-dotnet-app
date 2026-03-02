@@ -13,5 +13,5 @@ public class Pokemon
     /// <summary>
     /// Gets or sets the URL for detailed Pokemon information.
     /// </summary>
-    public string Url { get; set; } = string.Empty;
+    public Uri? Url { get; set; }
 }

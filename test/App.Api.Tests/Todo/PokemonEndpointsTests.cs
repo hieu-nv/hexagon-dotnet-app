@@ -48,9 +48,9 @@ public class PokemonEndpointsTests
         // Arrange
         var expectedPokemon = new List<PokemonEntity>
         {
-            new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
-            new() { Name = "ivysaur", Url = "https://pokeapi.co/api/v2/pokemon/2/" },
-            new() { Name = "venusaur", Url = "https://pokeapi.co/api/v2/pokemon/3/" },
+            new() { Name = "bulbasaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/1/", UriKind.RelativeOrAbsolute) },
+            new() { Name = "ivysaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/2/", UriKind.RelativeOrAbsolute) },
+            new() { Name = "venusaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/3/", UriKind.RelativeOrAbsolute) },
         };
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(expectedPokemon);
@@ -75,7 +75,7 @@ public class PokemonEndpointsTests
         // Arrange
         var expectedPokemon = new List<PokemonEntity>
         {
-            new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
+            new() { Name = "charmander", Url = new Uri("https://pokeapi.co/api/v2/pokemon/4/", UriKind.RelativeOrAbsolute) },
         };
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(10, 50)).ReturnsAsync(expectedPokemon);
@@ -152,7 +152,7 @@ public class PokemonEndpointsTests
         // Arrange
         var pokemonList = Enumerable
             .Range(1, 20)
-            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = $"https://pokeapi.co/api/v2/pokemon/{i}/", })
+            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = new Uri($"https://pokeapi.co/api/v2/pokemon/{i}/", UriKind.RelativeOrAbsolute), })
             .ToList();
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(pokemonList);
@@ -174,7 +174,7 @@ public class PokemonEndpointsTests
         // Arrange
         var pokemonList = Enumerable
             .Range(21, 20)
-            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = $"https://pokeapi.co/api/v2/pokemon/{i}/", })
+            .Select(i => new PokemonEntity { Name = $"pokemon{i}", Url = new Uri($"https://pokeapi.co/api/v2/pokemon/{i}/", UriKind.RelativeOrAbsolute), })
             .ToList();
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 20)).ReturnsAsync(pokemonList);
@@ -199,7 +199,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithValidId_ShouldReturnOkWithPokemon()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity { Name = "pikachu", Url = "https://pokeapi.co/api/v2/pokemon/25/", };
+        var expectedPokemon = new PokemonEntity { Name = "pikachu", Url = new Uri("https://pokeapi.co/api/v2/pokemon/25/", UriKind.RelativeOrAbsolute), };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(expectedPokemon);
 
@@ -235,7 +235,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithSmallId_ShouldReturnOk()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/", };
+        var expectedPokemon = new PokemonEntity { Name = "bulbasaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/1/", UriKind.RelativeOrAbsolute), };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(1)).ReturnsAsync(expectedPokemon);
 
@@ -252,7 +252,7 @@ public class PokemonEndpointsTests
     public async Task FetchPokemonByIdAsync_WithLargeValidId_ShouldReturnOk()
     {
         // Arrange
-        var expectedPokemon = new PokemonEntity { Name = "arceus", Url = "https://pokeapi.co/api/v2/pokemon/493/", };
+        var expectedPokemon = new PokemonEntity { Name = "arceus", Url = new Uri("https://pokeapi.co/api/v2/pokemon/493/", UriKind.RelativeOrAbsolute), };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(493)).ReturnsAsync(expectedPokemon);
 
