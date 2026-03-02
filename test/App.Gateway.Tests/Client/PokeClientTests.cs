@@ -35,7 +35,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/25");
+        var result = await client.GetAsync<TestPayload>(new Uri("pokemon/25", UriKind.RelativeOrAbsolute));
 
         // Assert
         Assert.NotNull(result);
@@ -55,7 +55,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/99999");
+        var result = await client.GetAsync<TestPayload>(new Uri("pokemon/99999", UriKind.RelativeOrAbsolute));
 
         // Assert
         Assert.Null(result);
@@ -71,7 +71,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/1");
+        var result = await client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute));
 
         // Assert
         Assert.Null(result);
@@ -85,7 +85,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act & Assert — cancellation exceptions now propagate instead of being swallowed
-        await Assert.ThrowsAsync<TaskCanceledException>(() => client.GetAsync<TestPayload>("pokemon/1")
+        await Assert.ThrowsAsync<TaskCanceledException>(() => client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute))
         );
     }
 
@@ -106,7 +106,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act — JsonException is not HttpRequestException, so it propagates
-        await Assert.ThrowsAsync<JsonException>(() => client.GetAsync<TestPayload>("pokemon/1")
+        await Assert.ThrowsAsync<JsonException>(() => client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute))
         );
     }
 
@@ -123,7 +123,7 @@ public class PokeClientTests
         var client = CreateClient(handler);
 
         // Act
-        var result = await client.GetAsync<TestPayload>("pokemon/1");
+        var result = await client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute));
 
         // Assert
         Assert.NotNull(result);

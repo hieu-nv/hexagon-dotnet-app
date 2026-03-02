@@ -23,7 +23,8 @@ public static class AppGateway
         builder
             .Services.AddHttpClient<IPokeClient, PokeClient>(client =>
             {
-                client.BaseAddress = new Uri("https://pokeapi.co/api/v2/");
+                var pokeApiBaseUrl = builder.Configuration["PokeApiBaseUrl"] ?? "https://pokeapi.co/api/v2/";
+                client.BaseAddress = new Uri(pokeApiBaseUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.Timeout = TimeSpan.FromSeconds(30);
             })

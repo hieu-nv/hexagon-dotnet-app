@@ -24,5 +24,5 @@ public class PokeResponse<T>
     /// <summary>
     /// Gets or sets the list of results.
     /// </summary>
-    public List<T> Results { get; set; } = [];
+    public IReadOnlyList<T> Results { get; init; } = [];
 }
