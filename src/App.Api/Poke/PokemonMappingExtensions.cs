@@ -14,6 +14,6 @@ public static class PokemonMappingExtensions
     /// <returns>The mapped response.</returns>
     public static PokemonResponse ToResponse(this App.Core.Poke.Pokemon pokemon)
     {
-        return new PokemonResponse(pokemon.Name, pokemon.Url);
+        return new PokemonResponse(pokemon.Name, pokemon.Url?.ToString() ?? string.Empty);
     }
 }

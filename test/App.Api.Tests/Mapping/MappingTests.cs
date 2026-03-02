@@ -39,7 +39,7 @@ public class MappingTests
         var pokemon = new App.Core.Poke.Pokemon
         {
             Name = "pikachu",
-            Url = "https://pokeapi.co/api/v2/pokemon/25/"
+            Url = new Uri("https://pokeapi.co/api/v2/pokemon/25/", UriKind.RelativeOrAbsolute)
         };
 
         // Act
@@ -47,6 +47,6 @@ public class MappingTests
 
         // Assert
         Assert.Equal(pokemon.Name, response.Name);
-        Assert.Equal(pokemon.Url, response.Url);
+        Assert.Equal(pokemon.Url?.ToString(), response.Url);
     }
 }

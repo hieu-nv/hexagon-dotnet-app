@@ -29,8 +29,8 @@ public class PokemonServiceTests
         // Arrange
         var expected = new List<App.Core.Poke.Pokemon>
         {
-            new() { Name = "bulbasaur", Url = "https://pokeapi.co/api/v2/pokemon/1/" },
-            new() { Name = "charmander", Url = "https://pokeapi.co/api/v2/pokemon/4/" },
+            new() { Name = "bulbasaur", Url = new Uri("https://pokeapi.co/api/v2/pokemon/1/", UriKind.RelativeOrAbsolute) },
+            new() { Name = "charmander", Url = new Uri("https://pokeapi.co/api/v2/pokemon/4/", UriKind.RelativeOrAbsolute) },
         };
 
         _gatewayMock.Setup(x => x.FetchPokemonListAsync(20, 0)).ReturnsAsync(expected);
@@ -129,7 +129,7 @@ public class PokemonServiceTests
         // Arrange
         var expected = new App.Core.Poke.Pokemon
         {
-            Name = "pikachu", Url = "https://pokeapi.co/api/v2/pokemon/25/",
+            Name = "pikachu", Url = new Uri("https://pokeapi.co/api/v2/pokemon/25/", UriKind.RelativeOrAbsolute),
         };
 
         _gatewayMock.Setup(x => x.FetchPokemonByIdAsync(25)).ReturnsAsync(expected);
@@ -148,7 +148,7 @@ public class PokemonServiceTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.GetPokemonByIdAsync(0));
 
-        Assert.Contains("Pokemon ID must be greater than zero", ex.Message);
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message, StringComparison.OrdinalIgnoreCase);
         _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(It.IsAny<int>()), Times.Never);
     }
 
@@ -160,7 +160,7 @@ public class PokemonServiceTests
             _service.GetPokemonByIdAsync(-1)
         );
 
-        Assert.Contains("Pokemon ID must be greater than zero", ex.Message);
+        Assert.Contains("Pokemon ID must be greater than zero", ex.Message, StringComparison.OrdinalIgnoreCase);
         _gatewayMock.Verify(x => x.FetchPokemonByIdAsync(It.IsAny<int>()), Times.Never);
     }
 

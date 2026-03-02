@@ -45,7 +45,7 @@ public class PokemonGatewayTests
         var pokemonList = result.ToList();
         Assert.Equal(2, pokemonList.Count);
         Assert.Equal("bulbasaur", pokemonList[0].Name);
-        Assert.Equal("https://pokeapi.co/api/v2/pokemon/1/", pokemonList[0].Url);
+        Assert.Equal(new Uri("https://pokeapi.co/api/v2/pokemon/1/", UriKind.RelativeOrAbsolute), pokemonList[0].Url);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class PokemonGatewayTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("pikachu", result.Name);
-        Assert.Equal("pokemon/25/", result.Url);
+        Assert.Equal(new Uri("pokemon/25/", UriKind.RelativeOrAbsolute), result.Url);
     }
 
     [Fact]

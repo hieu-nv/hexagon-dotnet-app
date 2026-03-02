@@ -34,7 +34,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
         }
 
         return response
-            .Results.Select(item => new Core.Poke.Pokemon { Name = item.Name, Url = item.Url })
+            .Results.Select(item => new Core.Poke.Pokemon { Name = item.Name, Url = new Uri(item.Url, UriKind.RelativeOrAbsolute) })
             .ToList();
     }
 
@@ -53,7 +53,7 @@ public class PokemonGateway(IPokeClient pokeClient) : IPokemonGateway
             return null;
         }
 
-        return new Core.Poke.Pokemon { Name = response.Name, Url = $"pokemon/{id}/", };
+        return new Core.Poke.Pokemon { Name = response.Name, Url = new Uri($"pokemon/{id}/", UriKind.RelativeOrAbsolute), };
     }
 
     /// <summary>
