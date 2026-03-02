@@ -47,7 +47,7 @@ Application → Local Agent → Datadog Cloud
 | ----------------------- | -------------------------- | --------------------------- |
 | **Offline Development** | ❌ Requires internet       | ✅ Works offline            |
 | **Network Reliability** | ❌ Drops data on failures  | ✅ Buffers and retries      |
-| **Local Debugging**     | ❌ No local visibility     | ✅ View data before cloud   |
+| **Local Debugging**     | ❌ No local visibility     | ✅ View metrics/status via CLI (Note: Full trace UI needs Datadog Cloud) |
 | **Performance**         | ⚠️ Blocks on network calls | ✅ Async with buffering     |
 | **Multiple Protocols**  | ❌ Limited                 | ✅ OTLP, StatsD, native APM |
 | **Data Processing**     | ❌ None                    | ✅ Agent-side filtering     |
@@ -465,6 +465,8 @@ builder.Services.AddOpenTelemetry()
         })
         .AddOtlpExporter(options =>
         {
+            // Note: The OpenTelemetry SDK also reads OTEL_ vars automatically.
+            // We set it explicitly here for clarity in the tutorial.
             options.Endpoint = new Uri(
                 Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")
                 ?? "http://localhost:4318");
@@ -695,6 +697,8 @@ var dogstatsdConfig = new DogStatsdConfig
 };
 
 DogStatsd.Configure(dogstatsdConfig);
+// Note: In modern .NET apps, using builder.Services.AddDogStatsd(dogstatsdConfig) 
+// and injecting IDogStatsd is often preferred to make testing easier.
 
 // ... rest of configuration
 
@@ -1041,6 +1045,8 @@ services:
       - "4318:4318"
       - "8125:8125/udp"
       - "8126:8126"
+    volumes:
+      - ./src/App.Api/logs:/app/logs:ro
 ```
 
 ## When to Use Agent vs Direct Cloud
@@ -1082,6 +1088,7 @@ app.MapGet("/agent-health", async () =>
             
             if (await Task.WhenAny(connectTask, Task.Delay(1000)) == connectTask)
             {
+                await connectTask; // Throws if connection failed before the timeout
                 results.Add(new { endpoint = name, port, status = "reachable" });
             }
             else
@@ -1164,7 +1171,7 @@ The agent-based architecture is the **recommended approach** for most production
 The full working code from this guide is available on GitHub:
 
 ```
-https://github.com/yourusername/hexagon-dotnet-app
+https://github.com/hieu-nv/hexagon-dotnet-app
 ```
 
 Includes:
@@ -1177,6 +1184,6 @@ Includes:
 
 ---
 
-_Questions? Drop a comment below or reach out on [Twitter](https://twitter.com/yourhandle)._
+_Questions? Drop a comment below or reach out on [Bluesky](https://bsky.app/profile/hieunv.bsky.social)._
 
 _Found this helpful? Share it with your team and give it a clap! 👏_
