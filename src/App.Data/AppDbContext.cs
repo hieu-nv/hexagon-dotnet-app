@@ -49,6 +49,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<TodoEntity>(entity =>
+        {
+            // Column name mappings — kept in App.Data to preserve App.Core's infrastructure independence
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.CreatedAt).HasColumnName("CREATED_AT");
+            entity.Property(e => e.UpdatedAt).HasColumnName("UPDATED_AT");
+            entity.Property(e => e.Title).HasColumnName("TITLE");
+            entity.Property(e => e.DueBy).HasColumnName("DUE_BY");
+            entity.Property(e => e.IsCompleted).HasColumnName("IS_COMPLETED");
+        });
+
         modelBuilder
             .Entity<TodoEntity>()
             .HasIndex(t => t.IsCompleted);
