@@ -18,21 +18,11 @@ Hexagonal Architecture separates the core business logic of an application from 
 
 The critical rule is **dependency direction flows inward only**. Outer layers know about inner layers, but the inner core never knows about the outside world:
 
-```mermaid
-flowchart LR
-    Api["App.Api (Primary Adapter)"]
-    Core["App.Core (Domain & Ports)"]
-    Data["App.Data (Secondary Adapter)"]
-    Gateway["App.Gateway (Secondary Adapter)"]
-
-    Api --> Core
-    Data --> Core
-    Gateway --> Core
-```
+![Hexagonal Flow Diagram](./architecture/assets/hexagonal_flow_diagram.png)
 
 `App.Core` has zero knowledge of databases, HTTP clients, or web frameworks. `App.Data`, `App.Gateway`, and `App.Api` all depend on `App.Core` — never the reverse.
 
-![Hexagonal Architecture](docs/architecture/assets/hexagonal_architecture_diagram.png)
+![Hexagonal Architecture](./architecture/assets/architecture_infographic.png)
 
 ## Project Structure
 
