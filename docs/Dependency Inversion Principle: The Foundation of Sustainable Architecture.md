@@ -1,5 +1,10 @@
 # Dependency Inversion Principle: The Foundation of Sustainable Architecture
 
+> **This is Part 1 of the .NET Architecture series.**
+> - **Part 1 — Dependency Inversion Principle: The Foundation of Sustainable Architecture** *(this post)*
+> - Part 2 — Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle
+> - Part 3 — [Mastering Hexagonal Architecture in .NET: A Practical Guide](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa)
+
 ## Introduction
 
 In the field of software development, creating sustainable and maintainable code is always a challenge. The Dependency Inversion Principle (DIP) - one of the five SOLID principles - provides a solid foundation to address this challenge. This article will explain DIP in detail and illustrate how to apply it at the architectural level through a real project using Hexagonal Architecture (also known as Ports and Adapters).

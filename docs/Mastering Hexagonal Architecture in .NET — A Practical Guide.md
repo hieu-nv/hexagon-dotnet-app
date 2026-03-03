@@ -1,5 +1,10 @@
 # Mastering Hexagonal Architecture in .NET — A Practical Guide
 
+> **This is Part 3 of the .NET Architecture series.**
+> - Part 1 — [Dependency Inversion Principle: The Foundation of Sustainable Architecture](https://medium.com/@hieunv/dependency-inversion-principle-the-foundation-of-sustainable-architecture-12345)
+> - Part 2 — Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle
+> - **Part 3 — Mastering Hexagonal Architecture in .NET: A Practical Guide** *(this post)*
+
 ## Introduction
 
 Have you ever had to change your database and realized it required touching 10 different files — some of which had nothing to do with persistence? Or swapped an HTTP client and found business logic scattered throughout? These are symptoms of a tightly coupled architecture.
