@@ -1,9 +1,14 @@
 # Dependency Inversion Principle: The Foundation of Sustainable Architecture
 
-> **This is Part 1 of the .NET Architecture series.**
-> - **Part 1 — Dependency Inversion Principle: The Foundation of Sustainable Architecture** *(this post)*
-> - Part 2 — [Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle](
-> - Part 3 — [Mastering Hexagonal Architecture in .NET: A Practical Guide](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa?source=friends_link&sk=91dc7ef74051997e2bbc7080f4aa5d93)
+**This is Part 1 of the .NET Architecture series.**
+
+- **Part 1 — Dependency Inversion Principle: The Foundation of Sustainable Architecture** _(this post)_
+
+- Part 2 — [Mastering Hexagonal Architecture in .NET: A Practical Guide](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa?source=friends_link&sk=91dc7ef74051997e2bbc7080f4aa5d93)
+
+- Part 3 — [Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle](https://medium.com/@hieunv/dependency-injection-the-core-foundation-for-implementing-dependency-inversion-principle-8a2ef14cb82a?source=friends_link&sk=871b8238d962ac63569f66da223b29ae)
+
+---
 
 ## Introduction
 
