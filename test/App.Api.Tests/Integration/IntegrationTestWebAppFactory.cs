@@ -16,6 +16,7 @@ namespace App.Api.Tests.Integration;
 /// Replaces external dependencies (Pokemon gateway) with mocks
 /// and uses a dedicated in-memory SQLite database per factory instance.
 /// </summary>
+#pragma warning disable CA1515 // Type is used as a fixture parameter by public xUnit test classes
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
 {
     // Keep the connection open for the lifetime of the factory so the

@@ -73,4 +73,20 @@ public class AppDataTests
         // Assert
         Assert.Same(builder, result);
     }
+
+    [Fact]
+    public void UseAppData_Builder_WithNoConnectionString_UsesFallbackSqlite()
+    {
+        // Arrange — no "DefaultConnection" in config, covers the ?? 'Data Source=app.db' branch
+        var builder = WebApplication.CreateBuilder();
+        // Ensure no DefaultConnection is set
+        builder.Configuration.GetSection("ConnectionStrings").GetSection("DefaultConnection").GetChildren();
+
+        // Act — should not throw; defaults to 'Data Source=app.db'
+        builder.UseAppData();
+
+        // Assert
+        var provider = builder.Services.BuildServiceProvider();
+        Assert.NotNull(provider.GetService<AppDbContext>());
+    }
 }

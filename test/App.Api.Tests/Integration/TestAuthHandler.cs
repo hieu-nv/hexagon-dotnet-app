@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace App.Api.Tests.Integration;
 
+#pragma warning disable CA1515 // AuthenticationHandler subclass used by public xUnit factories
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string AuthenticationScheme = "Test";

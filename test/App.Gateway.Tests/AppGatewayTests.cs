@@ -8,6 +8,7 @@ using Xunit;
 
 namespace App.Gateway.Tests;
 
+#pragma warning disable CA1515 // xUnit test classes must be public (xUnit1000)
 public class AppGatewayTests
 {
     [Fact]
@@ -35,6 +36,7 @@ public class AppGatewayTests
     }
 }
 
+#pragma warning disable CA1515 // xUnit test classes must be public (xUnit1000)
 public class PokeClientConstructorTests
 {
     [Fact]

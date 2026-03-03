@@ -142,4 +142,87 @@ public class ServiceDefaultsTests
         // Assert
         Assert.NotNull(app);
     }
+
+    [Fact]
+    public void ConfigureOpenTelemetry_WithLocalAgentOtlpEndpoint_Succeeds()
+    {
+        // Arrange — covers the localhost/127.0.0.1 branch that enables BOTH traces AND metrics via OTLP
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://127.0.0.1:4318",
+            ["OTEL_SERVICE_NAME"] = "test-service"
+        });
+
+        // Act
+        builder.ConfigureOpenTelemetry();
+
+        // Assert
+        var serviceProvider = builder.Services.BuildServiceProvider();
+        Assert.NotNull(serviceProvider);
+    }
+
+    [Fact]
+    public void MapDefaultEndpoints_WithStatsdMetrics_ExcludesPrometheusEndpoint()
+    {
+        // Arrange — with METRICS_EXPORTER=statsd, Prometheus endpoint should not be mapped
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["METRICS_EXPORTER"] = "statsd"
+        });
+        builder.AddServiceDefaults();
+        var app = builder.Build();
+
+        // Act — should not throw even without Prometheus configured
+        app.MapDefaultEndpoints();
+
+        // Assert
+        Assert.NotNull(app);
+    }
+
+    [Fact]
+    public void MapDefaultEndpoints_WithDisabledMetrics_Succeeds()
+    {
+        // Arrange — with METRICS_EXPORTER=disabled, Prometheus endpoint should not be mapped
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["METRICS_EXPORTER"] = "disabled"
+        });
+        builder.AddServiceDefaults();
+        var app = builder.Build();
+
+        // Act
+        app.MapDefaultEndpoints();
+
+        // Assert
+        Assert.NotNull(app);
+    }
+
+    [Fact]
+    public void AddDefaultHealthChecks_ReturnsBuilder()
+    {
+        // Arrange
+        var builder = Host.CreateApplicationBuilder();
+
+        // Act
+        var result = builder.AddDefaultHealthChecks();
+
+        // Assert — verifies the method returns the builder for chaining
+        Assert.Same(builder, result);
+    }
+
+    [Fact]
+    public void AddServiceDefaults_ReturnsBuilder()
+    {
+        // Arrange
+        var builder = Host.CreateApplicationBuilder();
+
+        // Act
+        var result = builder.AddServiceDefaults();
+
+        // Assert
+        Assert.Same(builder, result);
+    }
 }

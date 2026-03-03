@@ -187,4 +187,28 @@ public class TodoRepositoryTests
         // Assert
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task DeleteAsync_WithNonExistentId_ShouldReturnFalse()
+    {
+        // Covers the entity==null branch in DeleteAsync => returns false
+        var result = await _repository.DeleteAsync(99999);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithExistingId_ShouldReturnTrue()
+    {
+        // Ensure the true branch is also explicitly verified via repository (not just integration)
+        var todo = new TodoEntity { Title = "Delete Me" };
+        _context.Todos.Add(todo);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.DeleteAsync(todo.Id);
+        Assert.True(result);
+
+        // Verify it's gone
+        var found = await _context.Todos.FindAsync(todo.Id);
+        Assert.Null(found);
+    }
 }

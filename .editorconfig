@@ -395,7 +395,7 @@ dotnet_naming_symbols.generic_type_parameter.applicable_kinds = type_parameter
 dotnet_naming_style.generic_type_parameter_style.required_prefix = T
 
 # CA1715: Identifiers should have correct prefix
-dotnet_diagnostic.CA1715.severity = none
+dotnet_diagnostic.CA1715.severity = warning
 
 # Additional Code Analysis Rules for Quality and Security
 # Performance Rules

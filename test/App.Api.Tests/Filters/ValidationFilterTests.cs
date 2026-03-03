@@ -9,7 +9,9 @@ namespace App.Api.Tests.Filters;
 
 public class ValidationFilterTests
 {
+#pragma warning disable CA1515 // Nested request type must be public for use with generic ValidationFilter<T>
     public class TestRequest { public string Name { get; set; } = string.Empty; }
+#pragma warning restore CA1515
 
     [Fact]
     public async Task InvokeAsync_WithValidRequest_ShouldCallNext()

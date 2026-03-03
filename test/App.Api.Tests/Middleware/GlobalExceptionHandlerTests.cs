@@ -63,4 +63,23 @@ public class GlobalExceptionHandlerTests
         // Final verification: we ensure the handler returned true and set the status code.
         // Direct body inspection is omitted for brevity as it requires mocking the response stream.
     }
+
+    [Fact]
+    public async Task TryHandleAsync_WithNoActivity_ShouldUseFallbackTraceIdentifier()
+    {
+        // Arrange — ensures Activity.Current is null so the ?? branch uses TraceIdentifier
+        Activity.Current = null;
+        var context = new DefaultHttpContext();
+        context.TraceIdentifier = "fallback-trace-id";
+        context.Request.Path = "/test";
+        var exception = new InvalidOperationException("oops");
+        _environmentMock.Setup(m => m.EnvironmentName).Returns(Environments.Production);
+
+        // Act
+        var result = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+    }
 }

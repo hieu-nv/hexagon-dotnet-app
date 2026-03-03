@@ -119,6 +119,21 @@ public class PokemonServiceTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public async Task GetPokemonListAsync_WithDefaultParams_CallsGatewayWithLimit20AndOffset0()
+    {
+        // Arrange
+        _gatewayMock
+            .Setup(x => x.FetchPokemonListAsync(20, 0))
+            .ReturnsAsync(new List<App.Core.Poke.Pokemon>());
+
+        // Act — no arguments: relies on the method defaults (limit=20, offset=0)
+        await _service.GetPokemonListAsync();
+
+        // Assert
+        _gatewayMock.Verify(x => x.FetchPokemonListAsync(20, 0), Times.Once);
+    }
+
     #endregion
 
     #region GetPokemonByIdAsync Tests

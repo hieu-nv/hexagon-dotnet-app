@@ -22,7 +22,7 @@ namespace App.Api.Tests.Integration;
 /// <summary>
 /// Authentication handler that impersonates a non-admin user (role: "user" only).
 /// </summary>
-public class NonAdminTestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+internal class NonAdminTestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     public const string AuthenticationScheme = "NonAdminTest";
 
@@ -56,6 +56,7 @@ public class NonAdminTestAuthHandler : AuthenticationHandler<AuthenticationSchem
 /// <summary>
 /// WebApplicationFactory variant that uses a non-admin user for authorization tests.
 /// </summary>
+#pragma warning disable CA1515 // Used as xUnit fixture parameter by public test class
 public class NonAdminWebAppFactory : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection;
@@ -128,6 +129,7 @@ public class NonAdminWebAppFactory : WebApplicationFactory<Program>
 /// <summary>
 /// Integration tests for authorization: verifies that non-admin users cannot access admin-only endpoints.
 /// </summary>
+#pragma warning disable CA1515 // xUnit test classes must be public (xUnit1000)
 public class AuthIntegrationTests : IClassFixture<NonAdminWebAppFactory>
 {
     private readonly HttpClient _client;

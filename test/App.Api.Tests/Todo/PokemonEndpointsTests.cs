@@ -362,4 +362,26 @@ public class PokemonEndpointsTests
     }
 
     #endregion
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithNullService_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokemonEndpoints(null!, _loggerMock.Object)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() =>
+            new PokemonEndpoints(_pokemonService, null!)
+        );
+    }
+
+    #endregion
 }

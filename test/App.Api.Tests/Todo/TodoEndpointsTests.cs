@@ -635,4 +635,24 @@ public class TodoEndpointsTests
     }
 
     #endregion
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithNullService_ThrowsArgumentNullException()
+    {
+        // Covers the null-guard branch for todoService
+        Assert.Throws<ArgumentNullException>(() =>
+            new TodoEndpoints(null!, _loggerMock.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Covers the null-guard branch for logger (50% branch that was missing)
+        Assert.Throws<ArgumentNullException>(() =>
+            new TodoEndpoints(_todoService, null!));
+    }
+
+    #endregion
 }

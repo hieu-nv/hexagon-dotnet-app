@@ -5,7 +5,9 @@ namespace App.Core.Repositories;
 /// </summary>
 /// <typeparam name="T">Entity type that inherits from BaseEntity</typeparam>
 /// <typeparam name="K">The type of the entity's key</typeparam>
+#pragma warning disable CA1715 // Identifiers should have correct prefix
 public interface IRepository<T, K>
+#pragma warning restore CA1715 // Identifiers should have correct prefix
 {
     /// <summary>
     /// Finds all entities
