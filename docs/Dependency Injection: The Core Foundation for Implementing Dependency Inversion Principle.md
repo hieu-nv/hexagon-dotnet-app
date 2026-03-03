@@ -461,18 +461,6 @@ public class TodoService(ITodoRepository todoRepository)  // ← Injected by DI
 
 When an HTTP request comes in, DI orchestrates the full dependency chain invisibly:
 
-```
-HTTP Request
-    ↓
-TodoEndpoint (Adapter — App.Api)
-    ↓ [DI injects TodoService]
-TodoService (Domain — App.Core)
-    ↓ [DI injects ITodoRepository → TodoRepository]
-TodoRepository (Adapter — App.Data)
-    ↓
-SQLite Database
-```
-
 ![DI + Hexagonal Flow](./architecture/assets/image_f690bb5b.png)
 
 **The domain core (`App.Core`) has zero knowledge of SQLite, EF Core, or HTTP.** DI enforces this separation at the composition root.

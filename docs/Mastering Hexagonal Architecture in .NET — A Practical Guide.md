@@ -2,7 +2,7 @@
 
 **This is Part 2 of the .NET Architecture series.**
 
-- Part 1 — [Dependency Inversion Principle: The Foundation of Sustainable Architecture](https://medium.com/@hieunv/dependency-inversion-principle-the-foundation-of-sustainable-architecture-12345)
+- Part 1 — [Dependency Inversion Principle: The Foundation of Sustainable Architecture](https://medium.com/@hieunv/dependency-inversion-principle-the-foundation-of-sustainable-architecture-d3f096c8a3ec?source=friends_link&sk=90c7967b4f244428c1e5319ff485654c)
 
 - **Part 2 — Mastering Hexagonal Architecture in .NET: A Practical Guide** _(this post)_
 
