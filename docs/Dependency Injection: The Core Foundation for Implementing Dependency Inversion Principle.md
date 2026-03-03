@@ -1,9 +1,10 @@
 # Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle
 
-> **This is Part 2 of the .NET Architecture series.**
-> - Part 1 — [Dependency Inversion Principle: The Foundation of Sustainable Architecture](https://medium.com/@hieunv/dependency-inversion-principle-the-foundation-of-sustainable-architecture-12345)
-> - **Part 2 — Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle** *(this post)*
-> - Part 3 — [Mastering Hexagonal Architecture in .NET: A Practical Guide](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa)
+**This is Part 2 of the .NET Architecture series.**
+
+- Part 1 — [Dependency Inversion Principle: The Foundation of Sustainable Architecture](https://medium.com/@hieunv/dependency-inversion-principle-the-foundation-of-sustainable-architecture-d3f096c8a3ec?source=friends_link&sk=90c7967b4f244428c1e5319ff485654c)
+- **Part 2 — Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle** _(this post)_
+Part 3 — [Mastering Hexagonal Architecture in .NET: A Practical Guide](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa?source=friends_link&sk=91dc7ef74051997e2bbc7080f4aa5d93)
 
 ---
 
@@ -38,6 +39,7 @@ public class OrderService
 ```
 
 This code violates DIP because:
+
 1. **High-level policy** (order processing) depends on **low-level details** (MySQL, SMTP, Stripe)
 2. **Abstractions** (business logic) depend on **concretions** (specific implementations)
 3. Changes to infrastructure force changes to business logic
@@ -185,11 +187,11 @@ public class OrderService(IOrderRepository repository)  // Container injects the
 
 ASP.NET Core DI gives you fine-grained control over object lifetimes, which reinforces DIP boundaries:
 
-| Lifetime | Registration | When to Use |
-|---|---|---|
-| **Transient** | `AddTransient<I, T>()` | Lightweight, stateless services |
-| **Scoped** | `AddScoped<I, T>()` | Per-request state (e.g., DB contexts, repositories) |
-| **Singleton** | `AddSingleton<I, T>()` | Shared, thread-safe state (e.g., caches, clients) |
+| Lifetime      | Registration           | When to Use                                         |
+| ------------- | ---------------------- | --------------------------------------------------- |
+| **Transient** | `AddTransient<I, T>()` | Lightweight, stateless services                     |
+| **Scoped**    | `AddScoped<I, T>()`    | Per-request state (e.g., DB contexts, repositories) |
+| **Singleton** | `AddSingleton<I, T>()` | Shared, thread-safe state (e.g., caches, clients)   |
 
 ```csharp
 builder.Services.AddTransient<INotificationService, EmailNotificationService>(); // New instance per use
@@ -381,20 +383,7 @@ In Hexagonal Architecture, DI is not optional — it is the **wiring mechanism**
 
 ### The Three Layers and Their DI Roles
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      App.Api                            │
-│     (Adapters: HTTP endpoints, Middleware, Auth)        │
-│                 ↓ calls Domain via DI                   │
-├─────────────────────────────────────────────────────────┤
-│                     App.Core                            │
-│    (Domain: Services, Port Interfaces, Entities)        │
-│          ↑ injected with implementations by DI          │
-├─────────────────────────────────────────────────────────┤
-│              App.Data / App.Gateway                     │
-│   (Adapters: EF Core Repository, External API clients)  │
-└─────────────────────────────────────────────────────────┘
-```
+![DI Architecture Infographic](./architecture/assets/di_architecture_infographic_1772524317652.png)
 
 ### Ports as Interfaces, Adapters as Implementations
 
@@ -482,6 +471,8 @@ TodoRepository (Adapter — App.Data)
 SQLite Database
 ```
 
+![DI + Hexagonal Flow](./architecture/assets/image_f690bb5b.png)
+
 **The domain core (`App.Core`) has zero knowledge of SQLite, EF Core, or HTTP.** DI enforces this separation at the composition root.
 
 ---
@@ -554,7 +545,7 @@ Without DI, following DIP leads to complex manual dependency management that doe
 
 ## References
 
-1. **Martin, Robert C.** — *"Clean Architecture: A Craftsman's Guide to Software Structure and Design"*
-2. **Seemann, Mark** — *"Dependency Injection Principles, Practices, and Patterns"*
-3. **Evans, Eric** — *"Domain-Driven Design: Tackling Complexity in the Heart of Software"*
+1. **Martin, Robert C.** — _"Clean Architecture: A Craftsman's Guide to Software Structure and Design"_
+2. **Seemann, Mark** — _"Dependency Injection Principles, Practices, and Patterns"_
+3. **Evans, Eric** — _"Domain-Driven Design: Tackling Complexity in the Heart of Software"_
 4. **Microsoft** — [Dependency injection in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection)
