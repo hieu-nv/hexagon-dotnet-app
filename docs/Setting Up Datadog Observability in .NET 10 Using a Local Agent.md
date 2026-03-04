@@ -60,15 +60,8 @@ The agent becomes especially valuable in development environments where:
 
 For .NET developers familiar with other observability platforms:
 
-| Feature | Datadog Agent | Application Insights | Elastic APM |
-|---------|---------------|---------------------|------------|
-| **Local Agent** | ✅ Yes | ❌ No (direct to cloud) | ✅ Yes |
-| **Offline Development** | ✅ Yes | ❌ No | ✅ Yes (with local ES) |
-| **Multi-Cloud Support** | ✅ All clouds | ⚠️ Azure-optimized | ✅ All clouds |
-| **Cost Model** | Per GB ingested | Per GB + node count | Self-hosted or cloud |
-| **Trace Retention** | 15 days (configurable) | 90 days | Configurable |
-| **Learning Curve** | Medium | Low (if using Azure) | Medium-High |
-| **K8s Native** | ✅ DaemonSet pattern | ⚠️ Sidecar only | ✅ DaemonSet pattern |
+![Comparison with other solutions](./assets/comparison-with-other-solutions.png)
+
 
 ## Architecture Overview
 
@@ -858,12 +851,7 @@ Understanding Datadog costs helps you optimize your observability spend:
 
 **Monthly Cost Estimates (as of 2026):**
 
-| Metric | Small App (10K req/day) | Medium App (1M req/day) | Large App (10M req/day) |
-|--------|------------------------|-------------------------|------------------------|
-| **Traces** | ~5GB → $12/mo | ~50GB (10% sampled) → $120/mo | ~500GB (1% sampled) → $1,200/mo |
-| **Logs** | ~10GB → $10/mo | ~100GB (filtered) → $100/mo | ~1TB (aggressive filtering) → $1,000/mo |
-| **Metrics** | ~250 custom → $15/mo | ~1,000 custom → $60/mo | ~5,000 custom → $300/mo |
-| **Total** | **~$37/mo** | **~$280/mo** | **~$2,500/mo** |
+![Cost Estimation](./assets/cost-estimation.png)
 
 **Cost Optimization Strategies:**
 
@@ -992,15 +980,7 @@ services:
 
 ## When to Use Agent vs Direct Cloud
 
-| Scenario                  | Recommendation                        |
-| ------------------------- | ------------------------------------- |
-| **Local Development**     | ✅ Use Agent (offline capability)     |
-| **CI/CD Pipeline**        | ⚠️ Direct Cloud (simpler setup)       |
-| **Kubernetes Production** | ✅ Use Agent (DaemonSet pattern)      |
-| **Serverless (Lambda)**   | ❌ Direct Cloud (no persistent agent) |
-| **Docker Compose**        | ✅ Use Agent (sidecar pattern)        |
-| **High-Volume Services**  | ✅ Use Agent (buffering, sampling)    |
-| **Simple Single Service** | ⚠️ Either works                       |
+![When to Use Agent vs Direct Cloud](./assets/when-to-use-agent-vs-direct-cloud.png)
 
 ## Monitoring Agent Health
 
