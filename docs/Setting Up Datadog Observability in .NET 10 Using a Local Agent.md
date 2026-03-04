@@ -31,15 +31,11 @@ Before diving into implementation, let's understand why the agent-based approach
 
 **Direct to Cloud (One-Hop):**
 
-```
-Application → Datadog Cloud
-```
+![Direct to Cloud](./assets/direct-to-cloud.png)
 
 **Agent-Based (Two-Hop):**
 
-```
-Application → Local Agent → Datadog Cloud
-```
+![Agent-Based](./assets/agent-based.png)
 
 ### Benefits of the Agent-Based Approach
 
@@ -78,49 +74,7 @@ For .NET developers familiar with other observability platforms:
 
 Here's how all the pieces fit together:
 
-```
-┌─────────────────────────────────────────────────┐
-│                                         .NET Application                                         │
-│                                        (ASP.NET Core API)                                        │
-│                                                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │       Serilog Logs       │  │   OpenTelemetry Traces   │  │       .NET Metrics       │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  │
-└────────┼───────────────┼───────────────┼────────┘
-                  │                              │                              │
-                  │ JSON/File                    │ OTLP/HTTP                    │ StatsD
-                  │                              │ :4318                        │ :8125
-                  ▼                              ▼                              ▼
-┌─────────────────────────────────────────────────┐
-│                                          Datadog Agent                                           │
-│                                           (localhost)                                            │
-│                                                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │        Log Tailer        │  │      OTLP Receiver       │  │    DogStatsD Receiver    │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  │
-│                │                              │                              │                │
-│                └───────────────┼───────────────┘                │
-│                                                │                                                │
-│                          ┌──────────▼──────────┐                          │
-│                          │   Unified Forwarder                      │                          │
-│                          │   📦 Batching                            │                          │
-│                          │   🗜️ Compression                         │                          │
-│                          │   🔄 Retry Logic                         │                          │
-│                          └─────────┬───────────┘                          │
-└───────────────────────┼─────────────────────────┘
-                                                │
-                                                │ HTTPS (with API Key)
-                                                │
-                                                ▼
-                        ┌────────────────────────┐
-                        │                 Datadog Cloud.                 │
-                        │              (us5.datadoghq.com)               │
-                        │                                                │
-                        │  📊 Logs Explorer                              │
-                        │  📈 APM Traces                                 │
-                        │  📉 Metrics                                    │
-                        └────────────────────────┘
-```
+![Architecture Overview](./assets/2-hop-agent-based-dotnet-app.png)
 
 ## Prerequisites
 
@@ -308,11 +262,7 @@ Make it executable:
 chmod +x scripts/datadog-agent.sh
 ```
 
-**Important Note:** The script uses environment variables for configuration instead of mounting a `datadog.yaml` file. This is simpler and more flexible for development. If you need advanced agent configuration, you can create a custom `datadog.yaml` and mount it with:
-
-```bash
--v "${SCRIPT_DIR}/datadog-agent/datadog.yaml:/etc/datadog-agent/datadog.yaml:ro" \
-```
+**Important Note:** The script explicitly mounts your `datadog.yaml` configuration file and your application `logs` directory. It also relies on environment variables for overrides to ensure maximum flexibility during local development.
 
 ### Start the Agent
 
@@ -412,7 +362,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Formatting.Json;
+using Serilog.Formatting.Compact;
 
 // Load .env file
 Env.Load();
@@ -467,6 +417,8 @@ builder.Services.AddOpenTelemetry()
         {
             // Note: The OpenTelemetry SDK also reads OTEL_ vars automatically.
             // We set it explicitly here for clarity in the tutorial.
+            // In .NET 8+, you can also use the parameterless .UseOtlpExporter() 
+            // to rely entirely on standard environment variables.
             options.Endpoint = new Uri(
                 Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")
                 ?? "http://localhost:4318");
@@ -506,7 +458,7 @@ Update your `Program.cs` with enhanced Serilog configuration:
 
 ```csharp
 using Serilog;
-using Serilog.Formatting.Json;
+using Serilog.Formatting.Compact;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -516,9 +468,9 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.WithProperty("service", "hexagon-dotnet-app")
     .Enrich.WithProperty("env", Environment.GetEnvironmentVariable("DD_ENV") ?? "development")
     .Enrich.WithProperty("version", Environment.GetEnvironmentVariable("DD_VERSION") ?? "1.0.0")
-    .WriteTo.Console(new JsonFormatter())
+    .WriteTo.Console(new CompactJsonFormatter())
     .WriteTo.File(
-        new JsonFormatter(),
+        new CompactJsonFormatter(),
         path: "logs/app.log",
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
@@ -530,15 +482,13 @@ Log.Logger = new LoggerConfiguration()
 
 ### Enable Log Collection in Agent
 
-**Note:** The basic agent script uses environment variables for configuration. For log file tailing, you need to mount both the logs directory and a custom configuration.
-
 **Option 1: Simple Approach (Recommended for Development)**
 
 Just use console and file logging from your app. The agent will collect container logs automatically if you're running in Docker/Kubernetes.
 
 **Option 2: Advanced File Tailing**
 
-If you want the agent to tail log files directly:
+If you want the agent to tail log files directly (our quick start script already explicitly mounts your `logs` directory!):
 
 1. Create `scripts/datadog-agent/conf.d/app-logs.d/conf.yaml`:
 
@@ -552,11 +502,10 @@ logs:
       - env:development
 ```
 
-2. Update your agent startup script to mount the config:
+2. Update your agent startup script to mount the configuration directory:
 
 ```bash
-# Add these volume mounts to the docker run command:
--v "${PROJECT_ROOT}/src/App.Api/logs:/app/logs:ro" \
+# Add this volume mount to the docker run command (the logs directory is already mounted):
 -v "${SCRIPT_DIR}/datadog-agent/conf.d:/etc/datadog-agent/conf.d:ro" \
 ```
 
@@ -688,7 +637,7 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure DogStatsD client (do this early in startup)
+// Configure DogStatsD client via Dependency Injection
 var dogstatsdConfig = new DogStatsdConfig
 {
     StatsdServerName = "localhost",
@@ -696,33 +645,25 @@ var dogstatsdConfig = new DogStatsdConfig
     Prefix = "hexagon"
 };
 
-DogStatsd.Configure(dogstatsdConfig);
-// Note: In modern .NET apps, using builder.Services.AddDogStatsd(dogstatsdConfig) 
-// and injecting IDogStatsd is often preferred to make testing easier.
+builder.Services.AddDogStatsd(dogstatsdConfig);
 
 // ... rest of configuration
 
 var app = builder.Build();
 
-// Send metrics in endpoints
-app.MapGet("/metrics-test", () =>
+// Send metrics in endpoints injecting IDogStatsd
+app.MapGet("/metrics-test", (IDogStatsd statsd) =>
 {
-    using (DogStatsd.StartTimer("api.response_time"))
+    using (statsd.StartTimer("api.response_time"))
     {
-        DogStatsd.Increment("api.request", tags: new[] { "endpoint:metrics-test" });
-        DogStatsd.Gauge("api.active_connections", 42);
+        statsd.Increment("api.request", tags: new[] { "endpoint:metrics-test" });
+        statsd.Gauge("api.active_connections", 42);
         
         // Simulate work
         Thread.Sleep(100);
         
         return Results.Ok(new { message = "Metrics sent to agent!" });
     }
-});
-
-// Don't forget to dispose on shutdown
-app.Lifetime.ApplicationStopping.Register(() =>
-{
-    DogStatsd.Dispose();
 });
 ```
 
@@ -790,7 +731,7 @@ Before diving into troubleshooting, verify these basics:
 ```bash
 # In your app
 echo $OTEL_EXPORTER_OTLP_ENDPOINT
-# Should be: http://localhost:4318
+# Should be: http://localhost:4318 (or http://dd-agent:4318 if app is in Docker network)
 
 # Check agent is listening
 netstat -an | grep 4318
@@ -1068,6 +1009,8 @@ services:
 ```csharp
 using System.Net.Sockets;
 
+record EndpointStatus(string Endpoint, int Port, string Status, string? Error = null);
+
 app.MapGet("/agent-health", async () =>
 {
     var endpoints = new[] 
@@ -1077,32 +1020,29 @@ app.MapGet("/agent-health", async () =>
         ("APM", "localhost", 8126)
     };
     
-    var results = new List<object>();
+    var results = new List<EndpointStatus>();
     
     foreach (var (name, host, port) in endpoints)
     {
         try
         {
             using var tcpClient = new TcpClient();
-            var connectTask = tcpClient.ConnectAsync(host, port);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             
-            if (await Task.WhenAny(connectTask, Task.Delay(1000)) == connectTask)
-            {
-                await connectTask; // Throws if connection failed before the timeout
-                results.Add(new { endpoint = name, port, status = "reachable" });
-            }
-            else
-            {
-                results.Add(new { endpoint = name, port, status = "timeout" });
-            }
+            await tcpClient.ConnectAsync(host, port, cts.Token);
+            results.Add(new EndpointStatus(name, port, "reachable"));
+        }
+        catch (OperationCanceledException)
+        {
+            results.Add(new EndpointStatus(name, port, "timeout"));
         }
         catch (Exception ex)
         {
-            results.Add(new { endpoint = name, port, status = "unreachable", error = ex.Message });
+            results.Add(new EndpointStatus(name, port, "unreachable", ex.Message));
         }
     }
     
-    var allReachable = results.All(r => ((dynamic)r).status == "reachable");
+    var allReachable = results.All(r => r.Status == "reachable");
     
     return allReachable 
         ? Results.Ok(new { agent = "healthy", endpoints = results })

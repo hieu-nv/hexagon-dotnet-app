@@ -18,3 +18,4 @@ logs/
 !.github/instructions/speckit.*.md
 !.github/workflows/speckit.*.md
 coverage/
+.idea/
