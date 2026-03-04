@@ -1,5 +1,7 @@
 # GitHub Issues: Keycloak SSO Implementation
 
+Related PR: [#23 Keycloak SSO Implementation](https://github.com/hieu-nv/hexagon-dotnet-app/pull/23)
+
 This document maps all 71 tasks to GitHub issues for tracking implementation progress.
 
 **Create these issues in order by phase to maintain dependencies.**
@@ -79,13 +81,13 @@ Initialize OAuth2/OpenID Connect infrastructure, project structure, and NuGet de
 
 ### Tasks
 
-- [ ] T001 Add NuGet dependencies to `src/App.Api/App.Api.csproj`
+- [x] T001 Add NuGet dependencies to `src/App.Api/App.Api.csproj`
   - Microsoft.AspNetCore.Authentication.OpenIdConnect
   - System.IdentityModel.Tokens.Jwt
-- [ ] T002 Create authentication configuration in `src/App.Core/Authentication/`
-- [ ] T003 Create authorization configuration in `src/App.Core/Authorization/`
-- [ ] T004 Update `.github/copilot-instructions.md` with OAuth2 patterns
-- [ ] T005 Create Keycloak config directory at `scripts/keycloak/`
+- [x] T002 Create authentication configuration in `src/App.Core/Authentication/`
+- [x] T003 Create authorization configuration in `src/App.Core/Authorization/`
+- [x] T004 Update `.github/copilot-instructions.md` with OAuth2 patterns
+- [x] T005 Create Keycloak config directory at `scripts/keycloak/`
 
 ### Checkpoint
 
@@ -123,45 +125,45 @@ Establish port interfaces and foundational value objects.
 
 ### Port Interfaces
 
-- [ ] T006 [P] IClaimsExtractor in `src/App.Core/Authentication/Ports/`
+- [x] T006 [P] IClaimsExtractor in `src/App.Core/Authentication/Ports/`
   - ExtractFromPrincipal(ClaimsPrincipal): AuthenticatedUser?
   - IsValidPrincipal(ClaimsPrincipal): bool
 
-- [ ] T007 [P] IAuthorizationPolicyProvider in `src/App.Core/Authorization/Ports/`
+- [x] T007 [P] IAuthorizationPolicyProvider in `src/App.Core/Authorization/Ports/`
   - GetPolicy(string): AuthenticationPolicy?
   - AuthorizeUser(AuthenticatedUser, string): bool
   - AuthorizeByRoles(AuthenticatedUser, IReadOnlyList<string>): bool
 
 ### Value Objects
 
-- [ ] T008 [P] AuthenticatedUser in `src/App.Core/Authentication/`
+- [x] T008 [P] AuthenticatedUser in `src/App.Core/Authentication/`
   - Properties: Id, Email, Name, Roles, CustomClaims
 
-- [ ] T009 [P] AuthenticationPolicy in `src/App.Core/Authorization/`
+- [x] T009 [P] AuthenticationPolicy in `src/App.Core/Authorization/`
   - Properties: Name, Description, RequiredRoles
 
-- [ ] T010 [P] OpenIdConnectConfiguration in `src/App.Core/Authentication/`
+- [x] T010 [P] OpenIdConnectConfiguration in `src/App.Core/Authentication/`
   - Properties: Enabled, Authority, ClientId, ClientSecret, Scopes, RequiredClaims
 
 ### Domain Services
 
-- [ ] T011 AuthService in `src/App.Core/Authentication/`
+- [x] T011 AuthService in `src/App.Core/Authentication/`
   - Depends on IClaimsExtractor
   - Methods: GetAuthenticatedUser, IsAuthenticated
   - XML documentation required
 
-- [ ] T012 AuthorizationService in `src/App.Core/Authorization/`
+- [x] T012 AuthorizationService in `src/App.Core/Authorization/`
   - Depends on IAuthorizationPolicyProvider
   - Methods: AuthorizeUser, AuthorizeByRoles
   - XML documentation required
 
 ### Extension Methods
 
-- [ ] T013 AuthenticationExtensions.cs in `src/App.Core/Authentication/`
+- [x] T013 AuthenticationExtensions.cs in `src/App.Core/Authentication/`
   - UseAppAuthentication (builder)
   - UseAppAuthentication (app)
 
-- [ ] T014 AuthorizationExtensions.cs in `src/App.Core/Authorization/`
+- [x] T014 AuthorizationExtensions.cs in `src/App.Core/Authorization/`
   - UseAppAuthorization (builder)
 
 ### Checkpoint
@@ -213,7 +215,7 @@ Administrator can run setup script and verify realm, client, users in Keycloak c
 
 #### Tests
 
-- [ ] T015 [P] KeycloakSetupTests.cs in `test/App.Core.Tests/Authentication/`
+- [x] T015 [P] KeycloakSetupTests.cs in `test/App.Core.Tests/Authentication/`
   - Keycloak health check returns 200
   - Setup script creates "hexagon" realm
   - OAuth2 client "hexagon-app" configured
@@ -221,34 +223,34 @@ Administrator can run setup script and verify realm, client, users in Keycloak c
 
 #### Implementation
 
-- [ ] T016 [P] realm-export.json in `scripts/keycloak/`
+- [x] T016 [P] realm-export.json in `scripts/keycloak/`
   - Realm name: "hexagon"
   - Event logs enabled
   - Password policy: 8 chars, uppercase, number
 
-- [ ] T017 [P] client-config.json in `scripts/keycloak/`
+- [x] T017 [P] client-config.json in `scripts/keycloak/`
   - Client ID: "hexagon-app"
   - Redirect URI: http://localhost:5112/signin-oidc
   - Authorization Code + PKCE
   - RS256 signing
 
-- [ ] T018 [P] users-roles.json in `scripts/keycloak/`
+- [x] T018 [P] users-roles.json in `scripts/keycloak/`
   - admin@example.com: [admin, user]
   - user@example.com: [user]
 
-- [ ] T019 keycloak-setup.sh in `scripts/`
+- [x] T019 keycloak-setup.sh in `scripts/`
   - Health check Keycloak running
   - Create realm/client/users via Admin API
   - <30 seconds completion (NFR-002)
   - Error handling & rollback
 
-- [ ] T020 podman-compose.yml in `scripts/keycloak/`
+- [x] T020 podman-compose.yml in `scripts/keycloak/`
   - Keycloak 22+ service
   - PostgreSQL 15+ backend
   - Volume persistence
   - Health check configured
 
-- [ ] T021 KEYCLOAK_SETUP.md in `docs/`
+- [x] T021 KEYCLOAK_SETUP.md in `docs/`
   - Prerequisites
   - Quick start: podman-compose + setup.sh
   - Configuration reference
@@ -308,19 +310,19 @@ Disabling makes all endpoints accessible.
 
 #### Tests
 
-- [ ] T022 [P] OpenIdConnectConfigurationTests.cs in `test/App.Core.Tests/Authentication/`
+- [x] T022 [P] OpenIdConnectConfigurationTests.cs in `test/App.Core.Tests/Authentication/`
   - Configuration loads from appsettings.json
   - Validates required properties
   - Handles missing config gracefully
 
-- [ ] T023 [P] OpenIdConnectMiddlewareTests.cs in `test/App.Api.Tests/Authentication/`
+- [x] T023 [P] OpenIdConnectMiddlewareTests.cs in `test/App.Api.Tests/Authentication/`
   - OAuth2 disabled: endpoints accessible without auth
   - OAuth2 enabled: unauthenticated → Keycloak redirect
   - Valid JWT from Keycloak accepted
 
 #### Implementation
 
-- [ ] T024 [P] appsettings.json & appsettings.Development.json in `src/App.Api/`
+- [x] T024 [P] appsettings.json & appsettings.Development.json in `src/App.Api/`
   ```json
   {
     "OpenIdConnect": {
@@ -335,29 +337,29 @@ Disabling makes all endpoints accessible.
   ```
 ````
 
-- [ ] T025 OpenIdConnectConfiguration.cs in `src/App.Api/Configuration/`
+- [x] T025 OpenIdConnectConfiguration.cs in `src/App.Api/Configuration/`
   - Bind from IConfiguration
   - Validate required properties at startup
   - Strongly-typed access
 
-- [ ] T026 OpenIdConnectExtensions.cs in `src/App.Api/Authentication/`
+- [x] T026 OpenIdConnectExtensions.cs in `src/App.Api/Authentication/`
   - Register auth schemes: "oidc", cookie
   - Configure OIDC events
   - Handle validation failures
 
-- [ ] T027 Program.cs update in `src/App.Api/`
+- [x] T027 Program.cs update in `src/App.Api/`
   - AddAuthentication() with OIDC
   - UseAuthentication() + UseAuthorization()
   - Conditional enable based on config
   - Call UseAppAuthentication()
 
-- [ ] T028 AuthStatusEndpoints.cs in `src/App.Api/Authentication/`
+- [x] T028 AuthStatusEndpoints.cs in `src/App.Api/Authentication/`
   - GET /auth/status
   - 200 if authenticated (with user info)
   - 401 if not authenticated
   - Include email & roles for debugging
 
-- [ ] T029 Logging in `src/App.Api/Logging/`
+- [x] T029 Logging in `src/App.Api/Logging/`
   - Log OIDC events (started, token, failed)
   - Correlate with trace IDs
   - No sensitive data
@@ -414,7 +416,7 @@ from mocked ClaimsPrincipal with various claim combinations. No Keycloak require
 ### Tasks
 
 #### Tests
-- [ ] T030 [P] ClaimsExtractorTests.cs in `test/App.Core.Tests/Authentication/`
+- [x] T030 [P] ClaimsExtractorTests.cs in `test/App.Core.Tests/Authentication/`
   - Extract user with all claims
   - Extract with required only
   - Multiple roles extraction
@@ -422,14 +424,14 @@ from mocked ClaimsPrincipal with various claim combinations. No Keycloak require
   - Fail: missing required claims
   - Fail: malformed claims
 
-- [ ] T031 [P] AuthServiceTests.cs in `test/App.Core.Tests/Authentication/`
+- [x] T031 [P] AuthServiceTests.cs in `test/App.Core.Tests/Authentication/`
   - GetAuthenticatedUser() returns user (valid principal)
   - GetAuthenticatedUser() returns null (invalid)
   - IsAuthenticated() true/false
   - Custom claims preserved
 
 #### Implementation
-- [ ] T032 [P] KeycloakClaimsExtractor.cs in `src/App.Data/Authentication/`
+- [x] T032 [P] KeycloakClaimsExtractor.cs in `src/App.Data/Authentication/`
   - Implement IClaimsExtractor
   - Extract: subject, email, name, roles
   - Map Keycloak role claim path
@@ -437,30 +439,30 @@ from mocked ClaimsPrincipal with various claim combinations. No Keycloak require
   - Validate required claims (sub, email)
   - Handle missing/null gracefully
 
-- [ ] T033 OpenIdConnectClaims.cs in `src/App.Core/Authentication/`
+- [x] T033 OpenIdConnectClaims.cs in `src/App.Core/Authentication/`
   - Claim type constants
   - Keycloak-specific paths
   - Custom claim prefixes
   - Role separator handling
 
-- [ ] T034 AuthServiceExtensions.cs in `src/App.Core/Authentication/`
+- [x] T034 AuthServiceExtensions.cs in `src/App.Core/Authentication/`
   - Extension: GetAuthenticatedUser(IServiceProvider, ClaimsPrincipal)
   - Resolve AuthService from DI
   - Convenience for endpoint handlers
 
-- [ ] T035 OpenIdConnectTokenHandler.cs in `src/App.Data/`
+- [x] T035 OpenIdConnectTokenHandler.cs in `src/App.Data/`
   - Validate JWT structure
   - Parse for debugging
   - Log validation results
   - Handle parsing exceptions
 
-- [ ] T036 AuthenticationEventHandler.cs in `src/App.Api/Authentication/`
+- [x] T036 AuthenticationEventHandler.cs in `src/App.Api/Authentication/`
   - Subscribe to OnTokenValidated
   - Extract AuthenticatedUser
   - Attach to Principal
   - Log extraction
 
-- [ ] T037 AuthInfoEndpoints.cs in `src/App.Api/Authentication/`
+- [x] T037 AuthInfoEndpoints.cs in `src/App.Api/Authentication/`
   - GET /auth/me returns user info
   - 401 if not authenticated
   - Include email, name, roles, custom claims
@@ -517,13 +519,13 @@ Use mock AuthenticatedUser objects.
 
 #### Tests
 
-- [ ] T038 [P] AuthorizationPolicyTests.cs in `test/App.Core.Tests/Authorization/`
+- [x] T038 [P] AuthorizationPolicyTests.cs in `test/App.Core.Tests/Authorization/`
   - Single role policy
   - Multiple roles (OR logic)
   - Authorization succeeds/fails
   - Edge cases (empty, null)
 
-- [ ] T039 [P] AuthorizationServiceTests.cs in `test/App.Core.Tests/Authorization/`
+- [x] T039 [P] AuthorizationServiceTests.cs in `test/App.Core.Tests/Authorization/`
   - AuthorizeUser() returns true/false
   - AuthorizeByRoles() with OR logic
   - Multiple user roles
@@ -531,32 +533,32 @@ Use mock AuthenticatedUser objects.
 
 #### Implementation
 
-- [ ] T040 [P] AuthorizationPoliciesRegistry.cs in `src/App.Core/Authorization/`
+- [x] T040 [P] AuthorizationPoliciesRegistry.cs in `src/App.Core/Authorization/`
   - "AdminOnly": admin role
   - "UserAccess": user OR admin
   - "TodoAccess": user OR admin
   - Easy extension
   - Include descriptions
 
-- [ ] T041 DefaultAuthorizationPolicyProvider.cs in `src/App.Data/Authorization/`
+- [x] T041 DefaultAuthorizationPolicyProvider.cs in `src/App.Data/Authorization/`
   - Implement IAuthorizationPolicyProvider
   - Return policies from registry
   - Support dynamic policies (future)
   - Handle unknown policies
 
-- [ ] T042 AuthorizationService updates in `src/App.Core/Authorization/`
+- [x] T042 AuthorizationService updates in `src/App.Core/Authorization/`
   - AuthorizeUser(user, policy): bool
   - AuthorizeByRoles(user, roles): bool with OR
   - Clear logging
   - Thread-safe
 
-- [ ] T043 AuthorizationHelpers.cs in `src/App.Core/Authorization/`
+- [x] T043 AuthorizationHelpers.cs in `src/App.Core/Authorization/`
   - HasRole()
   - HasAnyRole() (OR)
   - HasAllRoles() (AND)
   - Case-insensitive matching
 
-- [ ] T044 AUTHORIZATION_POLICIES.md in `docs/`
+- [x] T044 AUTHORIZATION_POLICIES.md in `docs/`
   - Explain policy system
   - List built-in policies
   - Custom policy creation
@@ -612,51 +614,51 @@ Endpoints with [Authorize] attributes return 401 (unauthenticated) and 403 (unau
 
 #### Tests
 
-- [ ] T045 [P] AuthorizedEndpointsTests.cs in `test/App.Api.Tests/Authentication/`
+- [x] T045 [P] AuthorizedEndpointsTests.cs in `test/App.Api.Tests/Authentication/`
   - Unprotected accessible without auth
   - [Authorize] → 401 unauthenticated
   - [Authorize("AdminOnly")] → 403 non-admin
   - [Authorize("AdminOnly")] → 200 admin
   - [Authorize("TodoAccess")] accessible to user/admin
 
-- [ ] T046 [P] AuthenticationContractTests.cs in `test/App.Api.Tests/Authentication/`
+- [x] T046 [P] AuthenticationContractTests.cs in `test/App.Api.Tests/Authentication/`
   - Swagger documents [Authorize] requirements
   - 401/403 responses defined
   - Security scheme configured
 
 #### Implementation
 
-- [ ] T047 [P] AuthorizationMiddleware.cs in `src/App.Api/Authentication/`
+- [x] T047 [P] AuthorizationMiddleware.cs in `src/App.Api/Authentication/`
   - Check endpoint auth requirements
   - 401 for missing/invalid token
   - 403 for insufficient permissions
   - Works with [Authorize]
 
-- [ ] T048 TodoEndpoints.cs updates in `src/App.Api/Todo/`
+- [x] T048 TodoEndpoints.cs updates in `src/App.Api/Todo/`
   - POST /todos: [Authorize("TodoAccess")]
   - DELETE /todos/{id}: [Authorize]
   - PUT /todos/{id}: [Authorize("TodoAccess")]
   - GET /todos: public or auth-only
   - XML documented
 
-- [ ] T049 AdminEndpoints.cs in `src/App.Api/Admin/`
+- [x] T049 AdminEndpoints.cs in `src/App.Api/Admin/`
   - GET /admin/stats: [Authorize("AdminOnly")]
   - Return statistics
   - Demonstrates admin-only pattern
 
-- [ ] T050 Program.cs Swagger config update in `src/App.Api/`
+- [x] T050 Program.cs Swagger config update in `src/App.Api/`
   - Register OpenID Connect security scheme
   - Mark [Authorize] endpoints
   - 401/403 in spec
   - Swagger "Authorize" button
 
-- [ ] T051 EndpointAuthorizationExtensions.cs in `src/App.Api/Authentication/`
+- [x] T051 EndpointAuthorizationExtensions.cs in `src/App.Api/Authentication/`
   - RequireAuthorization(RouteHandlerBuilder, policy)
   - Fluent API alternative to [Authorize]
   - Works with minimal APIs
   - No handler signature changes
 
-- [ ] T052 AuthorizationLogging.cs in `src/App.Api/Authentication/`
+- [x] T052 AuthorizationLogging.cs in `src/App.Api/Authentication/`
   - Log user email + endpoint
   - Log allow/deny reason
   - Correlation IDs
@@ -712,7 +714,7 @@ Browser confirms session cleared.
 
 #### Tests
 
-- [ ] T053 [P] LogoutTests.cs in `test/App.Api.Tests/Authentication/`
+- [x] T053 [P] LogoutTests.cs in `test/App.Api.Tests/Authentication/`
   - Unauthenticated logout: error/redirect
   - Authenticated logout: clears session
   - After logout: protected → Keycloak
@@ -721,30 +723,30 @@ Browser confirms session cleared.
 
 #### Implementation
 
-- [ ] T054 [P] AuthLogoutEndpoints.cs in `src/App.Api/Authentication/`
+- [x] T054 [P] AuthLogoutEndpoints.cs in `src/App.Api/Authentication/`
   - POST/GET /auth/logout
   - Clear authentication cookie
   - Clear session state
   - Build Keycloak logout redirect
   - Return 200 redirect or 302
 
-- [ ] T055 LogoutService.cs in `src/App.Core/Authentication/`
+- [x] T055 LogoutService.cs in `src/App.Core/Authentication/`
   - BuildLogoutRedirectUri()
   - Encode redirect parameters
   - Keycloak endpoint: /protocol/openid-connect/logout
 
-- [ ] T056 LogoutExtensions.cs in `src/App.Core/Authentication/`
+- [x] T056 LogoutExtensions.cs in `src/App.Core/Authentication/`
   - LogoutAsync(HttpContext, LogoutService)
   - SignOutAsync
   - Clear cookies/session
   - For endpoint handlers
 
-- [ ] T057 logout-success.html in `src/App.Api/Static/` (or Razor page)
+- [x] T057 logout-success.html in `src/App.Api/Static/` (or Razor page)
   - Post-logout confirmation
   - Friendly message
   - Link to login
 
-- [ ] T058 KEYCLOAK_SETUP.md update in `docs/`
+- [x] T058 KEYCLOAK_SETUP.md update in `docs/`
   - Logout behavior docs
   - Endpoint usage
   - Redirect URI config
@@ -792,7 +794,7 @@ Browser confirms session cleared.
 
 ### Documentation Tasks
 
-- [ ] T059 OAUTH2_ARCHITECTURE.md in `docs/`
+- [x] T059 OAUTH2_ARCHITECTURE.md in `docs/`
   - Architecture diagram (ASCII/Mermaid)
   - Component interactions
   - Authentication data flow
@@ -800,14 +802,14 @@ Browser confirms session cleared.
   - Claims extraction pipeline
   - Authorization decision flow
 
-- [ ] T060 OAUTH2_TROUBLESHOOTING.md in `docs/`
+- [x] T060 OAUTH2_TROUBLESHOOTING.md in `docs/`
   - Common errors & solutions
   - Token validation failures
   - Keycloak connectivity
   - Configuration mistakes
   - Debugging tips
 
-- [ ] T063 OAUTH2_SECURITY.md in `docs/`
+- [x] T063 OAUTH2_SECURITY.md in `docs/`
   - HTTPS enforcement
   - Client secret management
   - PKCE for mobile/SPA
@@ -815,42 +817,42 @@ Browser confirms session cleared.
   - CORS for Keycloak
   - Rate limiting
 
-- [ ] T064 OAUTH2_CONFIG_REFERENCE.md in `docs/`
+- [x] T064 OAUTH2_CONFIG_REFERENCE.md in `docs/`
   - All config options
   - Environment variables
   - Prod vs. dev defaults
   - Keycloak realm config
 
-- [ ] T065 OAUTH2_EXAMPLES.md in `docs/`
+- [x] T065 OAUTH2_EXAMPLES.md in `docs/`
   - Use authenticated user
   - Authorization policies
   - Extract custom claims
   - Advanced scenarios
 
-- [ ] T070 README.md update in root
+- [x] T070 README.md update in root
   - Add "Authentication" section
   - Keycloak quick start
   - Links to docs
   - Feature status badge
 
-- [ ] T071 GitHub issue templates in `.github/ISSUE_TEMPLATE/`
+- [x] T071 GitHub issue templates in `.github/ISSUE_TEMPLATE/`
   - Auth bug report
   - OAuth2 feature request
 
 ### Testing Tasks
 
-- [ ] T061 [P] OAuth2IntegrationTests.cs in `test/App.Api.Tests/Authentication/`
+- [x] T061 [P] OAuth2IntegrationTests.cs in `test/App.Api.Tests/Authentication/`
   - End-to-end with real Keycloak (Docker)
   - Token refresh (if implemented)
   - Session timeout
   - Token expiration
 
-- [ ] T062 [P] AuthenticationPerformanceTests.cs in `test/App.Core.Tests/Authentication/`
+- [x] T062 [P] AuthenticationPerformanceTests.cs in `test/App.Core.Tests/Authentication/`
   - Claims extraction: <10ms (NFR-001)
   - Auth policy: <5ms
   - 100 concurrent requests
 
-- [ ] T069 test-coverage.md in `specs/001-keycloak-sso/checklists/`
+- [x] T069 test-coverage.md in `specs/001-keycloak-sso/checklists/`
   - Auth tests: 15+
   - Authorization tests: 10+
   - Integration tests: 8+
@@ -860,7 +862,7 @@ Browser confirms session cleared.
 
 ### Edge Cases & Quality
 
-- [ ] T067 [P] Edge case handling in `src/App.Core/Authentication/` & `src/App.Api/Authentication/`
+- [x] T067 [P] Edge case handling in `src/App.Core/Authentication/` & `src/App.Api/Authentication/`
   - Keycloak unavailable
   - Token validation timeout
   - Malformed ID tokens
@@ -868,14 +870,14 @@ Browser confirms session cleared.
   - Role changes in Keycloak
   - OAuth2 disabled config
 
-- [ ] T066 Swagger/OpenAPI in `src/App.Api/Program.cs`
+- [x] T066 Swagger/OpenAPI in `src/App.Api/Program.cs`
   - OIDC security scheme
   - [Authorize] attributes
   - /auth/status documented
   - /auth/logout documented
   - Public vs. auth endpoints
 
-- [ ] T068 Code review against standards
+- [x] T068 Code review against standards
   - XML documentation (csharp-docs skill)
   - No nullable warnings
   - ConfigureAwait(false) (csharp-async skill)
@@ -884,12 +886,12 @@ Browser confirms session cleared.
 
 ### Summary & Validation
 
-- [ ] T059-T071 Complete implementations
-- [ ] All 71 tasks completed
-- [ ] 40+ unit tests passing
-- [ ] 80%+ auth coverage
-- [ ] Zero compilation errors
-- [ ] All documentation reviewed
+- [x] T059-T071 Complete implementations
+- [x] All 71 tasks completed
+- [x] 40+ unit tests passing
+- [x] 80%+ auth coverage
+- [x] Zero compilation errors
+- [x] All documentation reviewed
 
 ### Success Criteria
 
