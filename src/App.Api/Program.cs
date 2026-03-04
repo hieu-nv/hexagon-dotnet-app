@@ -65,6 +65,7 @@ builder
 
 builder.UseTodo();
 builder.UsePokemon();
+builder.UseAppAuth();
 
 // Configure Authentication
 var jwtEnabled = builder.Configuration.GetValue<bool>("JwtBearer:Enabled");
@@ -78,30 +79,7 @@ if (jwtEnabled)
             options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>("JwtBearer:RequireHttpsMetadata");
         });
 
-    builder.Services.AddAuthorization(options =>
-    {
-        options.AddPolicy(AuthorizationPolicies.AdminOnly, policy => policy.RequireAssertion(context =>
-        {
-            if (context.Resource is HttpContext httpContext)
-            {
-                var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
-                var user = claimsExtractor.ExtractFromPrincipal(context.User);
-                return user != null && AuthService.AuthorizeByRoles(user, App.Api.ProgramConstants.AdminRoles);
-            }
-            return false;
-        }));
-
-        options.AddPolicy(AuthorizationPolicies.UserAccess, policy => policy.RequireAssertion(context =>
-        {
-            if (context.Resource is HttpContext httpContext)
-            {
-                var claimsExtractor = httpContext.RequestServices.GetRequiredService<IClaimsExtractor>();
-                var user = claimsExtractor.ExtractFromPrincipal(context.User);
-                return user != null && AuthService.AuthorizeByRoles(user, App.Api.ProgramConstants.UserAdminRoles);
-            }
-            return false;
-        }));
-    });
+    builder.Services.AddAuthorization(options => options.AddAppPolicies());
 
     // Register domain services
     builder.Services.AddScoped<IClaimsExtractor, KeycloakClaimsExtractor>();
@@ -206,6 +184,7 @@ var apiVersionSet = app.NewApiVersionSet()
 
 app.UseTodo(apiVersionSet);
 app.UsePokemon(apiVersionSet);
+app.UseAppAuth(apiVersionSet);
 
 try
 {
