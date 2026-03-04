@@ -39,15 +39,7 @@ Before diving into implementation, let's understand why the agent-based approach
 
 ### Benefits of the Agent-Based Approach
 
-| Feature                 | Direct to Cloud            | With Local Agent            |
-| ----------------------- | -------------------------- | --------------------------- |
-| **Offline Development** | ❌ Requires internet       | ✅ Works offline            |
-| **Network Reliability** | ❌ Drops data on failures  | ✅ Buffers and retries      |
-| **Local Debugging**     | ❌ No local visibility     | ✅ View metrics/status via CLI (Note: Full trace UI needs Datadog Cloud) |
-| **Performance**         | ⚠️ Blocks on network calls | ✅ Async with buffering     |
-| **Multiple Protocols**  | ❌ Limited                 | ✅ OTLP, StatsD, native APM |
-| **Data Processing**     | ❌ None                    | ✅ Agent-side filtering     |
-| **Cost Control**        | ⚠️ Send everything         | ✅ Filter before sending    |
+![Benefits of the Agent-Based Approach](./assets/benifits-of-the-agent-based-approach.png)
 
 The agent becomes especially valuable in development environments where:
 
