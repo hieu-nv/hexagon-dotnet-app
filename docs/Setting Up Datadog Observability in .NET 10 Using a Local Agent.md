@@ -1,6 +1,6 @@
 # Setting Up Datadog Observability in .NET 10 Using a Local Agent
 
-![Datadog Agent Architecture](https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&h=400&fit=crop)
+![Datadog Agent Architecture](./assets/datadog-local-agent-setup-guide.png)
 
 When building production-ready applications, having a robust observability stack isn't optional—it's essential. But setting up logging, tracing, and metrics can feel overwhelming, especially when juggling multiple services and environments.
 
