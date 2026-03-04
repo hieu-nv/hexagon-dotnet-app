@@ -1,0 +1,44 @@
+{
+    "clientId": "hexagon-app",
+    "name": "Hexagon Application",
+    "description": "OAuth2/OpenID Connect client for the Hexagon .NET application",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "clientAuthenticatorType": "client-secret",
+    "publicClient": false,
+    "standardFlowEnabled": true,
+    "implicitFlowEnabled": false,
+    "directAccessGrantsEnabled": false,
+    "serviceAccountsEnabled": false,
+    "authorizationServicesEnabled": false,
+    "alwaysDisplayInConsole": false,
+    "redirectUris": [
+        "http://localhost:5112/signin-oidc",
+        "https://localhost:7153/signin-oidc",
+        "http://localhost:5112/*",
+        "https://localhost:7153/*"
+    ],
+    "webOrigins": [
+        "http://localhost:5112",
+        "https://localhost:7153"
+    ],
+    "frontchannelLogout": true,
+    "attributes": {
+        "token.endpoint.auth.signing.alg": "RS256",
+        "post.logout.redirect.uris": "http://localhost:5112/##https://localhost:7153/",
+        "pkce.code.challenge.method": "S256"
+    },
+    "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+    ],
+    "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+    ]
+}

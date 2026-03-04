@@ -1,3 +1,4 @@
+using App.Api.Auth;
 using App.Api.Filters;
 using App.Api.Todo;
 using App.Core.Entities;
@@ -68,7 +69,9 @@ internal static class TodoEndpointsExtensions
             .WithSummary("Create a new to-do item")
             .Produces<TodoResponse>(201)
             .Produces(400)
-            .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>();
+            .Produces(401)
+            .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
+            .RequireAuthorization(AuthorizationPolicies.TodoAccess);
 
         // PUT endpoint
         group
@@ -82,7 +85,9 @@ internal static class TodoEndpointsExtensions
             .Produces<TodoResponse>(200)
             .Produces(404)
             .Produces(400)
-            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>();
+            .Produces(401)
+            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
+            .RequireAuthorization(AuthorizationPolicies.TodoAccess);
 
         // DELETE endpoint
         group
@@ -91,7 +96,9 @@ internal static class TodoEndpointsExtensions
             .WithSummary("Delete a to-do item")
             .Produces(204)
             .Produces(404)
-            .Produces(400);
+            .Produces(400)
+            .Produces(401)
+            .RequireAuthorization();
 
         return endpointRouteBuilder;
     }

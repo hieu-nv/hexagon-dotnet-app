@@ -15,4 +15,5 @@ internal static class AuthorizationPolicies
 {
     public const string AdminOnly = "AdminOnly";
     public const string UserAccess = "UserAccess";
+    public const string TodoAccess = "TodoAccess";
 }
