@@ -14,8 +14,7 @@ namespace App.Gateway.Client;
 /// HTTP client for interacting with the PokeAPI.
 /// </summary>
 /// <param name="httpClient">The HTTP client instance.</param>
-/// <param name="logger">The logger instance.</param>
-public partial class PokeClient(HttpClient httpClient, ILogger<PokeClient> logger) : IPokeClient
+public partial class PokeClient(HttpClient httpClient) : IPokeClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -93,9 +92,6 @@ public partial class PokeClient(HttpClient httpClient, ILogger<PokeClient> logge
 
     private readonly HttpClient _httpClient =
         httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-
-    private readonly ILogger<PokeClient> _logger =
-        logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
     /// Performs an HTTP GET request to the specified URL.

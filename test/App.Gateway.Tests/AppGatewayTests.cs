@@ -44,14 +44,6 @@ public class PokeClientConstructorTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new PokeClient(null!, Microsoft.Extensions.Logging.Abstractions.NullLogger<PokeClient>.Instance));
-    }
-
-    [Fact]
-    public void PokeClient_WithNullLogger_ShouldThrow()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
-            new PokeClient(new HttpClient(), null!));
+            new PokeClient(null!));
     }
 }

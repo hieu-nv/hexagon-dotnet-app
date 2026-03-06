@@ -15,7 +15,7 @@ public class PokeClientTests
     private static PokeClient CreateClient(HttpMessageHandler handler)
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://pokeapi.co/api/v2/"), };
-        return new PokeClient(httpClient, NullLogger<PokeClient>.Instance);
+        return new PokeClient(httpClient);
     }
 
     #region GetAsync Success
