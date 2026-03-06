@@ -1,14 +1,10 @@
 using System.Threading.RateLimiting;
-
 using App.Api.Auth;
 using App.Api.Logging;
 using App.Api.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 using FluentValidation;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
-
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
@@ -71,12 +67,15 @@ builder.UseAppAuth();
 var jwtEnabled = builder.Configuration.GetValue<bool>("JwtBearer:Enabled");
 if (jwtEnabled)
 {
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    builder
+        .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
             options.Authority = builder.Configuration["JwtBearer:Authority"];
             options.Audience = builder.Configuration["JwtBearer:Audience"];
-            options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>("JwtBearer:RequireHttpsMetadata");
+            options.RequireHttpsMetadata = builder.Configuration.GetValue<bool>(
+                "JwtBearer:RequireHttpsMetadata"
+            );
         });
 
     builder.Services.AddAuthorization(options => options.AddAppPolicies());
@@ -120,26 +119,20 @@ builder.Services.AddCors(options =>
         {
             if (allowedOrigins is { Length: > 0 })
             {
-                policy
-                    .WithOrigins(allowedOrigins)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
             }
             else if (builder.Environment.IsProduction())
             {
                 // Fail fast in Production to prevent accidentally open CORS
                 throw new InvalidOperationException(
-                    "Cors:AllowedOrigins must be configured in Production environments. " +
-                    "Set at least one allowed origin in appsettings or environment variables."
+                    "Cors:AllowedOrigins must be configured in Production environments. "
+                        + "Set at least one allowed origin in appsettings or environment variables."
                 );
             }
             else
             {
                 // Fallback for Development and Testing environments when no origins are configured
-                policy
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
             }
         }
     );

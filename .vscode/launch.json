@@ -5,15 +5,13 @@
       "name": "C#: App.Api (with .env)",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/App.Api/App.Api.csproj",
-      "envFile": "${workspaceFolder}/.env"
+      "projectPath": "${workspaceFolder}/src/App.Api/App.Api.csproj"
     },
     {
       "name": "C#: App.AppHost (with .env)",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/App.AppHost/App.AppHost.csproj",
-      "envFile": "${workspaceFolder}/.env"
+      "projectPath": "${workspaceFolder}/src/App.AppHost/App.AppHost.csproj"
     }
   ]
 }

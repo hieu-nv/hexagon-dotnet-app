@@ -37,12 +37,14 @@ internal static class TodoEndpointsExtensions
             .MapGet("/", (TodoEndpoints handler) => handler.FindAllTodosAsync())
             .WithName("GetAllTodos")
             .WithSummary("Get all to-do items")
+            .AllowAnonymous()
             .Produces<IEnumerable<TodoResponse>>(200);
 
         group
             .MapGet("/{id:int}", (TodoEndpoints handler, int id) => handler.FindTodoByIdAsync(id))
             .WithName("GetTodoById")
             .WithSummary("Get a to-do item by ID")
+            .AllowAnonymous()
             .Produces<TodoResponse>(200)
             .Produces(404);
 
@@ -50,12 +52,14 @@ internal static class TodoEndpointsExtensions
             .MapGet("/completed", (TodoEndpoints handler) => handler.FindCompletedTodosAsync())
             .WithName("GetCompletedTodos")
             .WithSummary("Get all completed to-do items")
+            .AllowAnonymous()
             .Produces<IEnumerable<TodoResponse>>(200);
 
         group
             .MapGet("/incomplete", (TodoEndpoints handler) => handler.FindIncompleteTodosAsync())
             .WithName("GetIncompleteTodos")
             .WithSummary("Get all incomplete to-do items")
+            .AllowAnonymous()
             .Produces<IEnumerable<TodoResponse>>(200);
 
         // POST endpoint
@@ -67,11 +71,12 @@ internal static class TodoEndpointsExtensions
             )
             .WithName("CreateTodo")
             .WithSummary("Create a new to-do item")
+            .AllowAnonymous()
+            // .RequireAuthorization(AuthorizationPolicies.TodoAccess)
+            .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
             .Produces<TodoResponse>(201)
             .Produces(400)
-            .Produces(401)
-            .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
-            .RequireAuthorization(AuthorizationPolicies.TodoAccess);
+            .Produces(401);
 
         // PUT endpoint
         group
@@ -82,23 +87,25 @@ internal static class TodoEndpointsExtensions
             )
             .WithName("UpdateTodo")
             .WithSummary("Update an existing to-do item")
+            // .RequireAuthorization(AuthorizationPolicies.TodoAccess)
+            .AllowAnonymous()
+            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
             .Produces<TodoResponse>(200)
             .Produces(404)
             .Produces(400)
-            .Produces(401)
-            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
-            .RequireAuthorization(AuthorizationPolicies.TodoAccess);
+            .Produces(401);
 
         // DELETE endpoint
         group
             .MapDelete("/{id:int}", (TodoEndpoints handler, int id) => handler.DeleteTodoAsync(id))
             .WithName("DeleteTodo")
             .WithSummary("Delete a to-do item")
+            // .RequireAuthorization()
+            .AllowAnonymous()
             .Produces(204)
             .Produces(404)
             .Produces(400)
-            .Produces(401)
-            .RequireAuthorization();
+            .Produces(401);
 
         return endpointRouteBuilder;
     }
