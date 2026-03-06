@@ -16,3 +16,5 @@ logs/
 coverage/
 .idea/
 .gemini/
+!.specify/memory/constitution.md
+.specify/
