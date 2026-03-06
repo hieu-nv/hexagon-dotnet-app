@@ -48,7 +48,7 @@ public class PokeClientTests
     #region GetAsync Error Scenarios
 
     [Fact]
-    public async Task GetAsync_With404Response_ShouldReturnNull()
+    public async Task GetAsync_With404Response_ShouldReturnFallback()
     {
         // Arrange
         var handler = new FakeHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.NotFound));
@@ -58,11 +58,13 @@ public class PokeClientTests
         var result = await client.GetAsync<TestPayload>(new Uri("pokemon/99999", UriKind.RelativeOrAbsolute));
 
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.Null(result.Name);
+        Assert.Equal(0, result.Id);
     }
 
     [Fact]
-    public async Task GetAsync_With500Response_ShouldReturnNull()
+    public async Task GetAsync_With500Response_ShouldReturnFallback()
     {
         // Arrange
         var handler = new FakeHttpMessageHandler(
@@ -74,19 +76,25 @@ public class PokeClientTests
         var result = await client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute));
 
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.Null(result.Name);
+        Assert.Equal(0, result.Id);
     }
 
     [Fact]
-    public async Task GetAsync_WithTimeout_ShouldPropagateException()
+    public async Task GetAsync_WithTimeout_ShouldReturnFallback()
     {
         // Arrange
         var handler = new FakeHttpMessageHandler(new TaskCanceledException("Request timed out"));
         var client = CreateClient(handler);
 
-        // Act & Assert — cancellation exceptions now propagate instead of being swallowed
-        await Assert.ThrowsAsync<TaskCanceledException>(() => client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute))
-        );
+        // Act 
+        var result = await client.GetAsync<TestPayload>(new Uri("pokemon/1", UriKind.RelativeOrAbsolute));
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Name);
+        Assert.Equal(0, result.Id);
     }
 
     [Fact]
