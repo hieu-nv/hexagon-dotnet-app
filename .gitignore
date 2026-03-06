@@ -17,4 +17,6 @@ coverage/
 .idea/
 .gemini/
 !.specify/memory/constitution.md
+!.specify/templates/
 .specify/
+
