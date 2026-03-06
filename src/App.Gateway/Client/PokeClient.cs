@@ -106,39 +106,18 @@ public partial class PokeClient(HttpClient httpClient, ILogger<PokeClient> logge
     public async Task<T?> GetAsync<T>(Uri url)
         where T : class
     {
-        try
-        {
-            var response = await ResiliencePipeline
-                .ExecuteAsync(async cancellationToken =>
-                {
-                    var req = await _httpClient
-                        .GetAsync(url, cancellationToken)
-                        .ConfigureAwait(false);
-                    req.EnsureSuccessStatusCode();
-                    return req;
-                })
-                .ConfigureAwait(false);
+        var response = await ResiliencePipeline
+            .ExecuteAsync(async cancellationToken =>
+            {
+                var req = await _httpClient
+                    .GetAsync(url, cancellationToken)
+                    .ConfigureAwait(false);
+                req.EnsureSuccessStatusCode();
+                return req;
+            })
+            .ConfigureAwait(false);
 
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return JsonSerializer.Deserialize<T>(content, JsonOptions);
-        }
-        catch (BrokenCircuitException ex)
-        {
-            _logger.LogError(ex, "Circuit breaker is open. Request to {Url} failed.", url);
-            return null;
-        }
-        catch (TimeoutRejectedException ex)
-        {
-            _logger.LogError(ex, "Request to {Url} timed out.", url);
-            return null;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpError(ex, url);
-            return null;
-        }
+        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        return JsonSerializer.Deserialize<T>(content, JsonOptions);
     }
-
-    [LoggerMessage(LogLevel.Error, "HTTP error fetching data from {Url}")]
-    private partial void LogHttpError(Exception ex, Uri url);
 }

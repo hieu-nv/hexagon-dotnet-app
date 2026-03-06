@@ -18,6 +18,7 @@ public class PokemonServiceTests
     {
         _gatewayMock = new Mock<IPokemonGateway>();
         _loggerMock = new Mock<ILogger<PokemonService>>();
+        _loggerMock.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
         _service = new PokemonService(_gatewayMock.Object, _loggerMock.Object);
     }
 

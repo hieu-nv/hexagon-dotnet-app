@@ -190,5 +190,32 @@ public class AuthorizedEndpointsTests : IClassFixture<AnonymousWebAppFactory>, I
         var response = await _anonymous.GetAsync("/api/v1/todos");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task TodoUpdate_Unauthenticated_Returns401()
+    {
+        var request = new App.Api.Todo.UpdateTodoRequest("Updated Todo", true, null);
+        var response = await _anonymous.PutAsJsonAsync("/api/v1/todos/1", request);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TodoUpdate_WithUserRole_Returns200_Or_404()
+    {
+        // Tests authorization flow passes; might return 404 since db might be empty
+        var request = new App.Api.Todo.UpdateTodoRequest("Updated Title", true, null);
+        var response = await _user.PutAsJsonAsync("/api/v1/todos/999", request);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TodoDelete_WithUserRole_Returns204_Or_404()
+    {
+        // Tests authorization flow passes
+        var response = await _user.DeleteAsync("/api/v1/todos/999");
+        Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
+    }
 }
 #pragma warning restore CA1515
