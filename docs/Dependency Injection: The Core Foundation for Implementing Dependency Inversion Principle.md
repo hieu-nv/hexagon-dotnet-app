@@ -8,6 +8,8 @@
 
 - **Part 3 — Dependency Injection: The Core Foundation for Implementing Dependency Inversion Principle** _(this post)_
 
+Not a Medium member? Keep reading for free by clicking [here](https://medium.com/@hieunv/dependency-injection-the-core-foundation-for-implementing-dependency-inversion-principle-8a2ef14cb82a?source=friends_link&sk=871b8238d962ac63569f66da223b29ae).
+
 ---
 
 ## Introduction
@@ -201,7 +203,48 @@ builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();             
 builder.Services.AddSingleton<IPaymentGateway, StripePaymentGateway>();           // Shared instance
 ```
 
-### 3. Dependency Graph Resolution
+### 3. The Captive Dependency Pitfall
+
+While DI gives you powerful tools to manage object lifetimes, it also introduces a dangerous pitfall known as a **Captive Dependency**. This occurs when a service with a longer lifetime "captures" and holds a reference to a service with a shorter lifetime.
+
+```csharp
+// ❌ Captive Dependency: Singleton service holding a Scoped dependency
+public class CacheUpdateService(IOrderRepository repository) // Repository is Scoped!
+{
+    // The Scoped repository is now captive inside the Singleton service.
+    // It will live for the lifetime of the application, effectively becoming a Singleton itself.
+    // If it contains a DbContext, this will cause severe thread-safety issues and data corruption.
+    private readonly IOrderRepository _repository = repository;
+}
+
+// Program.cs
+builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
+builder.Services.AddSingleton<CacheUpdateService>(); // ❌ Danger!
+```
+
+To fix this, a long-lived service should never depend directly on a shorter-lived service. Instead, if a `Singleton` needs a `Scoped` service, it should inject an `IServiceScopeFactory` to create the scope dynamically:
+
+```csharp
+// ✅ Correct approach using IServiceScopeFactory
+public class CacheUpdateService(IServiceScopeFactory scopeFactory)
+{
+    public async Task UpdateCacheAsync()
+    {
+        // Create a new scope explicitly
+        using var scope = scopeFactory.CreateScope();
+        
+        // Resolve the scoped service within this new boundary
+        var repository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+        
+        // Use the repository safely within the scope
+        // ...
+    } // Scope is disposed here, properly releasing the repository
+}
+```
+
+*Note: ASP.NET Core throws an `InvalidOperationException` by default in the Development environment if it detects a scoped service injected into a singleton.*
+
+### 4. Dependency Graph Resolution
 
 DI automatically resolves complex dependency graphs, ensuring proper DIP implementation throughout the system:
 
