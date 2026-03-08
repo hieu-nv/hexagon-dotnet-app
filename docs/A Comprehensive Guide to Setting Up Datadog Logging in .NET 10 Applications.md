@@ -1,7 +1,5 @@
 # A Comprehensive Guide to Setting Up Datadog Logging in .NET 10 Applications
 
-![Datadog + .NET](https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=400&fit=crop)
-
 Effective logging is the backbone of observability in modern applications. When your application runs in production, logs are often the first place you look when something goes wrong. But what if your logs could do more than just tell you *what* happened? What if they could show you the *entire journey* of a request through your system?
 
 In this comprehensive guide, I'll walk you through setting up **Datadog logging** in a .NET 10 application with full **trace correlation**—a powerful feature that allows you to see logs in the context of distributed traces, making debugging exponentially easier.
@@ -24,10 +22,10 @@ In this comprehensive guide, I'll walk you through setting up **Datadog logging*
 By the end of this guide, you'll have:
 
 - ✅ Structured JSON logging with Serilog
-- ✅ Multiple log destinations (console, file, Datadog cloud)
+- ✅ Multiple local log destinations (console, file)
 - ✅ Automatic log-trace correlation using OpenTelemetry
 - ✅ Local development setup with Datadog agent
-- ✅ Production-ready configuration patterns
+- ✅ OTLP exporter configuration for telemetry
 
 ## Why Datadog + Serilog + OpenTelemetry?
 
@@ -43,7 +41,7 @@ Before diving into implementation, let's understand why this stack is powerful:
 
 Here's how the pieces fit together:
 
-```
+```text
 ┌────────────────────────┐
 │   .NET Application                             │
 │   (ASP.NET Core)                               │
@@ -53,7 +51,7 @@ Here's how the pieces fit together:
                 │
                 ├─── File Sink ────────► logs/app.log (Local)
                 │
-                └─── Datadog Sink ─────► Datadog Cloud (Production)
+                └─── OTLP Exporter ────► Local Datadog Agent ──► Datadog Cloud (Logs, Traces, Metrics)
                                             │
                                             ▼
                          ┌──────────────────┐
@@ -64,13 +62,7 @@ Here's how the pieces fit together:
                          └──────────────────┘
 ```
 
-For local development, you can optionally run a **Datadog agent** that acts as a local proxy:
-
-```
-Application → Local Agent → Datadog Cloud
-```
-
-This provides buffering, retry logic, and offline development capability.
+> **Note:** In this setup, we rely on the OpenTelemetry (OTLP) exporter to send ALL telemetry (including logs) to a local Datadog Agent, which then forwards them to the Datadog Cloud. This keeps application configuration simple and cleanly separates the telemetry pipeline from application logic.
 
 ## Prerequisites
 
@@ -89,7 +81,6 @@ Add these packages to your ASP.NET Core project:
 
 ```bash
 dotnet add package Serilog.AspNetCore
-dotnet add package Serilog.Sinks.Datadog.Logs
 dotnet add package Serilog.Sinks.File
 dotnet add package Serilog.Enrichers.Span
 dotnet add package DotNetEnv
@@ -100,7 +91,6 @@ dotnet add package DotNetEnv
 **What each package does:**
 
 - `Serilog.AspNetCore`: Core Serilog integration for ASP.NET Core
-- `Serilog.Sinks.Datadog.Logs`: Direct HTTP logging to Datadog cloud
 - `Serilog.Sinks.File`: File-based logging with rolling files
 - `Serilog.Enrichers.Span`: Extracts OpenTelemetry trace context
 - `DotNetEnv`: Load environment variables from `.env` files
@@ -194,6 +184,8 @@ builder.Services.AddOpenTelemetry()
             options.RecordException = true;
             options.EnrichWithHttpRequest = (activity, request) =>
             {
+                // Note: If running behind a proxy (like Nginx), ensure UseForwardedHeaders 
+                // middleware is configured so RemoteIpAddress reflects the actual client setup.
                 activity.SetTag("http.client_ip", request.HttpContext.Connection.RemoteIpAddress);
             };
         })
@@ -227,7 +219,6 @@ using App.Api.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
-using Serilog.Sinks.Datadog.Logs;
 
 // Load environment variables from .env file
 DotNetEnv.Env.Load();
@@ -235,10 +226,9 @@ DotNetEnv.Env.Load();
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog with multiple sinks
-var loggerConfiguration = new LoggerConfiguration()
+Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.With(new OpenTelemetryTraceEnricher()) // 🔥 This enables trace correlation
     .Enrich.WithProperty("Application", "App.Api")
@@ -251,36 +241,14 @@ var loggerConfiguration = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 7,
         shared: true,
-        flushToDiskInterval: TimeSpan.FromSeconds(10) // Reduced frequency for performance
-    );
-
-// Only send logs to Datadog in non-development environments
-if (!builder.Environment.IsDevelopment())
-{
-    var ddApiKey = Environment.GetEnvironmentVariable("DD_API_KEY")
-        ?? throw new InvalidOperationException(
-            "DD_API_KEY environment variable is required for non-development environments"
-        );
-
-    loggerConfiguration.WriteTo.DatadogLogs(
-        apiKey: ddApiKey,
-        source: "csharp",
-        service: "hexagon-dotnet-app",
-        host: Environment.MachineName,
-        tags: new[] { 
-            $"env:{builder.Environment.EnvironmentName}", 
-            "version:1.0.0" 
-        },
-        configuration: new DatadogConfiguration { 
-            Url = Environment.GetEnvironmentVariable("DD_LOG_INTAKE_URL") 
-                ?? "https://http-intake.logs.datadoghq.com" 
-        }
-    );
-}
-
-Log.Logger = loggerConfiguration.CreateLogger();
+        flushToDiskInterval: TimeSpan.FromSeconds(1)
+    )
+    .CreateLogger();
 
 builder.Host.UseSerilog();
+
+// Add OpenTelemetry exporters (using Aspire defaults or custom methods)
+builder.AddServiceDefaults(); // Important: This configures OpenTelemetry exporters in our codebase
 
 // Rest of your application setup...
 WebApplication app = builder.Build();
@@ -296,6 +264,8 @@ app.UseSerilogRequestLogging(options =>
         diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
     };
 });
+
+// -> Add middleware like app.UseRouting(), app.UseAuthentication(), etc. here <-
 
 try
 {
@@ -314,11 +284,10 @@ finally
 
 **Key improvements in this configuration:**
 
-1. ✅ **Environment-aware**: Datadog sink only active in production
-2. ✅ **Null safety**: API key validation prevents runtime errors
-3. ✅ **Request logging**: Automatic HTTP logging with `UseSerilogRequestLogging`
-4. ✅ **Performance**: 10-second file flush interval (not 1 second)
-5. ✅ **Enrichment**: HTTP context automatically added to logs
+1. ✅ **OTLP Integration**: Telemetry is cleanly passed to the OpenTelemetry pipeline via `AddServiceDefaults()`
+2. ✅ **Request logging**: Automatic HTTP request logging with `app.UseSerilogRequestLogging()`
+3. ✅ **File Logging**: 1-second file flush interval and log rotation ensures durability
+4. ✅ **Enrichment**: HTTP context and custom fields are automatically added to all logs
 
 ## Step 5: Configure Environment Variables
 
@@ -375,12 +344,12 @@ These fields enable Datadog to link logs with traces automatically.
 
 ## Step 7: Setting Up Local Datadog Agent (Optional)
 
-For local development, running a Datadog agent provides several benefits:
+For local development, running a Datadog agent provides APM tracing, metrics, and generalized log forwarding via OTLP. Since our app relies entirely on the OTLP exporter, this step is highly recommended if you wish to see telemetry locally.
 
-- 📦 **Buffering:** Logs are queued locally, reducing network calls
+- 📦 **Buffering:** Telemetry is queued locally before forwarding
 - 🔄 **Retry logic:** Automatic retries if Datadog cloud is unreachable
-- 🚀 **Performance:** Offloads HTTP requests from your app
-- 💻 **Offline dev:** Continue logging even without internet
+- 🚀 **Performance:** Offloads heavy telemetry data processing from your app
+- 💻 **Offline dev:** Continue generating telemetry even without internet
 
 Create a script `scripts/datadog-agent.sh`:
 
@@ -625,7 +594,7 @@ Datadog charges by log volume. Understanding costs helps you optimize:
 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
 .MinimumLevel.Override("System", LogEventLevel.Warning)
 
-// 3. Only log to Datadog in production (as shown in Step 4)
+// 3. Only enable OTLP exporter in environments where it is needed
 ```
 
 **In Datadog UI:**
@@ -660,7 +629,7 @@ Should return: `{"status":"ok"}`
 This is covered in Step 3, but verify:
 
 1. OpenTelemetry packages are installed
-2. `AddOpenTelemetry()` is called in `Program.cs`
+2. `builder.AddServiceDefaults()` (or equivalent OpenTelemetry setup) is called in `Program.cs`
 3. The enricher is registered: `.Enrich.With(new OpenTelemetryTraceEnricher())`
 4. At least one HTTP request has been made (traces are request-scoped)
 
@@ -702,7 +671,7 @@ This immediately reveals the root cause: connection pool exhaustion during a slo
 ✅ **DO:**
 - Use structured logging with Serilog
 - Enable log-trace correlation with OpenTelemetry
-- Set up multiple sinks (console for dev, Datadog for prod)
+- Use `AddServiceDefaults()` to cleanly manage OTLP telemetry exporters 
 - Add meaningful context properties
 - Use appropriate log levels
 - Flush logs on application shutdown
