@@ -2,6 +2,10 @@
 
 ![Datadog Agent Architecture](./assets/datadog-local-agent-setup-guide.png)
 
+Not a Medium member? Keep reading for free by clicking [here](https://medium.com/@hieunv/setting-up-datadog-observability-in-net-10-using-a-local-agent-9017fa4f0a98?source=friends_link&sk=ed75676d0fc1cfd2a750f6d126c64343).
+
+---
+
 When building production-ready applications, having a robust observability stack isn't optional—it's essential. But setting up logging, tracing, and metrics can feel overwhelming, especially when juggling multiple services and environments.
 
 What if I told you there's a better way? Instead of sending telemetry directly from your application to the cloud, you can use a **local Datadog agent** that acts as a smart proxy, buffering data, handling retries, and giving you local visibility before anything hits production.

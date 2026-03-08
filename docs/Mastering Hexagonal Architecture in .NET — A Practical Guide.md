@@ -10,6 +10,8 @@
 
 Not a Medium member? Keep reading for free by clicking [here](https://medium.com/@hieunv/mastering-hexagonal-architecture-in-net-a-practical-guide-6651752e6baa?source=friends_link&sk=91dc7ef74051997e2bbc7080f4aa5d93).
     
+---
+
 ## Introduction
 
 Have you ever had to change your database and realized it required touching 10 different files — some of which had nothing to do with persistence? Or swapped an HTTP client and found business logic scattered throughout? These are symptoms of a tightly coupled architecture.
